@@ -1,0 +1,18 @@
+Change History
+
+MMNGR v1.5.0
+	1. Fix error case.
+
+MMNGR v1.4.0
+	1. Fix error case.
+
+MMNGR v1.3.0
+	1. Fix typo of IPMMU register definition and local values.
+
+MMNGR v1.2.0
+	1. Fix checkpatch errors and some of checkpatch warnings.
+	2. Fix typo of IPMMU register definition.
+	3. Fix call timing of printk.
+	4. Add ALT support.
+
+Concluded.

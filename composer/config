@@ -1,0 +1,17 @@
+# define y or not y
+#  y     imgpctrl include in composer.
+#  other imgpctrl not include composer
+
+BUILD_WITH_IMGPCTRL_DRV := n
+
+
+# num of available blend unit.
+
+CONFIG_MAX_BLENDUNIT  := 1
+
+
+# num of available layer with rotate/mirror.
+# valid range from 0 to 4.
+# 0 means that should not request composer with rotate/mirror.
+
+CONFIG_MAX_ROTBUFFER  := 0

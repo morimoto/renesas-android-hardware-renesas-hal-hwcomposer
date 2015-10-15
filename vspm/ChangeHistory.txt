@@ -1,0 +1,16 @@
+Change History
+
+VSPM v1.3.0
+	1. Fix checkpatch errors and some of checkpatch warnings.
+
+VSPM v1.4.0
+	1. Add the following parameters of VSPM_lib_Entry.
+		VSPM_TYPE_VSP_VSPS
+		VSPM_TYPE_VSP_VSPR
+		VSPM_TYPE_VSP_VSPD0
+		VSPM_TYPE_VSP_VSPD1
+
+VSPM v1.5.0
+	1. Disable VSPD0 and VSPD1 in Makefile.
+
+Concluded.

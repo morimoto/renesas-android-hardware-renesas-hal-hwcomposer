@@ -1,0 +1,7 @@
+Change History
+
+S3CTL v1.2.0
+	1. Fix default value of XYMODECONF.
+	2. Delete codes for unused functions.
+
+Concluded.

@@ -1,0 +1,51 @@
+#
+# R_MOBILE config for  composer
+#
+#    support graphics image blending
+#
+
+config MISC_R_CAR_COMPOSER
+	tristate "R-Car composer support"
+	depends on ION
+	depends on SYNC
+	depends on SW_SYNC
+	default y
+	---help---
+	  If Y is used, support of composer becomes effective.
+	  This module depend on CONFIG_ION.
+	  This module depend on CONFIG_SYNC.
+	  This module depend on CONFIG_SW_SYNC.
+
+config MISC_R_CAR_COMPOSER_MAX_BLENDUNIT
+	int      "Num of usable blend unit"
+	depends on MISC_R_CAR_COMPOSER
+	range   1 3
+	default 1
+	---help---
+	  Number of blend units to be used in the range of 1-3.
+	  If 1 is specified, composer use one blend unit and
+	  If 3 is specified, composer use three blend unit.
+
+config MISC_R_CAR_COMPOSER_MAX_ROTBUFFER
+	int      "Num of rotation buffer"
+	depends on MISC_R_CAR_COMPOSER
+	range   0 4
+	default 0
+	---help---
+	  Number of rotation buffer available with rotate/mirror.
+	  If 0 is specified, composer can notice user-layer,
+	  blending operation not work correctly with rotate/mirror.
+	  If 1 is specified, one layer can handle rotate/mirror.
+
+config MISC_R_CAR_COMPOSER_DEVATTR
+	int "create device attribute."
+	depends on MISC_R_CAR_COMPOSER
+	range   0 1
+	default 0
+	---help---
+	  If set value 1, create device attributes of enable_vsp.
+	  This attribute is only used for place holder of
+	  configuration, and never used in driver.
+	  This attribute require that mode is 0666
+	  to allow read/write from android JAVA app.
+
