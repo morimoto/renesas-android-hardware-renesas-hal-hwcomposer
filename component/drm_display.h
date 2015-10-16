@@ -38,7 +38,7 @@ using namespace android;
 #endif
 
 /* set 1, if drm driver support blank desktop extension. */
-#define DRMSUPPORT_BLANK_DESKTOP    1
+// #define DRMSUPPORT_BLANK_DESKTOP    1
 
 struct drm_attributes_t{
 	int   display_vsync_period;
