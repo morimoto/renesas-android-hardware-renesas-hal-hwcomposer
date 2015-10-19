@@ -21,5 +21,6 @@ cd s3ctl && make clean && make && cd .. || exit 1
 cd vspm && make clean && make && cd .. || exit 1
 cd composer && make clean && make && cd .. || exit 1
 cd fdpm && make clean && make && cd .. || exit 1
+cd uvcs/source/makefile/ndk_4_6 && make clean && make && cd ../../../../ || exit 1
 
 popd
