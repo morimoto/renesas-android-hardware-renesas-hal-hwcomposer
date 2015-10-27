@@ -44,8 +44,8 @@
 #define EXTERNAL_WIDTH            1920
 #define EXTERNAL_HEIGHT           1080
 #define EXT_DISP_ID     1
-#define EXT_CRT_INDEX   DRM_MODE_ENCODER_DAC
-#define EXT_CON_INDEX   DRM_MODE_CONNECTOR_VGA
+#define EXT_CRT_INDEX DRM_MODE_ENCODER_TMDS
+#define EXT_CON_INDEX DRM_MODE_CONNECTOR_HDMIA
 #else
 #error target unknown
 #endif
