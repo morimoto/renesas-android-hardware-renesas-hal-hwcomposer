@@ -20,7 +20,7 @@
 /* includes              */
 /*************************/
 #include "displays/hwc_virtual.h"
-#include "hal_public.h"
+#include "img_gralloc_public.h"
 #include <cutils/log.h>
 #include "config.h"
 #include "component/hwcglobal.h"

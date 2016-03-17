@@ -25,7 +25,7 @@
 #include <system/graphics.h>
 
 #include <cutils/log.h>
-#include "hal_public.h"
+#include "img_gralloc_public.h"
 
 
 /* timeout of fence recomment to set never.

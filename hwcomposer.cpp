@@ -28,8 +28,7 @@
 
 #include <utils/misc.h>
 #include <utils/String8.h>
-#include <gralloc_custom.h>
-#include <hal_public.h>
+#include <img_gralloc_public.h>
 
 #include "displays/hwc_primary.h"
 #include "displays/hwc_external.h"

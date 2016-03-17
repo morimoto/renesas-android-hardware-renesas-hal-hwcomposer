@@ -24,7 +24,6 @@
 #include "config.h"
 #include <cutils/log.h>
 #include "component/hwcglobal.h"
-#include "gralloc_custom.h"
 
 #include <linux/fb.h>
 #include <ion/ion.h>

@@ -22,8 +22,7 @@
 
 
 #include <cutils/log.h>
-#include "hal_public.h"
-#include "gralloc_custom.h"
+#include "img_gralloc_public.h"
 
 #define FLAG_FBTARGET_CONFIGURED   0x80
 
