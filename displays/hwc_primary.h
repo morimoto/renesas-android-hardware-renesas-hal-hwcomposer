@@ -21,6 +21,7 @@
 #include "base/hwc_base.h"
 #include "hwcomposer.h"
 #include "component/drm_display.h"
+#include <map>
 
 /***********************************/
 /* declare primary display handler */
@@ -32,10 +33,12 @@
 class HWCPrimary : public HWCBase {
 	HWCNotice  *notice;
 	DRMDisplay *dsp;
+	std::map<int, sp<DRMDisplay::IonBuffer> > ionbuffer_map;
 
 protected:
 	/* virtual function of base class */
 	bool onSetupLayersel(hwc_display_contents_1_t* list);
+	virtual void onTargetExecute(hwc_display_contents_1_t* list, int composer_fence, int& drm_fence, struct target_t& info, int&  retire_fence);
 
 public:
 	HWCPrimary(HWCNotice *obj, DRMDisplay *drm_disp);

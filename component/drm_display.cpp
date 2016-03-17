@@ -30,6 +30,8 @@
 
 #include <hardware/hwcomposer_defs.h>
 
+#include <cmath>
+
 #define DRM_THREAD_NAME "HWCDirectRender"
 #define DRM_VBLANK_THREAD_NAME "HWCDirectRenderVBlank"
 
@@ -519,6 +521,7 @@ bool DRMDisplay::setmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 	struct display_fps_t temp_fps;
 	uint32_t crt_id, con_id;
 	int set_flag = 0;
+	float preferred_aspect_ratio = 0;
 
 	resources = drmModeGetResources(drm_fd);
 	if (!resources) {
@@ -577,14 +580,53 @@ bool DRMDisplay::setmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 		HZ = 60;
 
 	mode = NULL;
+
+	for (i = 0; i < connector->count_modes; i++) {
+		drmModeModeInfo *test_mode;
+		test_mode = &connector->modes[i];
+		ALOGD("mode %d name = %s vrefresh = %u", i, test_mode->name, test_mode->vrefresh);
+	}
+
+	if (connector->count_modes > 0) {
+		preferred_aspect_ratio = connector->modes[0].hdisplay /
+				(float)connector->modes[0].vdisplay;
+	}
+
+	for (i = 0; i < connector->count_modes; i++) {
+		drmModeModeInfo *test_mode;
+		test_mode = &connector->modes[i];
+		if(test_mode->type & DRM_MODE_TYPE_PREFERRED) {
+			preferred_aspect_ratio = test_mode->hdisplay / (float)test_mode->vdisplay;
+			break;
+		}
+	}
+
 	for (i = 0; i < connector->count_modes; i++) {
 		drmModeModeInfo *test;
 
 		test = &connector->modes[i];
-		if (test->hdisplay != width || test->vdisplay != height) {
-			/* display size is not meet request value */
+
+		float aspect = test->hdisplay / (float)test->vdisplay;
+
+		if(fabs(aspect - preferred_aspect_ratio) > 0.001) {
 			continue;
 		}
+
+		if (test->hdisplay >= 1920) {
+			/* Now we don't support FullHD resolution */
+			continue;
+		}
+
+//		if (test->hdisplay != width || test->vdisplay != height) {
+//			/* display size is not meet request value */
+//			continue;
+//		}
+
+		if(test->type == DRM_MODE_TYPE_USERDEF) {
+			/* HACK: need to re-check */
+			continue;
+		}
+
 		if (test->vrefresh != (unsigned int) HZ) {
 			matching_size_flag = MATCH_SIZE_ON;
 			matching_count++;
@@ -608,6 +650,7 @@ bool DRMDisplay::setmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 		}
 
 		mode = test;
+		ALOGD("selected mode %d name = %s vrefresh = %u", i, mode->name, mode->vrefresh);
 		break;
 	}
 	/* can't find same (HZ) */

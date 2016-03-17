@@ -25,11 +25,13 @@
 #include <cutils/log.h>
 #include "component/hwcglobal.h"
 
+#include <img_gralloc_public.h>
 #include <linux/fb.h>
 #include <ion/ion.h>
 #include <sync/sync.h>
 #include <linux/ion.h>
 #include <sys/mman.h>
+#include <utility>
 
 /*************************/
 /* defines               */
@@ -37,8 +39,10 @@
 #define ALIGN_ROUND_UP_4K(X)    (((X)+4095) & ~4095)
 
 #define PRIM_DISP_ID   0
-#define PRIM_CRT_INDEX   DRM_MODE_ENCODER_DAC
-#define PRIM_CON_INDEX   DRM_MODE_CONNECTOR_VGA
+//#define PRIM_CRT_INDEX   DRM_MODE_ENCODER_DAC
+#define PRIM_CRT_INDEX   DRM_MODE_ENCODER_TMDS
+//#define PRIM_CON_INDEX   DRM_MODE_CONNECTOR_VGA
+#define PRIM_CON_INDEX DRM_MODE_CONNECTOR_HDMIA
 
 #if DEBUG_USE_ATRACE
 #define ATRACE_TAG  ATRACE_TAG_ALWAYS
@@ -346,7 +350,7 @@ DisplayPrimary::DisplayPrimary(HWCNotice *obj, int display, DRMDisplay *drm_disp
 	int width = 1920, height = 1080;
 	bool interlace = false;
 
-	int ret_getmode;
+	int ret_getmode = false;
 	int get_width, get_height;
 	int i;
 
@@ -355,13 +359,13 @@ DisplayPrimary::DisplayPrimary(HWCNotice *obj, int display, DRMDisplay *drm_disp
 	uint32_t drm_handle;
 	int map_fd;
 
-	ret_getmode = dsp->getmode(PRIM_DISP_ID, PRIM_CRT_INDEX,
-		PRIM_CON_INDEX, &get_width, &get_height);
-
-	if (ret_getmode) {
-		width = get_width;
-		height = get_height;
-	}
+//	ret_getmode = dsp->getmode(PRIM_DISP_ID, PRIM_CRT_INDEX,
+//		PRIM_CON_INDEX, &get_width, &get_height);
+//
+//	if (ret_getmode) {
+//		width = get_width;
+//		height = get_height;
+//	}
 	ALOGI("primary display size:%dx%d", width, height);
 
 	if (!ret_getmode) {
@@ -387,9 +391,10 @@ DisplayPrimary::DisplayPrimary(HWCNotice *obj, int display, DRMDisplay *drm_disp
 	map_size = ALIGN_ROUND_UP_4K(map_size);
 
 	for (i = 0; i < NUM_MAX_PRIMARY_BUFFER; i++) {
-		const int alloc_flag = ION_FLAG_CACHED | ION_FLAG_CACHED_NEEDS_SYNC;
-		const int heap_mask  = 1 << (ION_HEAP_TYPE_CUSTOM);
-
+		//const int alloc_flag = ION_FLAG_CACHED | ION_FLAG_CACHED_NEEDS_SYNC;
+		const int alloc_flag = 0;
+		//const int heap_mask  = 1 << (ION_HEAP_TYPE_CUSTOM);
+		const int heap_mask  = ION_HEAP_TYPE_DMA_MASK;
 		drm_handle = 0; /* does not use libkms so drm_handle is always zero. */
 		map_fd = -1;
 		if (ion_alloc_fd(ion_fd, map_size, 4096, heap_mask, alloc_flag, &map_fd) < 0) {
@@ -502,4 +507,70 @@ HWCPrimary::HWCPrimary(HWCNotice *obj, DRMDisplay *drm_disp) :
 HWCPrimary::~HWCPrimary()
 {
 	/* nothing to do */
+}
+
+void HWCPrimary::onTargetExecute(
+	hwc_display_contents_1_t* list,
+	int              composer_fence,
+	int&             drm_fence,
+	struct target_t& info,
+	int&             retire_fence)
+{
+	hwc_disp_buffer *composition_target = (hwc_disp_buffer*)info.option;
+	bool            no_fbt = (composer->get_numoverlay()==0);
+	bool            no_plane = !(g.st_disable_hwc && info.use_ovl);
+
+//	UNUSED(list);
+	UNUSED(retire_fence);
+
+	int nlayers = list->numHwLayers;
+
+	buffer_handle_t buffer = list->hwLayers[nlayers-1].handle;
+
+	IMG_native_handle_t *IMGbuffer = (IMG_native_handle_t*)buffer;
+
+	/* display using composer */
+	if (composition_target) {
+
+		composition_target->buf_fd = IMGbuffer->fd[0];
+		struct DisplayPrimary::buffer_t *buf_with_ext_data = (struct DisplayPrimary::buffer_t *)composition_target;
+		auto ionbuffer = ionbuffer_map.find(composition_target->buf_fd);
+		if(ionbuffer != ionbuffer_map.end()) {
+			buf_with_ext_data->drm_buffer = ionbuffer->second;
+		} else {
+			sp<DRMDisplay::IonBuffer> buf = new DRMDisplay::IonBuffer(dsp,
+					composition_target->buf_fd, HAL_PIXEL_FORMAT_BGRA_8888, IMGbuffer->iWidth, IMGbuffer->iHeight);
+			ionbuffer_map.insert(std::pair<int, sp<DRMDisplay::IonBuffer> >(composition_target->buf_fd, buf));
+			buf_with_ext_data->drm_buffer = buf;
+		}
+
+		/* for physical display */
+//		if (composer_fence >= 0) {
+			/* queue target to display */
+			disp->queue(composition_target, -1, no_plane);
+//		} else {
+//			/* cancel dequeue */
+//			disp->dequeue_cancel(composition_target, no_plane);
+//		}
+	}
+
+	/* display using drm plane. */
+	if (!no_plane) {
+		struct HWCLayerSelect::layer_select_t *sel = &layersel->select;
+		size_t i;
+
+		/* turn on plane */
+		i = 0;
+
+		{
+			hwc_layer_1_t        *layer = &list->hwLayers[sel->ovl_index[i]];
+
+			drm_fence = disp->show_plane(layer->handle, layer->acquireFenceFd, &sel->ovl_sourceCrop[i], &sel->ovl_displayFrame[i], no_fbt);
+		}
+	} else {
+		/* turn off plane */
+		{
+			disp->show_plane(NULL, -1, NULL, NULL, no_fbt);
+		}
+	}
 }

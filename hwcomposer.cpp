@@ -242,7 +242,7 @@ static int hwc_prepare(hwc_composer_device_1_t *dev,
 {
 	struct hwc_context_t *ctx = (struct hwc_context_t*)dev;
 	size_t i;
-	bool   vsp_disable = false;
+	bool   vsp_disable = true;
 	bool   update_mode = false;
 	MONITOR_INOUT(0);
 

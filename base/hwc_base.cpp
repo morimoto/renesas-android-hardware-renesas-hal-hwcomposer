@@ -552,7 +552,7 @@ int HWCBase::set(hwc_display_contents_1_t* list)
 		composer->settarget_buffer(target_info.physaddr, target_info.fd, target_info.fence, target_info.cached);
 
 		/* request composition */
-		release_fd = composer->request(list);
+//		release_fd = composer->request(list);
 
 	}
 
@@ -919,14 +919,15 @@ HWCBase::HWCBase(): disp(NULL), composer(NULL), layersel(NULL), display_type(0),
 	}
 
 	composer = new HWCComposer();
-	if (composer == NULL || !composer->isValid()) {
-		ALOGE("composer not available.");
-		goto err;
-	}
+//	if (composer == NULL || !composer->isValid()) {
+//		ALOGE("composer not available.");
+//		goto err;
+//	}
 
 	/* vsync and display interface is created in create_display */
 
-	layersel = new HWCLayerSelect(composer->get_maxSize(), composer->get_maxArea(), composer->get_maxRotbuffer());
+	//layersel = new HWCLayerSelect(composer->get_maxSize(), composer->get_maxArea(), composer->get_maxRotbuffer());
+	layersel = new HWCLayerSelect(1920, 1920*1088, 0);
 	if (layersel == NULL) {
 		ALOGE("layerselect not available");
 		goto err;
