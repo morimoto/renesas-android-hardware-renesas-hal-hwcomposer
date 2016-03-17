@@ -559,10 +559,12 @@ static void hwc_dump(struct hwc_composer_device_1* dev, char *buff, int buff_len
 	msg.appendFormat("  [variable]\n");
 	msg.appendFormat("    disble:%d\n", g.st_disable_hwc);
 	if (g.st_connect[0]) {
-		msg.appendFormat("    primary  connect:%d blank:%d dotclock:%lld num_overlay:%d\n", g.st_connect[0], g.st_blank[0], g.st_dotclock[0], g.num_overlay[0]);
+		msg.appendFormat("    primary  connect:%d blank:%d dotclock:%llu num_overlay:%d\n",
+			g.st_connect[0], g.st_blank[0], (long long unsigned int)g.st_dotclock[0], g.num_overlay[0]);
 	}
 	if (g.st_connect[1]) {
-		msg.appendFormat("    external connect:%d blank:%d dotclock:%lld num_overlay:%d\n", g.st_connect[1], g.st_blank[1], g.st_dotclock[1], g.num_overlay[1]);
+		msg.appendFormat("    external connect:%d blank:%d dotclock:%llu num_overlay:%d\n",
+			g.st_connect[1], g.st_blank[1], (long long unsigned int)g.st_dotclock[1], g.num_overlay[1]);
 	}
 #if USE_HWC_VERSION1_3
 	msg.appendFormat("    virtual  num_overlay:%d\n", g.num_overlay[2]);
@@ -803,7 +805,7 @@ static int check_gralloc_handle(struct hwc_context_t *ctx)
 	const IMG_gralloc_module_public_t *gralloc;
 #if defined(TARGET_BOARD_KOELSCH)
 	const char *hal_name = "IMG SGX Graphics HAL";
-#elif defined(TARGET_BOARD_LAGER)
+#elif defined(TARGET_BOARD_LAGER) || defined(TARGET_BOARD_SALVATOR)
 	const char *hal_name = "IMG Rogue Graphics HAL";
 #elif defined(TARGET_BOARD_ALT)
 	const char *hal_name = "IMG SGX Graphics HAL";
