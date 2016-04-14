@@ -612,7 +612,7 @@ bool DRMDisplay::setmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 			continue;
 		}
 
-		if (test->hdisplay >= 1920) {
+		if (test->hdisplay > 1920) {
 			/* Now we don't support FullHD resolution */
 			continue;
 		}
