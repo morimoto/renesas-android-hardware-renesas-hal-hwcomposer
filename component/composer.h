@@ -29,7 +29,7 @@ typedef struct hwc_blend_post_t {
 	int           num_buffer;
 
 	/* graphic buffer parameter */
-	unsigned int  physAddress[COMPOSER_BUFFER];
+	uint64_t  physAddress[COMPOSER_BUFFER];
 	int           buffer_fd[COMPOSER_BUFFER];
 	int           buffer_cached[COMPOSER_BUFFER];
 

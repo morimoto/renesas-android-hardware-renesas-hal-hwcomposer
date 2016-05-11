@@ -74,7 +74,7 @@
  *  3   use three layer for overlay.
  *  2   use two layer for overlay.
  */
-#define NUM_ASSIGN_OVERLAY    2
+#define NUM_ASSIGN_OVERLAY    4
 
 /*****************************************************************************/
 /*  debug functions                                                          */
@@ -242,7 +242,7 @@ static int hwc_prepare(hwc_composer_device_1_t *dev,
 {
 	struct hwc_context_t *ctx = (struct hwc_context_t*)dev;
 	size_t i;
-	bool   vsp_disable = true;
+	bool   vsp_disable = false;
 	bool   update_mode = false;
 	MONITOR_INOUT(0);
 

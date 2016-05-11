@@ -34,13 +34,11 @@ class DisplayPrimary : public DisplayBase {
 	sp<DRMDisplay::VSyncCallback> vsync;
 	sp<DRMDisplay::FlipCallback>  flip;
 
-public:
 	struct buffer_t {
 		hwc_disp_buffer           buffer;
 		sp<DRMDisplay::IonBuffer> drm_buffer;
 	} bufdata[NUM_MAX_PRIMARY_BUFFER];
 
-private:
 	struct buffer_t *current;
 
 	DRMDisplay  *dsp;
