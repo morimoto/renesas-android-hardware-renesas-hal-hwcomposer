@@ -1,8 +1,0 @@
-#
-# config for rcar composer
-#
-# Example
-#
-
-source "drivers/char/composer/composer/Kconfig"
-
