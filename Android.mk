@@ -41,6 +41,7 @@ LOCAL_SRC_FILES += component/composer.cpp
 LOCAL_SRC_FILES += component/layersel.cpp
 LOCAL_SRC_FILES += component/drm_display.cpp
 LOCAL_SRC_FILES += component/hwcglobal.cpp
+LOCAL_SRC_FILES += component/SyncTimeline.cpp
 
 LOCAL_SRC_FILES += displays/hwc_primary.cpp
 LOCAL_SRC_FILES += displays/hwc_external.cpp
@@ -77,6 +78,7 @@ endif
 LOCAL_C_INCLUDES+= $(TOP)/vendor/renesas/include
 LOCAL_C_INCLUDES+= $(TOP)/vendor/renesas/$(TARGET_BOARD_PLATFORM)/include
 LOCAL_C_INCLUDES+= $(TARGET_OUT_HEADERS)/libdrm/
+LOCAL_C_INCLUDES+= $(TOP)/system/core/libsync/
 
 # TARGET_FORCE_HWC_FOR_VIRTUAL_DISPLAYS
 #   set build option for copy HWC_FRAMEBUFFER_TARGET to output buffer.

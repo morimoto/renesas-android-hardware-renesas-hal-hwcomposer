@@ -873,7 +873,6 @@ void HWCBase::onTargetExecute(
 	bool            no_plane = !(g.st_disable_hwc && info.use_ovl);
 
 	UNUSED(list);
-	UNUSED(retire_fence);
 
 	/* display using composer */
 	if (composition_target) {
@@ -903,7 +902,7 @@ void HWCBase::onTargetExecute(
 	} else {
 		/* turn off plane */
 		{
-			disp->show_plane(NULL, -1, NULL, NULL, no_fbt);
+			retire_fence = disp->show_plane(NULL, -1, NULL, NULL, no_fbt);
 		}
 	}
 }

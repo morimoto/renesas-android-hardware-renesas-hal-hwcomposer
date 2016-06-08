@@ -40,6 +40,7 @@ class DisplayPrimary : public DisplayBase {
 	} bufdata[NUM_MAX_PRIMARY_BUFFER];
 
 	struct buffer_t *current;
+	struct buffer_t *callback_buf;
 
 	DRMDisplay  *dsp;
 	struct drm_attributes_t hwc_attr;

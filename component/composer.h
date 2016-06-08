@@ -106,7 +106,6 @@ protected:
 	int              composition_index[COMPOSER_SRC];
 	int              fbtarget_layer;
 	bool             prev_drawbgcolor;
-	int              prev_fence;
 
 	FenceMerge       usefence;
 

@@ -67,8 +67,15 @@
  */
 void DisplayPrimary::flip_callback(void)
 {
-	Mutex::Autolock _l(lock);
-	cond_flip_flag.signal();
+	if (callback_buf) {
+#if DEBUG_USE_ATRACE
+		sprintf(name, "Primary-Disp%d", callback_buf->buffer.buf_index);
+		ATRACE_INT(name, 0);
+#endif
+		/* notice base class the buffer be complete */
+		complete_flip_buffer(&callback_buf->buffer);
+	}
+	page_flip.unlock();
 }
 
 /* virtual function of base class */
@@ -116,7 +123,7 @@ void DisplayPrimary::onUpdateDisplay(hwc_disp_buffer *buf, bool no_plane)
 		ATRACE_INT(name, 1);
 #endif
 
-		Mutex::Autolock _l(lock);
+		page_flip.lock();
 #if DRMSUPPORT_BLANK_DESKTOP
 		if (flag_no_fbt) {
 			/* do not page flip when no_fbt */
@@ -129,23 +136,18 @@ void DisplayPrimary::onUpdateDisplay(hwc_disp_buffer *buf, bool no_plane)
 					need_plane_op = false;
 				}
 #endif
-				if (cond_flip_flag.waitRelative(lock, WAIT_TIMEOUT) != NO_ERROR) {
-					ALOGE("wait flip timeout");
-				}
+			} else {
+				page_flip.unlock();
+				if(current)
+					complete_flip_buffer(&current->buffer);
 			}
+			callback_buf = current;
+			current = next;
 #if DRMSUPPORT_BLANK_DESKTOP
 		}
 #endif
 
-		if (current) {
-#if DEBUG_USE_ATRACE
-			sprintf(name, "Primary-Disp%d", current->buffer.buf_index);
-			ATRACE_INT(name, 0);
-#endif
-			/* notice base class the buffer be complete */
-			complete_flip_buffer(&current->buffer);
-		}
-		current = next;
+
 	}
 #if STOP_PLANE_DELAY
 	if (need_plane_op) {
@@ -201,6 +203,7 @@ int DisplayPrimary::onUpdatePlane(hwc_disp_plane *plane, bool no_fbt)
 	}
 #endif
 
+	f = dsp->getfencefd();
 	return f;
 }
 
@@ -340,6 +343,7 @@ void DisplayPrimary::setEnabled(bool state)
 DisplayPrimary::DisplayPrimary(HWCNotice *obj, int display, DRMDisplay *drm_disp):
 	DisplayBase(obj, display),
 	current(NULL),
+	callback_buf(NULL),
 	dsp(drm_disp),
 	notice(obj),
 #if DRMSUPPORT_BLANK_DESKTOP

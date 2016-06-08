@@ -1373,6 +1373,8 @@ void DRMDisplay::page_flip_handler(int fd, unsigned int frame, unsigned int sec,
 	UNUSED(sec);
 	UNUSED(usec);
 
+	/* Signal fence */
+	dsp->sync_timeline.inc();
 #if DEBUG_ATRACE
 	const char *name;
 	if (dispid) {
@@ -1667,4 +1669,9 @@ void DRMDisplay::vblank_handler(int fd, unsigned int frame, unsigned int sec, un
 			}
 		}
 	}
+}
+
+int DRMDisplay::getfencefd()
+{
+	return sync_timeline.getFenceFd();
 }

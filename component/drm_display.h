@@ -23,6 +23,7 @@
 #include "drm_fourcc.h"
 
 #include "base/hwc_thread.h"
+#include "SyncTimeline.h"
 
 #include <hardware/hwcomposer_defs.h>
 
@@ -137,6 +138,7 @@ private:
 	Mutex           lock_flip;
 	Mutex           lock_vsync;
 	int             request_next;
+	SyncTimeline    sync_timeline;
 
 	struct {
 		List< sp<FlipCallback> >  flip_listners;
@@ -190,6 +192,8 @@ public:
 	{
 		return drm_fd >= 0 && drm_fd_vsync >= 0;
 	}
+
+	int getfencefd();
 
 	/* initialize */
 	void init(void);

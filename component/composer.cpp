@@ -900,12 +900,6 @@ int HWCComposer::request(hwc_display_contents_1_t *list)
 	/* update buffer handle and sync fence. */
 	index = 0;
 
-	/* to keep blending order, pass previous fence to composer. */
-	usefence.merge(prev_fence);
-
-	/* merge fence of target buffer */
-	usefence.merge(data.acquire_fd);
-
 	if (num_layer == 0) {
 		if (!prev_drawbgcolor) {
 			/* draw bgcolor */
@@ -960,17 +954,6 @@ int HWCComposer::request(hwc_display_contents_1_t *list)
 	/* clear merged fence */
 	usefence.clear();
 	data.acquire_fd = -1;
-
-	if (prev_fence >= 0) {
-		close(prev_fence);
-		prev_fence = -1;
-	}
-
-	/* handle fence object. releaseFence. */
-	if (release_fd >= 0) {
-		/* record previous fence */
-		prev_fence = dup(release_fd);
-	}
 
 	for (i = 0; i < index; i++) {
 		hwc_layer_1_t *layer = blendlayer[i];
@@ -1063,15 +1046,13 @@ void HWCComposer::enable_bgonly(bool flag)
 	allow_bgcolor_only = flag;
 }
 
-
 /*! \brief HWCComposer initialize
  */
 HWCComposer::HWCComposer():
 	allow_bgcolor_only(true),
 	num_layer(0),
 	fbtarget_layer(-1),
-	prev_drawbgcolor(false),
-	prev_fence(-1)
+	prev_drawbgcolor(false)
 {
 	fd = open("/dev/composer", O_RDWR);
 
@@ -1121,10 +1102,6 @@ HWCComposer::~HWCComposer()
 	if (fd >= 0) {
 		close(fd);
 		fd = -1;
-	}
-	if (prev_fence >= 0) {
-		close(prev_fence);
-		prev_fence = -1;
 	}
 
 	for(int i = 0; i < MAX_COMPOSER_JOBS; i++) {

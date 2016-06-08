@@ -141,6 +141,7 @@ protected:
 	Mutex             lock_blank;
 	bool              blank_state;
 	int               disp;
+	Mutex             page_flip;
 
 	int add_buffer(hwc_disp_buffer *buffer);
 	int complete_flip_buffer(hwc_disp_buffer *buffer);
