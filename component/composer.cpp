@@ -19,7 +19,7 @@
 #include "config.h"
 
 #include <fcntl.h>
-
+#include <ion/ion.h>
 
 #include <cutils/log.h>
 #include "img_gralloc_public.h"
@@ -1078,10 +1078,29 @@ HWCComposer::HWCComposer():
 	memset(&data, 0 , sizeof(data));
 	data.operation_type = OPTYPE_BLENDONLY;
 
-	{
-		hwc_register_composerinfo info;
 
-		memset(&info, 0, sizeof(info));
+	int ion_fd = ion_open();
+	const int heap_mask  = ION_HEAP_TYPE_DMA_MASK;
+	int map_fd = -1;
+	int map_size = 4096 * 8;
+
+	hwc_register_composerinfo info;
+	memset(&info, 0, sizeof(info));
+
+	for(int i = 0; i < MAX_COMPOSER_JOBS; i++) {
+		map_fd = -1;
+		if (ion_alloc_fd(ion_fd, map_size, 4096, heap_mask, 0, &map_fd) < 0) {
+			/* error */
+			ALOGE("ion_alloc_fd error\n");
+		}
+
+		additional_memory[i] = map_fd;
+		info.job_memory[i] = map_fd;
+	}
+
+	ion_close(ion_fd);
+
+	{
 		if (ioctl(fd, CMP_IOCGS_REGISTER, &info)) {
 			ALOGE("error CMP_IOCGS_REGISTER");
 			max_size = 1920;
@@ -1106,6 +1125,11 @@ HWCComposer::~HWCComposer()
 	if (prev_fence >= 0) {
 		close(prev_fence);
 		prev_fence = -1;
+	}
+
+	for(int i = 0; i < MAX_COMPOSER_JOBS; i++) {
+		if(additional_memory[i] > -1)
+			close(additional_memory[i]);
 	}
 }
 

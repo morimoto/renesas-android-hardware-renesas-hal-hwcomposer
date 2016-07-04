@@ -24,6 +24,7 @@
 
 #define COMPOSER_SRC     4                 /* num of source image that used to blend. */
 #define COMPOSER_BUFFER  (COMPOSER_SRC+1)  /* num of all buffer for dest and source.  */
+#define MAX_COMPOSER_JOBS   5
 
 typedef struct hwc_blend_post_t {
 	int           num_buffer;
@@ -47,6 +48,7 @@ typedef struct hwc_register_composerinfo_t {
 	int max_size;
 	int max_area;
 	int max_rotbuf;
+	int job_memory[MAX_COMPOSER_JOBS];
 } hwc_register_composerinfo;
 
 
@@ -85,6 +87,7 @@ private:
 	bool hwc_setup_layerinformation_prepare_transform(const hwc_layer_1_t& layer, int& rotate, int& mirror);
 	bool hwc_setup_layerinformation_prepare_offset(int fmt, int stride, int stride_c, int crop_x, int crop_y, unsigned long offset[3]);
 
+	int additional_memory[MAX_COMPOSER_JOBS];
 protected:
 /* private */
 	int fd;
