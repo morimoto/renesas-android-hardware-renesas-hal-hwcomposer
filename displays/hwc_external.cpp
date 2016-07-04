@@ -40,17 +40,20 @@
 #define ALIGN_ROUND_UP_4K(X)    (((X)+4095) & ~4095)
 #define ALIGN_ROUND_UP_128(X)    (((X)+127) & ~127)
 
-#if defined(TARGET_BOARD_LAGER)
+#if defined(TARGET_BOARD_LAGER) || defined(TARGET_BOARD_SALVATOR_H3) || \
+	defined(TARGET_BOARD_SALVATOR_M3)
 #define EXTERNAL_WIDTH            1920
 #define EXTERNAL_HEIGHT           1080
 #define EXT_DISP_ID     1
 #define EXT_CRT_INDEX DRM_MODE_ENCODER_TMDS
 #define EXT_CON_INDEX DRM_MODE_CONNECTOR_HDMIA
+#define EXT_ENCODER_ID 49
+#define EXT_CONNECTOR_ID 50
 #else
 #error target unknown
 #endif
 
-#define USE_UEVENT           0
+#define USE_UEVENT           1
 
 #if USE_UEVENT
 #include <hardware_legacy/uevent.h>
@@ -229,23 +232,25 @@ bool DisplayExternal::set_displaysize(int width, int height)
 	sp<DRMDisplay::IonBuffer> drm_data[NUM_MAX_EXTERNAL_BUFFER];
 	int i;
 	int get_width, get_height;
-	int ret_getmode;
 
-	ret_getmode = dsp->getmode(EXT_DISP_ID, EXT_CRT_INDEX,
-		EXT_CON_INDEX, &get_width, &get_height);
-	if (ret_getmode) {
-		width = get_width;
-		height = get_height;
+
+	if (!dsp->setmode(EXT_DISP_ID, EXT_ENCODER_ID, EXT_CONNECTOR_ID, width, height)) {
+		ALOGE("can not set mode for external display ENC:%d CON:%d", EXT_ENCODER_ID, EXT_CONNECTOR_ID);
 	}
-	ALOGI("external display size:%dx%d", width, height);
+
+	ALOGD("external display size:%dx%d", width, height);
+
+	clear_buffers();
+	freeDisplayBuffers();
+	allocateDisplayBuffers(width, height);
 
 	/* to avoid error in SurfaceFlinger. configure dummy param */
 	hwc_attr.display_vsync_period = 1000000000 / 60;
 	hwc_attr.display_width = width;
 	hwc_attr.display_height = height;
-	hwc_attr.display_dpi_x = 0;
-	hwc_attr.display_dpi_y = 0;
-	hwc_attr.display_stride = 0;
+	hwc_attr.display_dpi_x = 150;
+	hwc_attr.display_dpi_y = 150;
+	hwc_attr.display_stride = width * 4;
 
 	/* create new display_buffer. */
 	for (i = 0; i < NUM_MAX_EXTERNAL_BUFFER; i++) {
@@ -262,16 +267,6 @@ bool DisplayExternal::set_displaysize(int width, int height)
 		}
 	}
 
-	if (!ret_getmode) {
-		/* change display mode. */
-		if (!dsp->setmode(EXT_DISP_ID, EXT_CRT_INDEX, EXT_CON_INDEX, width, height)) {
-			ALOGE("can not set mode for external display CRT:%d CON:%d size:%dx%d", EXT_CRT_INDEX, EXT_CON_INDEX, width, height);
-			for (i = 0; i < NUM_MAX_EXTERNAL_BUFFER; i++) {
-				drm_data[i] = NULL;
-			}
-			return false;
-		}
-	}
 	if (!dsp->getattributes(EXT_DISP_ID, &hwc_attr)) {
 		ALOGE("can not get display attributes\n");
 		/* to avoid problem overwrite attributes. */
@@ -318,12 +313,6 @@ DisplayExternal::DisplayExternal(HWCNotice *obj, int display, DRMDisplay *drm_di
 	/* fake buffer register */
 	int i;
 
-	/* initialize to allocate ion memory. */
-	int ion_fd;
-	int map_size;
-	uint32_t drm_handle;
-	int map_fd;
-
 	/* to avoid error in SurfaceFlinger. configure dummy param */
 	hwc_attr.display_vsync_period = 1000000000 / 60;
 	hwc_attr.display_width = EXTERNAL_WIDTH;
@@ -332,29 +321,6 @@ DisplayExternal::DisplayExternal(HWCNotice *obj, int display, DRMDisplay *drm_di
 	hwc_attr.display_dpi_y = 0;
 	hwc_attr.display_stride = 0;
 
-	ion_fd = ion_open();
-	map_size = ALIGN_ROUND_UP_128(EXTERNAL_WIDTH * 4)*EXTERNAL_HEIGHT;
-	map_size = ALIGN_ROUND_UP_4K(map_size);
-
-	for (i = 0; i < NUM_MAX_EXTERNAL_BUFFER; i++) {
-		const int alloc_flag = ION_FLAG_CACHED | ION_FLAG_CACHED_NEEDS_SYNC;
-		const int heap_mask  = 1 << (ION_HEAP_TYPE_CUSTOM);
-
-		drm_handle = 0; /* does not use libkms so drm_handle is always zero. */
-		map_fd = -1;
-		if (ion_alloc_fd(ion_fd, map_size, 4096, heap_mask, alloc_flag, &map_fd) < 0) {
-			/* error */
-			ALOGE("ion_alloc_fd error\n");
-		}
-
-		bufdata[i].buffer.buf_fd = map_fd;
-		bufdata[i].drm_buffer    = NULL;
-		bufdata[i].buffer.phys_addr = 0;
-
-		/* add buffer to base class. */
-		add_buffer(&bufdata[i].buffer);
-	}
-
 	/* actual hwc_attr is configured in set_displaysize function. */
 	/* set default display size */
 #if 0
@@ -362,9 +328,6 @@ DisplayExternal::DisplayExternal(HWCNotice *obj, int display, DRMDisplay *drm_di
 		ALOGE("can not set display size");
 	}
 #endif
-
-	/* close ion_device. */
-	ion_close(ion_fd);
 
 	/* create flip listener */
 	class FlipReceiver:public virtual DRMDisplay::FlipCallback {
@@ -384,11 +347,47 @@ DisplayExternal::DisplayExternal(HWCNotice *obj, int display, DRMDisplay *drm_di
  */
 DisplayExternal::~DisplayExternal()
 {
-	int i;
-
 	flip = NULL;
 
-	for (i = 0; i < NUM_MAX_EXTERNAL_BUFFER; i++) {
+	freeDisplayBuffers();
+}
+
+int DisplayExternal::allocateDisplayBuffers(int width, int height)
+{
+	uint32_t drm_handle;
+	int map_fd;
+
+	int ion_fd = ion_open();
+	int map_size = ALIGN_ROUND_UP_128(width * 4) * height;
+	map_size = ALIGN_ROUND_UP_4K(map_size);
+
+	for (int i = 0; i < NUM_MAX_EXTERNAL_BUFFER; i++) {
+		const int alloc_flag = 0;
+		const int heap_mask  = ION_HEAP_TYPE_DMA_MASK;
+		drm_handle = 0; /* does not use libkms so drm_handle is always zero. */
+		map_fd = -1;
+		if (ion_alloc_fd(ion_fd, map_size, 4096, heap_mask, alloc_flag, &map_fd) < 0) {
+			/* error */
+			ALOGE("ion_alloc_fd error\n");
+		}
+
+		bufdata[i].buffer.buf_fd = map_fd;
+		bufdata[i].drm_buffer    = NULL;
+		bufdata[i].buffer.phys_addr = 0;
+
+		/* add buffer to base class. */
+		add_buffer(&bufdata[i].buffer);
+	}
+
+	/* close ion_device. */
+	ion_close(ion_fd);
+
+	return 0;
+}
+
+void DisplayExternal::freeDisplayBuffers()
+{
+	for (int i = 0; i < NUM_MAX_EXTERNAL_BUFFER; i++) {
 		if (bufdata[i].buffer.buf_fd >= 0) {
 			close(bufdata[i].buffer.buf_fd);
 		}
@@ -406,21 +405,18 @@ DisplayExternal::~DisplayExternal()
  */
 int HWCHotplug::onInitHotplug(void)
 {
-	int fd = open("/sys/class/switch/hdmi/state", O_RDONLY);
+	int fd = open("/sys/class/drm/card0-HDMI-A-2/status", O_RDONLY);
 
 	connected = false;
 	if (fd < 0) {
 		ALOGE("error open hdmi state");
-
-		/* assume connected. */
-		connected = true;
 	} else {
 		char value;
 
 		read(fd, &value, 1);
 		close(fd);
 
-		if (value == '1') {
+		if (value == 'c') {
 			connected = true;
 		}
 	}
@@ -435,10 +431,10 @@ int HWCHotplug::onInitHotplug(void)
 
 			disp->set_displaysize(EXTERNAL_WIDTH, EXTERNAL_HEIGHT);
 
-			ext_base->set_connect_state(connected);
+			ext_base->set_connect_state(true);
 		}
 	} else {
-		ext_base->set_connect_state(connected);
+		ext_base->set_connect_state(false);
 	}
 
 	return 0;
@@ -455,41 +451,55 @@ int HWCHotplug::onEventHotplug(void)
 
 #if USE_UEVENT
 	char uevent_desc[4096];
-	const char *dev = "change@/devices/virtual/switch/hdmi";
+	const char *dev = "change@/devices/platform/soc/feb00000.display/drm/card0";
 	const char *s;
 	int        len;
 	int state = 0;
 
-	connected = false;
+	bool curr_connected = false;
 
 	len = uevent_next_event(uevent_desc, sizeof(uevent_desc) - 2);
 	s   = &uevent_desc[0];
 
 	if (strcmp(s, dev) == 0) {
-		const char *state_name = "SWITCH_STATE=";
-		const int  state_name_len = strlen(state_name);
-		int c;
 
-		/* find out uevent of switch/hdmi */
-		c = strlen(s) + 1;
-		s += c;
-		len -= c;
 
-		while (*s && len > 0) {
-			if (!strncmp(s, state_name, state_name_len)) {
-				state = atoi(s + state_name_len);
-				break;
+
+		int fd = open("/sys/class/drm/card0-HDMI-A-2/status", O_RDONLY);
+
+		if (fd < 0) {
+			ALOGE("error open hdmi state");
+		} else {
+			char value;
+
+			read(fd, &value, 1);
+			close(fd);
+
+			if (value == 'c') {
+				curr_connected = true;
 			}
-			c = strlen(s) + 1;
-
-			s += c;
-			len -= c;
 		}
 
-		if (state)
-			connected = true;
+		if (curr_connected != connected) {
+			connected = curr_connected;
+			result = 0;
+			if (connected) {
+				DisplayExternal *disp = (DisplayExternal*)ext_base->disp;
+
+				if (!disp) {
+					ALOGE("can not get display handle");
+				} else {
+					/* update display class config if necessary. */
+
+					disp->set_displaysize(EXTERNAL_WIDTH, EXTERNAL_HEIGHT);
+
+					ext_base->set_connect_state(true);
+				}
+			} else {
+				ext_base->set_connect_state(false);
+			}
+		}
 	}
-	result = 0;
 #endif
 
 	return result;

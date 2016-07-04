@@ -19,7 +19,8 @@
 #define __HWC_EXTERNAL_H
 
 
-#if defined(TARGET_BOARD_LAGER)
+#if defined(TARGET_BOARD_LAGER) || defined(TARGET_BOARD_SALVATOR_M3) || \
+		defined(TARGET_BOARD_SALVATOR_H3)
 #define USE_EXTERNAL (1 && defined(USE_EXTERNAL_DISPLAY))
 #else
 #define USE_EXTERNAL 0

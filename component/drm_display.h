@@ -175,10 +175,10 @@ protected:
 	void setattributes(drmModeConnector *connector, drmModeModeInfo *mode, int disp_id, float vrefresh);
 
 	void request_next_vsync(void);
-	bool getResolutionFromBootargs(int& width, int& height, int& refresh);
+	bool getResolutionFromBootargs(int disp_id, int& width, int& height, int& refresh);
 
 public:
-	bool setmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
+	bool setmode(int disp_id, uint32_t enc_id, uint32_t con_id,
 		int& width, int& height, bool interlace = false, int HZ = 0);
 	bool getattributes(int disp_id, struct drm_attributes_t *hwc_attr);
 

@@ -491,11 +491,12 @@ err_exit:
 	return result;
 }
 
-bool DRMDisplay::getResolutionFromBootargs(int& width, int& height, int& refresh) {
+bool DRMDisplay::getResolutionFromBootargs(int disp_id, int& width, int& height, int& refresh) {
+
 	std::ifstream infile { "/proc/cmdline" };
 	std::string args { std::istreambuf_iterator<char>(infile), std::istreambuf_iterator<char>() };
 
-	std::string hdmi_args("video=HDMI-A-1:");
+	std::string hdmi_args((disp_id == 0) ? "video=HDMI-A-1:" : "video=HDMI-A-2:");
 	size_t found = args.find(hdmi_args);
 	if (found == std::string::npos)
 		return false;
@@ -556,7 +557,7 @@ bool DRMDisplay::getResolutionFromBootargs(int& width, int& height, int& refresh
  *  select crtc mode from parameters
  *  this function is called when getmode returns false
  */
-bool DRMDisplay::setmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
+bool DRMDisplay::setmode(int disp_id, uint32_t enc_id, uint32_t con_id,
 	int& width, int& height, bool interlace, int HZ)
 {
 	bool result = false;
@@ -572,7 +573,7 @@ bool DRMDisplay::setmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 	int matching_count = 0;
 	struct display_fps_t comp_fps[20];
 	struct display_fps_t temp_fps;
-	uint32_t crt_id, con_id;
+	uint32_t crt_id;
 	int set_flag = 0;
 	float preferred_aspect_ratio = 0;
 	bool isBootargsPresented = false;
@@ -594,8 +595,7 @@ bool DRMDisplay::setmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 			ERR_PRINT("drmModeGetEncoder error");
 			goto err_exit;
 		}
-
-		if(encoder->encoder_type == mode_enc) {
+		if (encoder->encoder_id == enc_id) {
 			set_flag = 1;
 			break;
 		}
@@ -607,6 +607,16 @@ bool DRMDisplay::setmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 	}
 
 	crt_id = encoder->crtc_id;
+
+	if(crt_id == 0) {
+		for (j = 0; j < resources->count_crtcs; ++j) {
+
+			if (!(encoder->possible_crtcs & (1 << j)))
+				continue;
+
+			crt_id = resources->crtcs[j];
+		}
+	}
 	drmModeFreeEncoder(encoder);
 
 	set_flag = 0;
@@ -616,7 +626,7 @@ bool DRMDisplay::setmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 			ERR_PRINT("drmModeGetConnector error");
 			goto err_exit;
 		}
-		if (connector->connector_type == mode_con) {
+		if (connector->connector_id == con_id) {
 			set_flag = 1;
 			break;
 		}
@@ -627,8 +637,6 @@ bool DRMDisplay::setmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 		ERR_PRINT("no matching connector_type");
 		goto err_exit;
 	}
-
-	con_id = connector->connector_id;
 
 	if (HZ == 0)
 		HZ = 60;
@@ -655,7 +663,7 @@ bool DRMDisplay::setmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 		}
 	}
 
-	isBootargsPresented = getResolutionFromBootargs(width, height, HZ);
+	isBootargsPresented = getResolutionFromBootargs(disp_id, width, height, HZ);
 
 	for (i = 0; i < connector->count_modes; i++) {
 		drmModeModeInfo *test;
@@ -761,6 +769,8 @@ bool DRMDisplay::setmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 
 		result = true;
 	}
+
+	display[disp_id].first_draw = true;
 
 err_exit:
 	if (connector) {

@@ -88,9 +88,10 @@ private:
 	bool hwc_setup_layerinformation_prepare_offset(int fmt, int stride, int stride_c, int crop_x, int crop_y, unsigned long offset[3]);
 
 	int additional_memory[MAX_COMPOSER_JOBS];
+public:
+	static int fd;
 protected:
 /* private */
-	int fd;
 	int max_size;
 	int max_area;
 	int max_rotbuf;

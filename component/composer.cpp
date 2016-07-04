@@ -28,6 +28,8 @@
 
 #define USE_NVCUSTOM_ALIGNMENT     1
 
+int HWCComposer::fd = -1;
+
 /**********************************************
  utility to setup layerinformation
 **********************************************/
@@ -1054,44 +1056,49 @@ HWCComposer::HWCComposer():
 	fbtarget_layer(-1),
 	prev_drawbgcolor(false)
 {
-	fd = open("/dev/composer", O_RDWR);
+	if(fd == -1) {
+		fd = open("/dev/composer", O_RDWR);
 
-	memset(&data, 0 , sizeof(data));
-	data.operation_type = OPTYPE_BLENDONLY;
+		memset(&data, 0 , sizeof(data));
+		data.operation_type = OPTYPE_BLENDONLY;
 
+		int ion_fd = ion_open();
+		const int heap_mask  = ION_HEAP_TYPE_DMA_MASK;
+		int map_fd = -1;
+		int map_size = 4096 * 8;
 
-	int ion_fd = ion_open();
-	const int heap_mask  = ION_HEAP_TYPE_DMA_MASK;
-	int map_fd = -1;
-	int map_size = 4096 * 8;
+		hwc_register_composerinfo info;
+		memset(&info, 0, sizeof(info));
 
-	hwc_register_composerinfo info;
-	memset(&info, 0, sizeof(info));
+		for(int i = 0; i < MAX_COMPOSER_JOBS; i++) {
+			map_fd = -1;
+			if (ion_alloc_fd(ion_fd, map_size, 4096, heap_mask, 0, &map_fd) < 0) {
+				/* error */
+				ALOGE("ion_alloc_fd error\n");
+			}
 
-	for(int i = 0; i < MAX_COMPOSER_JOBS; i++) {
-		map_fd = -1;
-		if (ion_alloc_fd(ion_fd, map_size, 4096, heap_mask, 0, &map_fd) < 0) {
-			/* error */
-			ALOGE("ion_alloc_fd error\n");
+			additional_memory[i] = map_fd;
+			info.job_memory[i] = map_fd;
 		}
 
-		additional_memory[i] = map_fd;
-		info.job_memory[i] = map_fd;
-	}
+		ion_close(ion_fd);
 
-	ion_close(ion_fd);
-
-	{
-		if (ioctl(fd, CMP_IOCGS_REGISTER, &info)) {
-			ALOGE("error CMP_IOCGS_REGISTER");
-			max_size = 1920;
-			max_area = 1920*1088;
-			max_rotbuf = 0;
-		} else {
-			max_size = info.max_size;
-			max_area = info.max_area;
-			max_rotbuf = info.max_rotbuf;
+		{
+			if (ioctl(fd, CMP_IOCGS_REGISTER, &info)) {
+				ALOGE("error CMP_IOCGS_REGISTER");
+				max_size = 1920;
+				max_area = 1920*1088;
+				max_rotbuf = 0;
+			} else {
+				max_size = info.max_size;
+				max_area = info.max_area;
+				max_rotbuf = info.max_rotbuf;
+			}
 		}
+	} else {
+		max_size = 4096;
+		max_area = 4096 * 4096;
+		max_rotbuf = 0;
 	}
 }
 

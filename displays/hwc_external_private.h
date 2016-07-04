@@ -74,6 +74,9 @@ public:
 
 	bool isValid(void);
 
+	int allocateDisplayBuffers(int width, int height);
+	void freeDisplayBuffers();
+
 	DisplayExternal(HWCNotice *obj, int display, DRMDisplay *drm_disp);
 	~DisplayExternal();
 };

@@ -74,7 +74,11 @@
  *  3   use three layer for overlay.
  *  2   use two layer for overlay.
  */
+#if defined(TARGET_BOARD_SALVATOR_H3)
 #define NUM_ASSIGN_OVERLAY    4
+#else
+#define NUM_ASSIGN_OVERLAY    2
+#endif
 
 /*****************************************************************************/
 /*  debug functions                                                          */
@@ -804,7 +808,8 @@ static int check_gralloc_handle(struct hwc_context_t *ctx)
 	const IMG_gralloc_module_public_t *gralloc;
 #if defined(TARGET_BOARD_KOELSCH)
 	const char *hal_name = "IMG SGX Graphics HAL";
-#elif defined(TARGET_BOARD_LAGER) || defined(TARGET_BOARD_SALVATOR)
+#elif defined(TARGET_BOARD_LAGER) || defined(TARGET_BOARD_SALVATOR_M3) || \
+	defined(TARGET_BOARD_SALVATOR_H3)
 	const char *hal_name = "IMG Rogue Graphics HAL";
 #elif defined(TARGET_BOARD_ALT)
 	const char *hal_name = "IMG SGX Graphics HAL";

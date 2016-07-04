@@ -39,10 +39,18 @@
 #define ALIGN_ROUND_UP_4K(X)    (((X)+4095) & ~4095)
 
 #define PRIM_DISP_ID   0
-//#define PRIM_CRT_INDEX   DRM_MODE_ENCODER_DAC
 #define PRIM_CRT_INDEX   DRM_MODE_ENCODER_TMDS
-//#define PRIM_CON_INDEX   DRM_MODE_CONNECTOR_VGA
 #define PRIM_CON_INDEX DRM_MODE_CONNECTOR_HDMIA
+
+#if defined(TARGET_BOARD_SALVATOR_H3)
+#define PRIM_ENCODER_ID 47
+#define PRIM_CONNECTOR_ID 48
+#endif
+
+#if defined(TARGET_BOARD_SALVATOR_M3)
+#define PRIM_ENCODER_ID 41
+#define PRIM_CONNECTOR_ID 42
+#endif
 
 #if DEBUG_USE_ATRACE
 #define ATRACE_TAG  ATRACE_TAG_ALWAYS
@@ -354,7 +362,6 @@ DisplayPrimary::DisplayPrimary(HWCNotice *obj, int display, DRMDisplay *drm_disp
 	int width = 1920, height = 1080;
 	bool interlace = false;
 
-	int ret_getmode = false;
 	int get_width, get_height;
 	int i;
 
@@ -363,19 +370,8 @@ DisplayPrimary::DisplayPrimary(HWCNotice *obj, int display, DRMDisplay *drm_disp
 	uint32_t drm_handle;
 	int map_fd;
 
-//	ret_getmode = dsp->getmode(PRIM_DISP_ID, PRIM_CRT_INDEX,
-//		PRIM_CON_INDEX, &get_width, &get_height);
-//
-//	if (ret_getmode) {
-//		width = get_width;
-//		height = get_height;
-//	}
-	ALOGI("primary display size:%dx%d", width, height);
-
-	if (!ret_getmode) {
-		if (!dsp->setmode(PRIM_DISP_ID, PRIM_CRT_INDEX, PRIM_CON_INDEX, width, height, interlace)) {
-			ALOGE("can not set mode for primary display CRT:%d CON:%d", PRIM_CRT_INDEX, PRIM_CON_INDEX);
-		}
+	if (!dsp->setmode(PRIM_DISP_ID, PRIM_ENCODER_ID, PRIM_CONNECTOR_ID, width, height, interlace)) {
+		ALOGE("can not set mode for primary display ENC:%d CON:%d", PRIM_ENCODER_ID, PRIM_CONNECTOR_ID);
 	}
 
 	/* to avoid error in SurfaceFlinger. configure dummy param */

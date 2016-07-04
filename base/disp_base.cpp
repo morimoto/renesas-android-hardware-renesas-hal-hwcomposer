@@ -139,6 +139,15 @@ int DisplayBase::add_buffer(hwc_disp_buffer *disp_buffer)
 	return res;
 }
 
+void DisplayBase::clear_buffers()
+{
+	Mutex::Autolock _l(lock_disp);
+
+	for (int i = 0; i < num_buffer; i++)
+		buffer[i] = NULL;
+	num_buffer = 0;
+}
+
 /*! \brief Process of completed buffer
  *  \param[in] p_buffer  pointer to a hwc_disp_buffer structure
  *  \return result of processing

@@ -144,6 +144,7 @@ protected:
 	Mutex             page_flip;
 
 	int add_buffer(hwc_disp_buffer *buffer);
+	void clear_buffers();
 	int complete_flip_buffer(hwc_disp_buffer *buffer);
 
 	virtual void onUpdateDisplay(hwc_disp_buffer *buffer, bool no_plane);

@@ -90,6 +90,7 @@ int HWCBase::set_connect_state(bool con_state)
 		/* update states */
 		state_connect = true;
 		ret = 0;
+		state = true;
 	} else {
 		/* update physical display information */
 		g.st_dotclock[display_type] = 0;
