@@ -253,6 +253,9 @@ typedef struct IMG_gralloc_module_public_t
 	/* Walk the above list and return only the specified format */
 	const IMG_buffer_format_public_t *(*GetBufferFormat)(int iFormat)
 	 __attribute__ ((deprecated("gralloc_module_get_buffer_format_img")));
+
+	int (*GetPhysAddr)(struct IMG_gralloc_module_public_t const *module,
+                            int fd, uint64_t *paddr);
 }
 IMG_gralloc_module_public_t;
 
