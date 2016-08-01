@@ -47,8 +47,8 @@
 #define EXT_DISP_ID     1
 #define EXT_CRT_INDEX DRM_MODE_ENCODER_TMDS
 #define EXT_CON_INDEX DRM_MODE_CONNECTOR_HDMIA
-#define EXT_ENCODER_ID 49
-#define EXT_CONNECTOR_ID 50
+#define EXT_ENCODER_ID 54
+#define EXT_CONNECTOR_ID 55
 #else
 #error target unknown
 #endif
