@@ -70,32 +70,24 @@ int HWCComposer::initialize_geometry(struct geometry_t& geometry, const hwc_laye
 #ifdef HAL_PIXEL_FORMAT_BGRX_8888
 	case HAL_PIXEL_FORMAT_BGRX_8888:
 #endif
-		stride  = w * 4;
-		break;
 	case HAL_PIXEL_FORMAT_RGB_888:
-		stride  = w * 3;
-		break;
 	case HAL_PIXEL_FORMAT_RGB_565:
-		stride  = w * 2;
+		stride = handle->aiStride[0] * handle->uiBpp / 8 ;
 		break;
 	case HAL_PIXEL_FORMAT_NV12_CUSTOM:
 	case HAL_PIXEL_FORMAT_NV21_CUSTOM:
-#if USE_NVCUSTOM_ALIGNMENT
-		w = ALIGN(w, 128);
-#endif
-		/* fall through */
 	case HAL_PIXEL_FORMAT_YCbCr_422_SP:
 	case HAL_PIXEL_FORMAT_NV12:
 	case HAL_PIXEL_FORMAT_NV21:
-		stride   = w;
-		stride_c = ((w + 1) / 2) * 2;
+		stride   = handle->aiStride[0];
+		stride_c = ((handle->aiStride[0] + 1) / 2) * 2;
 		break;
 	case HAL_PIXEL_FORMAT_YV12:
-		stride   = w;
-		stride_c = ((w + 1) / 2);
+		stride   = handle->aiStride[0];
+		stride_c = ((handle->aiStride[0] + 1) / 2);
 		break;
 	case HAL_PIXEL_FORMAT_UYVY:
-		stride   = w * 2;
+		stride   = handle->aiStride[0] * 2;
 		break;
 	default:
 		ALOGE("format %d not supported.", handle->iFormat);
