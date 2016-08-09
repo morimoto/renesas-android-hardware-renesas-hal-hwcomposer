@@ -289,10 +289,6 @@ int HWCLayerSelect::is_support_pixel_format(int format, int blend, int alpha)
 	int n_entry= 0;
 	const int *table = NULL;
 
-	/* composer module doesn't support yuv formats so skip them */
-	if (is_YUV_pixel_format(format))
-		return false;
-
 	if (mode.flags & MODE_FLAG_VSPDMODE) {
 		/* only support UYVY withoutu alpha */
 		if (alpha == 0xFF && blend == HWC_BLENDING_NONE) {
@@ -394,7 +390,7 @@ int HWCLayerSelect::is_support_vspmode(int width, int height, hwc_rect_t& win)
 		int dst_height = hwc_height(win);
 		const unsigned long B=width    *height;
 		const unsigned long C=dst_width*dst_height;
-
+		
 
 		/* check destination size */
 		if (dst_width < 4 || dst_height < 4) {
