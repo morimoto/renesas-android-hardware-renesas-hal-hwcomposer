@@ -127,7 +127,7 @@ public:
 	struct layer_statistics_t *gather_layerinfo(hwc_display_contents_1_t *list);
 	struct layer_select_t *select_layer(hwc_display_contents_1_t *list);
 
-	void init_numlayer(int num_layers, int num_yuv);
+	void init_numlayer(int num_layers, int num_yuv, int num_scaler);
 	void init_flag(int mode);
 	void init_aspect(int aspect_w, int aspect_x, int dpi_x = 1, int dpi_y = 1);
 	void init_vspparam(int dotclock);

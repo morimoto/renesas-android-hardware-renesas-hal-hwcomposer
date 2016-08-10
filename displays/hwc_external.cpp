@@ -550,13 +550,14 @@ bool HWCExternal::onSetupLayersel(hwc_display_contents_1_t* list)
 {
 	int num_layer = g.num_overlay[HWC_DISPLAY_EXTERNAL];
 	int num_yuv   = 1;
+	int num_scaler   = 0;
 
 	UNUSED(list);
 
 	ALOGD_IF(USE_DBGLEVEL(3),
 		"External-Disp overlay:%d", num_layer);
 
-	layersel->init_numlayer(num_layer, num_yuv);
+	layersel->init_numlayer(num_layer, num_yuv, num_scaler);
 
 	return true;
 }

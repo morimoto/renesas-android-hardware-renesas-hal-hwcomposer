@@ -52,6 +52,7 @@ bool HWCVirtual::onSetupLayersel(hwc_display_contents_1_t* list) {
 	IMG_native_handle_t *handle = (IMG_native_handle_t *)list->outbuf;
 	int num_layer = g.num_overlay[HWC_DISPLAY_VIRTUAL];
 	int num_yuv   = 1;
+	int num_scaler = 1;
 	int display_flag = 0;
 
 	/* physical display uses. */
@@ -115,7 +116,7 @@ bool HWCVirtual::onSetupLayersel(hwc_display_contents_1_t* list) {
 	ALOGD_IF(USE_DBGLEVEL(3),
 		"Virtual-Disp overlay:%d", num_layer);
 
-	layersel->init_numlayer(num_layer, num_yuv);
+	layersel->init_numlayer(num_layer, num_yuv, num_scaler);
 
 	return true;
 }

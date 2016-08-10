@@ -1265,10 +1265,11 @@ struct HWCLayerSelect::layer_select_t *HWCLayerSelect::select_layer(hwc_display_
  *  \param[in] num_yuv  number of YUVs
  *  \return none
  */
-void HWCLayerSelect::init_numlayer(int num_layers, int num_yuv)
+void HWCLayerSelect::init_numlayer(int num_layers, int num_yuv, int num_scaler)
 {
 	mode.num_layer = num_layers;
 	mode.num_yuv   = num_yuv;
+	mode.num_scaler = num_scaler;
 }
 
 /*! \brief Initialize flag
@@ -1333,7 +1334,7 @@ HWCLayerSelect::HWCLayerSelect(int size, int area, int rotbuf)
 #if defined(TARGET_BOARD_LAGER) || defined(TARGET_BOARD_KOELSCH) || defined(TARGET_BOARD_ALT) || \
 	defined(TARGET_BOARD_SALVATOR_M3) || defined(TARGET_BOARD_SALVATOR_H3)
 	mode.num_layer  = 4;
-	mode.num_scaler = 0;
+	mode.num_scaler = 1;
 	mode.num_yuv    = 1;
 	mode.vsp_paramA1 = 1920*1080;
 	mode.vsp_paramA2 = 148500000;
