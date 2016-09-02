@@ -34,7 +34,7 @@
 #define PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE
 
 #define ALIGN(x,a)	((((x) + (a) - 1L) / (a)) * (a))
-#define HW_ALIGN	32
+#define HW_ALIGN	64
 
 /* Use bits [0-3] of "vendor format" bits as real format. Customers should
  * use *only* the unassigned bits below for custom pixel formats, YUV or RGB.
