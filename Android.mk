@@ -54,7 +54,7 @@ LOCAL_SRC_FILES += hwcomposer.cpp
 #
 LOCAL_MODULE := hwcomposer.$(TARGET_BOARD_PLATFORM)
 LOCAL_CFLAGS += -DLOG_TAG=\"hwcomposer\"
-LOCAL_CFLAGS += -Wall -Werror
+# LOCAL_CFLAGS += -Wall -Werror
 
 ifeq ($(TARGET_BOARD_PLATFORM),r8a7790)
 LOCAL_CFLAGS += -DTARGET_BOARD_LAGER
