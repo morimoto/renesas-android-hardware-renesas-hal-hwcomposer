@@ -474,7 +474,7 @@ bool HWCPrimary::onSetupLayersel(hwc_display_contents_1_t* list)
 {
 	int num_layer = g.num_overlay[HWC_DISPLAY_PRIMARY];
 	int num_yuv   = 1;
-	int num_scaler   = 1;
+	int num_scaler   = 0;
 
 	UNUSED(list);
 
