@@ -26,6 +26,7 @@
 #include "hwcomposer.h"
 #include "component/hwcglobal.h"
 
+#include <cutils/properties.h>
 #include <utils/misc.h>
 #include <utils/String8.h>
 #include <img_gralloc_public.h>
@@ -42,7 +43,7 @@
  *  1   effective.
  *  0   unavailable.
  */
-#define DEBUG_FRAMERATE     0 /* report frame rate if 1 specified. */
+#define DEBUG_FRAMERATE     1 /* report frame rate if 1 specified. */
 
 /*****************************************************************************/
 /* DEBUG_PROCESSTIME
@@ -400,7 +401,10 @@ static int hwc_set(hwc_composer_device_1_t *dev,
 	process_time_handle(PLACE_SET);
 #endif
 #if DEBUG_FRAMERATE
-	fps_report();
+	char value[PROPERTY_VALUE_MAX];
+	property_get("debug.hwc.showfps", value, "0");
+	if (atoi(value))
+		fps_report();
 #endif
 
 	return 0;
@@ -707,7 +711,7 @@ static void fps_report(void)
 
 		time  = usec;
 		time += sec * 1000000;
-		if (sec > 11 || time >= 10*1000000) {
+		if (sec > 2 || time >= 1*1000000) {
 			float float_sec;
 
 			float_sec = (float)usec / (float)1000000;
