@@ -157,7 +157,7 @@ private:
 		bool            blank_state;
 		bool            first_draw;
 		int             high_crtc;
-	} display[2];
+	} display[3];
 
 	static void* _threadLoop(void *arg);
 	static void* _threadLoop_vsync(void *arg);
