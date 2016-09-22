@@ -44,14 +44,13 @@ class HWCExternal : public HWCBase {
 	HWCHotplug  *hotplug;
 
 	DRMDisplay  *dsp;
-	int disp_id;
 
 protected:
 	/* virtual function of base class */
 	bool onSetupLayersel(hwc_display_contents_1_t* list);
 
 public:
-	HWCExternal(HWCNotice *obj, DRMDisplay *drm_disp, int id);
+	HWCExternal(HWCNotice *obj, DRMDisplay *drm_disp);
 	~HWCExternal();
 };
 

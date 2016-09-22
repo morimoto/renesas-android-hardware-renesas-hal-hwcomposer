@@ -54,8 +54,6 @@ class DisplayExternal : public DisplayBase {
 	Mutex                   lock;
 	Condition               cond_flip_flag;
 	bool                    vsync_enable;
-	int                     disp_id;
-
 
 protected:
 	/* virtual function of base class */
@@ -79,7 +77,7 @@ public:
 	int allocateDisplayBuffers(int width, int height);
 	void freeDisplayBuffers();
 
-	DisplayExternal(HWCNotice *obj, int display, DRMDisplay *drm_disp, int id);
+	DisplayExternal(HWCNotice *obj, int display, DRMDisplay *drm_disp);
 	~DisplayExternal();
 };
 
@@ -95,7 +93,6 @@ class HWCExternal;
  */
 class HWCHotplug : public HotplugBase {
 	HWCExternal *ext_base;
-	int disp_id;
 /* protected */
 protected:
 	int onInitHotplug(void);
@@ -105,7 +102,7 @@ protected:
 public:
 	bool isValid(void);
 
-	HWCHotplug(HWCNotice *obj, int disp, HWCExternal *base, int disp_id);
+	HWCHotplug(HWCNotice *obj, int disp, HWCExternal *base);
 	~HWCHotplug();
 };
 

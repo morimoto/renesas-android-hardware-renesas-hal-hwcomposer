@@ -42,6 +42,11 @@
 #define PRIM_CRT_INDEX   DRM_MODE_ENCODER_TMDS
 #define PRIM_CON_INDEX DRM_MODE_CONNECTOR_HDMIA
 
+#if defined(TARGET_BOARD_SALVATOR_H3)
+#define PRIM_ENCODER_ID 52
+#define PRIM_CONNECTOR_ID 53
+#endif
+
 #if defined(TARGET_BOARD_SALVATOR_M3)
 #define PRIM_ENCODER_ID 46
 #define PRIM_CONNECTOR_ID 47
@@ -365,11 +370,8 @@ DisplayPrimary::DisplayPrimary(HWCNotice *obj, int display, DRMDisplay *drm_disp
 	uint32_t drm_handle;
 	int map_fd;
 
-	int encoder_id = hwdisplays[0].encoder_id;
-	int connector_id = hwdisplays[0].connector_id;
-
-	if (!dsp->setmode(PRIM_DISP_ID, encoder_id, connector_id, width, height, interlace)) {
-		ALOGE("can not set mode for primary display ENC:%d CON:%d", encoder_id, connector_id);
+	if (!dsp->setmode(PRIM_DISP_ID, PRIM_ENCODER_ID, PRIM_CONNECTOR_ID, width, height, interlace)) {
+		ALOGE("can not set mode for primary display ENC:%d CON:%d", PRIM_ENCODER_ID, PRIM_CONNECTOR_ID);
 	}
 
 	/* to avoid error in SurfaceFlinger. configure dummy param */

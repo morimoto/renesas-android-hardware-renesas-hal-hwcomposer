@@ -521,10 +521,8 @@ static int hwc_query(struct hwc_composer_device_1* dev, int what, int* value)
 			*value |= HWC_DISPLAY_PRIMARY_BIT;
 		if (ctx->base[1])
 			*value |= HWC_DISPLAY_EXTERNAL_BIT;
-		if (ctx->base[2])
-			*value |= HWC_DISPLAY_EXTERNAL_BIT;
 #if USE_HWC_VERSION1_3 && NUM_OF_VIRTUALDISPLAY
-		if (ctx->base[3])
+		if (ctx->base[2])
 			*value |= HWC_DISPLAY_VIRTUAL_BIT;
 #endif
 
@@ -570,11 +568,6 @@ static void hwc_dump(struct hwc_composer_device_1* dev, char *buff, int buff_len
 	if (g.st_connect[1]) {
 		msg.appendFormat("    external connect:%d blank:%d dotclock:%llu num_overlay:%d\n",
 			g.st_connect[1], g.st_blank[1], (long long unsigned int)g.st_dotclock[1], g.num_overlay[1]);
-	}
-
-	if (g.st_connect[2]) {
-		msg.appendFormat("    external2 connect:%d blank:%d dotclock:%llu num_overlay:%d\n",
-			g.st_connect[2], g.st_blank[2], (long long unsigned int)g.st_dotclock[2], g.num_overlay[2]);
 	}
 #if USE_HWC_VERSION1_3
 	msg.appendFormat("    virtual  num_overlay:%d\n", g.num_overlay[2]);
@@ -944,17 +937,11 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
 			goto err;
 		}
 #if USE_EXTERNAL
-		dev->base[1] = new HWCExternal(&dev->notice, dev->drm_disp, 1);
+		dev->base[1] = new HWCExternal(&dev->notice, dev->drm_disp);
 		if (dev->base[1] == NULL || !dev->base[1]->isValid()) {
 			ALOGE("can not create external handle");
 			goto err;
 		}
-		dev->base[2] = new HWCExternal(&dev->notice, dev->drm_disp, 2);
-		if (dev->base[2] == NULL || !dev->base[2]->isValid()) {
-			ALOGE("can not create second external handle");
-			goto err;
-		}
-
 #endif
 #if USE_HWC_VERSION1_3 && NUM_OF_VIRTUALDISPLAY
 		for (i = 2; i < NELEM(dev->base); i++) {

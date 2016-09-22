@@ -61,45 +61,5 @@
  */
 #define USE_HWC_VERSION1_3   0
 
-#if defined(TARGET_BOARD_SALVATOR_H3)
-
-#define VGA_ENCODER_ID 50
-#define VGA_CONNECTOR_ID 51
-
-#define HDMI_A_1_ENCODER_ID 52
-#define HDMI_A_1_CONNECTOR_ID 53
-
-#define HDMI_A_2_ENCODER_ID 54
-#define HDMI_A_2_CONNECTOR_ID 55
-
-struct hwdisplay {
-    int encoder_id;
-    int connector_id;
-    char status[50];
-    char bootargs[50];
-};
-
-static const hwdisplay hwdisplays[3] = {
-        // primary display
-        VGA_ENCODER_ID,
-        VGA_CONNECTOR_ID,
-        "/sys/class/drm/card0-VGA-1/status",
-        "video=VGA-1:",
-
-        // external display 1
-        HDMI_A_1_ENCODER_ID,
-        HDMI_A_1_CONNECTOR_ID,
-        "/sys/class/drm/card0-HDMI-A-1/status",
-        "video=HDMI-A-1:",
-
-        // external display 2
-        HDMI_A_2_ENCODER_ID,
-        HDMI_A_2_CONNECTOR_ID,
-        "/sys/class/drm/card0-HDMI-A-2/status",
-        "video=HDMI-A-2:",
-};
-
-#endif
-
 
 #endif

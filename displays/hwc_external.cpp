@@ -44,9 +44,11 @@
 	defined(TARGET_BOARD_SALVATOR_M3)
 #define EXTERNAL_WIDTH            1920
 #define EXTERNAL_HEIGHT           1080
+#define EXT_DISP_ID     1
 #define EXT_CRT_INDEX DRM_MODE_ENCODER_TMDS
 #define EXT_CON_INDEX DRM_MODE_CONNECTOR_HDMIA
-
+#define EXT_ENCODER_ID 54
+#define EXT_CONNECTOR_ID 55
 #else
 #error target unknown
 #endif
@@ -121,7 +123,7 @@ void DisplayExternal::onUpdateDisplay(hwc_disp_buffer *buf, bool no_plane)
 #endif
 		{
 			Mutex::Autolock _l(lock);
-			if (dsp->display_pageflip(disp_id, next->drm_buffer, flip)) {
+			if (dsp->display_pageflip(EXT_DISP_ID, next->drm_buffer, flip)) {
 				if (cond_flip_flag.waitRelative(lock, WAIT_TIMEOUT) != NO_ERROR) {
 					ALOGE("wait flip timeout");
 				}
@@ -151,7 +153,7 @@ int DisplayExternal::setBlank(bool state)
 {
 	Mutex::Autolock _l(lock_blank);
 
-	dsp->set_blankstate(disp_id, state);
+	dsp->set_blankstate(EXT_DISP_ID, state);
 
 	blank_state = state;
 
@@ -231,11 +233,9 @@ bool DisplayExternal::set_displaysize(int width, int height)
 	int i;
 	int get_width, get_height;
 
-	int encoder_id = hwdisplays[disp_id].encoder_id;
-	int connector_id = hwdisplays[disp_id].connector_id;
 
-	if (!dsp->setmode(disp_id, encoder_id, connector_id, width, height)) {
-		ALOGE("can not set mode for external display ENC:%d CON:%d", encoder_id, connector_id);
+	if (!dsp->setmode(EXT_DISP_ID, EXT_ENCODER_ID, EXT_CONNECTOR_ID, width, height)) {
+		ALOGE("can not set mode for external display ENC:%d CON:%d", EXT_ENCODER_ID, EXT_CONNECTOR_ID);
 	}
 
 	ALOGD("external display size:%dx%d", width, height);
@@ -267,7 +267,7 @@ bool DisplayExternal::set_displaysize(int width, int height)
 		}
 	}
 
-	if (!dsp->getattributes(disp_id, &hwc_attr)) {
+	if (!dsp->getattributes(EXT_DISP_ID, &hwc_attr)) {
 		ALOGE("can not get display attributes\n");
 		/* to avoid problem overwrite attributes. */
 		hwc_attr.display_width  = width;
@@ -305,11 +305,10 @@ bool DisplayExternal::isValid(void)
  *  \param[in] display  display type
  *  \param[in] drm_disp  pointer to a DRMDisplay structure
  */
-DisplayExternal::DisplayExternal(HWCNotice *obj, int display, DRMDisplay *drm_disp, int id):
+DisplayExternal::DisplayExternal(HWCNotice *obj, int display, DRMDisplay *drm_disp):
 	DisplayBase(obj, display),
 	current(NULL),
-	dsp(drm_disp),
-	disp_id(id)
+	dsp(drm_disp)
 {
 	/* fake buffer register */
 	int i;
@@ -342,10 +341,6 @@ DisplayExternal::DisplayExternal(HWCNotice *obj, int display, DRMDisplay *drm_di
 	};
 
 	flip = new FlipReceiver(this);
-
-	for (int i = 0; i < NUM_MAX_EXTERNAL_BUFFER; i++) {
-		bufdata[i].buffer.buf_fd = -1;
-	}
 }
 
 /*! \brief DisplayExternal destructor
@@ -410,7 +405,7 @@ void DisplayExternal::freeDisplayBuffers()
  */
 int HWCHotplug::onInitHotplug(void)
 {
-	int fd = open(hwdisplays[disp_id].status, O_RDONLY);
+	int fd = open("/sys/class/drm/card0-HDMI-A-2/status", O_RDONLY);
 
 	connected = false;
 	if (fd < 0) {
@@ -468,7 +463,9 @@ int HWCHotplug::onEventHotplug(void)
 
 	if (strcmp(s, dev) == 0) {
 
-		int fd = open(hwdisplays[disp_id].status, O_RDONLY);
+
+
+		int fd = open("/sys/class/drm/card0-HDMI-A-2/status", O_RDONLY);
 
 		if (fd < 0) {
 			ALOGE("error open hdmi state");
@@ -527,8 +524,7 @@ bool HWCHotplug::isValid(void)
  *  \param[in] disp  display type
  *  \param[in] base  pointer to a HWCExternal structure
  */
-HWCHotplug::HWCHotplug(HWCNotice *obj, int disp, HWCExternal *base, int disp_id): HotplugBase(obj, disp_id), ext_base(base),
-		disp_id(disp_id)
+HWCHotplug::HWCHotplug(HWCNotice *obj, int disp, HWCExternal *base): HotplugBase(obj, disp), ext_base(base)
 {
 #if USE_UEVENT
 	uevent_init();
@@ -570,20 +566,19 @@ bool HWCExternal::onSetupLayersel(hwc_display_contents_1_t* list)
  *  \param[in] obj  pointer to a HWCNotice structure
  *  \param[in] drm_disp  pointer to a DRMDisplay structure
  */
-HWCExternal::HWCExternal(HWCNotice *obj, DRMDisplay *drm_disp, int id) :
+HWCExternal::HWCExternal(HWCNotice *obj, DRMDisplay *drm_disp) :
 	notice(obj),
-	dsp(drm_disp),
-	disp_id(id)
+	dsp(drm_disp)
 {
 
-	display_type = id;
+	display_type = HWC_DISPLAY_EXTERNAL;
 
-	registerDisplay(new DisplayExternal(notice, display_type, dsp, disp_id));
+	registerDisplay(new DisplayExternal(notice, display_type, dsp));
 
 	/* external display always dis-connected on init. */
 	set_connect_state(false);
 
-	hotplug = new HWCHotplug(notice, HWC_DISPLAY_EXTERNAL, this, disp_id);
+	hotplug = new HWCHotplug(notice, HWC_DISPLAY_EXTERNAL, this);
 
 	if (hotplug) {
 		hotplug->init();
