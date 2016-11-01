@@ -808,8 +808,8 @@ static int check_gralloc_handle(struct hwc_context_t *ctx)
 {
 	const struct hw_module_t *module;
 	int result;
+	gralloc_module_t *gralloc;
 
-	const IMG_gralloc_module_public_t *gralloc;
 #if defined(TARGET_BOARD_KOELSCH)
 	const char *hal_name = "IMG SGX Graphics HAL";
 #elif defined(TARGET_BOARD_LAGER) || defined(TARGET_BOARD_SALVATOR_M3) || \
@@ -829,10 +829,10 @@ static int check_gralloc_handle(struct hwc_context_t *ctx)
 		goto err;
 	}
 
-	gralloc = (IMG_gralloc_module_public_t *) module;
-	if (strcmp(gralloc->base.common.name, hal_name)) {
+	gralloc = (gralloc_module_t *) module;
+	if (strcmp(gralloc->common.name, hal_name)) {
 		ALOGD_IF(USE_DBGLEVEL(1),
-			"gralloc name %s not supported.", gralloc->base.common.name);
+			"gralloc name %s not supported.", gralloc->common.name);
 		goto err;
 	}
 

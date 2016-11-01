@@ -28,10 +28,11 @@
  * this header to access functionality in the gralloc HAL.
  */
 
+#define PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE
+#define PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE_2
+
 #include <hardware/gralloc.h>
 #include <linux/ion.h>
-
-#define PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE
 
 #define ALIGN(x,a)	((((x) + (a) - 1L) / (a)) * (a))
 #define HW_ALIGN	64
@@ -185,12 +186,6 @@ typedef struct
 }
 __attribute__((aligned(sizeof(int)),packed)) IMG_native_handle_t;
 
-typedef struct
-{
-	int l, t, w, h;
-}
-IMG_write_lock_rect_t;
-
 #define IMG_BFF_YUV					(1 << 0)
 #define IMG_BFF_UVCbCrORDERING		(1 << 1)
 #define IMG_BFF_CPU_CLEAR			(1 << 2)
@@ -227,38 +222,6 @@ typedef struct IMG_buffer_format_public_t
 }
 IMG_buffer_format_public_t;
 
-/* NOTE: This interface is deprecated. Use module->perform() instead. */
-typedef struct IMG_gralloc_module_public_t
-{
-	gralloc_module_t base;
-
-	/* Gets the head of the linked list of all registered formats */
-	const IMG_buffer_format_public_t *(*GetBufferFormats)(void)
-	 __attribute__ ((deprecated("gralloc_module_get_buffer_formats_img")));
-
-	/* Custom-blit components in lieu of overlay hardware */
-	int (*Blit)(const gralloc_module_t *psModule,
-				buffer_handle_t src, buffer_handle_t dest,
-				int w, int h, int x, int y, int transform,
-				int iInputFenceFd, int *piOutputFenceFd)
-	 __attribute__ ((deprecated("gralloc_module_blit_handle_to_handle_img")));
-
-	int (*Blit3)(const gralloc_module_t *psModule,
-				 unsigned long long ui64SrcStamp, int iSrcWidth,
-				 int iSrcHeight, int iSrcFormat, int iSrcStrideInPixels,
-				 int eSrcRotation, buffer_handle_t dest, int eDestRotation,
-				 int iInputFenceFd, int *piOutputFenceFd)
-	 __attribute__ ((deprecated("gralloc_module_blit_stamp_to_handle")));
-
-	/* Walk the above list and return only the specified format */
-	const IMG_buffer_format_public_t *(*GetBufferFormat)(int iFormat)
-	 __attribute__ ((deprecated("gralloc_module_get_buffer_format_img")));
-
-	int (*GetPhysAddr)(struct IMG_gralloc_module_public_t const *module,
-                            int fd, uint64_t *paddr);
-}
-IMG_gralloc_module_public_t;
-
 typedef struct
 {
 	enum
@@ -287,6 +250,7 @@ IMG_buffer_handle_t;
 #define GRALLOC_MODULE_SET_DATA_SPACE_IMG        5
 #define GRALLOC_MODULE_GET_ION_CLIENT_IMG        6
 #define GRALLOC_MODULE_GET_BUFFER_HANDLE_IMG     7
+#define GRALLOC_MODULE_GET_BUFFER_PHYS_ADDRESS   8
 
 static inline int
 gralloc_module_get_buffer_format_img(const gralloc_module_t *module,
@@ -334,22 +298,75 @@ gralloc_module_blit_stamp_to_handle(const gralloc_module_t *module,
 
 #if !defined(PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE)
 
-typedef enum android_dataspace
+enum
 {
-	HAL_DATASPACE_SRGB_LINEAR	= 0x200,
-	HAL_DATASPACE_BT601_625		= 0x102,
-	HAL_DATASPACE_BT601_525		= 0x103,
-	HAL_DATASPACE_BT709			= 0x104,
-}
-android_dataspace_t;
+	HAL_DATASPACE_SRGB_LINEAR         = 0x200,
+	HAL_DATASPACE_SRGB                = 0x201,
+	HAL_DATASPACE_BT601_625           = 0x102,
+	HAL_DATASPACE_BT601_525           = 0x103,
+	HAL_DATASPACE_BT709               = 0x104,
+};
 
 #endif /* !defined(PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE) */
+
+#if !defined(PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE_2)
+
+enum
+{
+	HAL_DATASPACE_STANDARD_SHIFT      = 16,
+	HAL_DATASPACE_TRANSFER_SHIFT      = 22,
+	HAL_DATASPACE_RANGE_SHIFT         = 27,
+
+	HAL_DATASPACE_STANDARD_BT2020     = 6 << HAL_DATASPACE_STANDARD_SHIFT,
+
+	HAL_DATASPACE_TRANSFER_SMPTE_170M = 3 << HAL_DATASPACE_TRANSFER_SHIFT,
+
+	HAL_DATASPACE_RANGE_MASK          = 7 << HAL_DATASPACE_RANGE_SHIFT,
+	HAL_DATASPACE_RANGE_FULL          = 1 << HAL_DATASPACE_RANGE_SHIFT,
+	HAL_DATASPACE_RANGE_LIMITED       = 2 << HAL_DATASPACE_RANGE_SHIFT,
+};
+
+#endif /* !defined(PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE_2) */
+
+/* We want to add BT.2020 and 'full range' versions of the existing dataspace
+ * enums. These are extensions, so define a new android_dataspace_ext_t.
+ * If you only have an android_dataspace_t, you can simply cast it.
+ */
+typedef enum
+{
+	/* Identical to upstream enum android_dataspace */
+	HAL_DATASPACE_EXT_SRGB_LINEAR     = HAL_DATASPACE_SRGB_LINEAR,
+	HAL_DATASPACE_EXT_SRGB            = HAL_DATASPACE_SRGB,
+	HAL_DATASPACE_EXT_BT601_625       = HAL_DATASPACE_BT601_625,
+	HAL_DATASPACE_EXT_BT601_525       = HAL_DATASPACE_BT601_525,
+	HAL_DATASPACE_EXT_BT709           = HAL_DATASPACE_BT709,
+
+	/* IMG extension for BT.2020 support */
+	HAL_DATASPACE_EXT_BT2020          = HAL_DATASPACE_STANDARD_BT2020     |
+	                                    HAL_DATASPACE_TRANSFER_SMPTE_170M |
+	                                    HAL_DATASPACE_RANGE_LIMITED,
+
+	/* IMG extensions for 'full range' versions of previous enums */
+	HAL_DATASPACE_EXT_BT601_625_FULL  = ( HAL_DATASPACE_BT601_625 &
+	                                     ~HAL_DATASPACE_RANGE_MASK) |
+	                                    HAL_DATASPACE_RANGE_FULL,
+	HAL_DATASPACE_EXT_BT601_525_FULL  = ( HAL_DATASPACE_BT601_525 &
+	                                     ~HAL_DATASPACE_RANGE_MASK) |
+	                                    HAL_DATASPACE_RANGE_FULL,
+	HAL_DATASPACE_EXT_BT709_FULL      = ( HAL_DATASPACE_BT709 &
+	                                     ~HAL_DATASPACE_RANGE_MASK) |
+	                                    HAL_DATASPACE_RANGE_FULL,
+	HAL_DATASPACE_EXT_BT2020_FULL     = ( HAL_DATASPACE_EXT_BT2020 &
+	                                     ~HAL_DATASPACE_RANGE_MASK) |
+	                                    HAL_DATASPACE_RANGE_FULL,
+}
+android_dataspace_ext_t;
 
 static inline int
 gralloc_module_set_data_space_img(const gralloc_module_t *module,
 								  buffer_handle_t handle,
-								  android_dataspace_t source_dataspace,
-								  android_dataspace_t dest_dataspace)
+								  android_dataspace_ext_t source_dataspace,
+								  android_dataspace_ext_t dest_dataspace)
 {
 	return module->perform(module, GRALLOC_MODULE_SET_DATA_SPACE_IMG,
 						   handle, source_dataspace, dest_dataspace);
@@ -374,6 +391,15 @@ gralloc_module_get_buffer_handle_img(const gralloc_module_t *module,
 {
 	return module->perform(module, GRALLOC_MODULE_GET_BUFFER_HANDLE_IMG,
 						   handle, buffer_handle);
+}
+
+static inline int
+gralloc_module_get_get_phys_addr(const gralloc_module_t *module,
+									 int fd,
+									 uint64_t *paddr)
+{
+	return module->perform(module, GRALLOC_MODULE_GET_BUFFER_PHYS_ADDRESS,
+						   fd, paddr);
 }
 
 #endif /* HAL_PUBLIC_H */
