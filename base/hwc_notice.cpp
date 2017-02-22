@@ -17,6 +17,7 @@
 
 #include "base/hwc_notice.h"
 #include <cutils/log.h>
+#include <inttypes.h>
 #include "config.h"
 
 #define DEBUG_HWCNOTICE_ATRACE   0
@@ -77,7 +78,7 @@ bool HWCNotice::vsync(int disp, int64_t timestamp)
 
 		Mutex::Autolock _l(notice_mutex);
 
-		ALOGD_IF(USE_DBGLEVEL(4), "notice vsync disp:%d at %lld nsec", disp, timestamp);
+		ALOGD_IF(USE_DBGLEVEL(4), "notice vsync disp:%d at %" PRId64 " nsec", disp, timestamp);
 		(*procs)->vsync(*procs, disp, timestamp);
 		result = true;
 	} else {

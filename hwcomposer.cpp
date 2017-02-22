@@ -171,20 +171,20 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
 /*  variables                                                                */
 /*****************************************************************************/
 static struct hw_module_methods_t hwc_module_methods = {
-	open: hwc_device_open
+	.open = hwc_device_open
 };
 
 hwc_module_t HAL_MODULE_INFO_SYM = {
-	common: {
-		tag: HARDWARE_MODULE_TAG,
-		module_api_version: HWC_MODULE_API_VERSION_0_1,
-		hal_api_version: HARDWARE_HAL_API_VERSION,
-		id: HWC_HARDWARE_MODULE_ID,
-		name: "R-Car hwcomposer module",
-		author: "The Android Open Source Project",
-		methods: &hwc_module_methods,
-		dso: NULL,
-		reserved: {0},
+	.common = {
+		.tag                    = HARDWARE_MODULE_TAG,
+		.module_api_version     = HWC_MODULE_API_VERSION_0_1,
+		.hal_api_version        = HARDWARE_HAL_API_VERSION,
+		.id                     = HWC_HARDWARE_MODULE_ID,
+		.name                   = "R-Car hwcomposer module",
+		.author                 = "The Android Open Source Project",
+		.methods                = &hwc_module_methods,
+		.dso                    = NULL,
+		.reserved               = {0},
 	}
 };
 
@@ -210,7 +210,7 @@ static bool update_global(size_t numDisplays, hwc_display_contents_1_t** display
 	ALOGD_IF(USE_DBGLEVEL(3),
 		"connected:pri=%d ext=%d", g.st_connect[0], g.st_connect[1]);
 	ALOGD_IF(USE_DBGLEVEL(3),
-		"dotclock:pri=%lld ext=%lld", g.st_dotclock[0], g.st_dotclock[1]);
+		"dotclock:pri=%" PRId64 " ext=%" PRId64, g.st_dotclock[0], g.st_dotclock[1]);
 
 	/* num of available overlay for composer. */
 	max_ovl = 0;
@@ -306,7 +306,7 @@ static int hwc_prepare(hwc_composer_device_1_t *dev,
 			}
 		} else {
 			ALOGE_IF(USE_DBGLEVEL(3),
-				"display %d not supported.", i);
+				"display %zu not supported.", i);
 		}
 	}
 
@@ -364,7 +364,7 @@ static int hwc_set(hwc_composer_device_1_t *dev,
 				}
 			} else {
 				ALOGE_IF(USE_DBGLEVEL(3),
-					"display %d not supported.", i);
+					"display %zu not supported.", i);
 				if (displays[i]) {
 					/* handle default fence operation. */
 					HWCBase::set_release_fence(displays[i],-1,-1,false,NULL,-1);
@@ -620,7 +620,7 @@ static int hwc_getDisplayConfigs(struct hwc_composer_device_1* dev, int disp,
 	MONITOR_INOUT(6);
 
 	ALOGD_IF(USE_DBGLEVEL(3),
-		"getDisplayConfigs disp:%d config:%p, size:%d", disp, configs, *numConfigs);
+		"getDisplayConfigs disp:%d config:%p, size:%zu", disp, configs, *numConfigs);
 
 	/* select display */
 	if (disp >=0 && disp < NELEM(ctx->base))

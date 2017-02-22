@@ -496,13 +496,14 @@ int HWCBase::set(hwc_display_contents_1_t* list)
 	int    drm_release_fd = -1;
 	int    retire_fd  = -1;
 	struct target_t target_info = {
-		use_fbt:  false,
-		use_ovl:  false,
-		physaddr: 0,
-		fd:       -1,
-		fence:    -1,
-		cached:   0,
-		option:   NULL};
+		.use_fbt    = false,
+		.use_ovl    = false,
+		.physaddr   = 0,
+		.fd         = -1,
+		.fence      = -1,
+		.cached     = 0,
+		.option     = NULL
+	};
 
 	if (list == NULL) {
 		/* layer is not usable */

@@ -529,7 +529,7 @@ bool HWCHotplug::isValid(void)
  *  \param[in] disp  display type
  *  \param[in] base  pointer to a HWCExternal structure
  */
-HWCHotplug::HWCHotplug(HWCNotice *obj, int disp, HWCExternal *base, int disp_id): HotplugBase(obj, disp_id), ext_base(base),
+HWCHotplug::HWCHotplug(HWCNotice *obj, int /*disp*/, HWCExternal *base, int disp_id): HotplugBase(obj, disp_id), ext_base(base),
 		disp_id(disp_id)
 {
 #if USE_UEVENT

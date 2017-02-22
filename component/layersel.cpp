@@ -744,7 +744,7 @@ void HWCLayerSelect::is_supported_part2a(int i, hwc_display_contents_1_t *list, 
 		/* layer information available. */
 		if (tmp_layer.compositionType != HWC_FRAMEBUFFER || tmp_handle == NULL) {
 			ALOGD_IF(DEBUG_FLAG,
-				"overlay not available, because dummy layer %d not available.", j);
+				"overlay not available, because dummy layer %zu not available.", j);
 			continue;
 		}
 
@@ -762,7 +762,7 @@ void HWCLayerSelect::is_supported_part2a(int i, hwc_display_contents_1_t *list, 
 		}
 		if (k == 0) {
 			ALOGD_IF(DEBUG_FLAG,
-				"overlay not available, format of dummy layer %d unexpected.", j);
+				"overlay not available, format of dummy layer %zu unexpected.", j);
 			continue;
 		}
 
@@ -1207,7 +1207,7 @@ struct HWCLayerSelect::layer_select_t *HWCLayerSelect::select_layer(hwc_display_
 			select.use_fb = 1;
 		}
 		ALOGD_IF(DEBUG_FLAG,
-			"layer %d's blend type select %d (%s)", i, layer_type,
+			"layer %zu's blend type select %d (%s)", i, layer_type,
 			(layer_type == 0) ? "HWC_FRAMEBUFFER":"HWC_OVERLAY");
 	}
 
