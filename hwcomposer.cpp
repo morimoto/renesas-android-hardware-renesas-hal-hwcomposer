@@ -75,7 +75,7 @@
  *  3   use three layer for overlay.
  *  2   use two layer for overlay.
  */
-#if defined(TARGET_BOARD_SALVATOR_H3)
+#if defined(TARGET_BOARD_PLATFORM_R8A7795)
 #define NUM_ASSIGN_OVERLAY    4
 #else
 #define NUM_ASSIGN_OVERLAY    2
@@ -812,8 +812,8 @@ static int check_gralloc_handle(struct hwc_context_t *ctx)
 
 #if defined(TARGET_BOARD_KOELSCH)
 	const char *hal_name = "IMG SGX Graphics HAL";
-#elif defined(TARGET_BOARD_LAGER) || defined(TARGET_BOARD_SALVATOR_M3) || \
-	defined(TARGET_BOARD_SALVATOR_H3)
+#elif defined(TARGET_BOARD_LAGER) || \
+	  defined(TARGET_BOARD_SALVATOR)
 	const char *hal_name = "IMG Rogue Graphics HAL";
 #elif defined(TARGET_BOARD_ALT)
 	const char *hal_name = "IMG SGX Graphics HAL";
@@ -941,7 +941,7 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
 			goto err;
 		}
 #if USE_EXTERNAL
-		dev->base[1] = new HWCExternal(&dev->notice, dev->drm_disp);
+		dev->base[1] = new HWCExternal(&dev->notice, dev->drm_disp, 1);
 		if (dev->base[1] == NULL || !dev->base[1]->isValid()) {
 			ALOGE("can not create external handle");
 			goto err;

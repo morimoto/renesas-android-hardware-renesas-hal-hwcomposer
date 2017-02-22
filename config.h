@@ -61,5 +61,38 @@
  */
 #define USE_HWC_VERSION1_3   0
 
+#if defined(TARGET_BOARD_PLATFORM_R8A7795)
+
+#define HDMI_A_1_ENCODER_ID 52
+#define HDMI_A_1_CONNECTOR_ID 53
+
+#define HDMI_A_2_ENCODER_ID 54
+#define HDMI_A_2_CONNECTOR_ID 55
+
+#elif defined(TARGET_BOARD_PLATFORM_R8A7796)
+
+#define HDMI_A_1_ENCODER_ID 46
+#define HDMI_A_1_CONNECTOR_ID 47
 
 #endif
+
+struct hwdisplay {
+    int encoder_id;
+    int connector_id;
+    char status[64];
+    char bootargs[64];
+};
+
+static const hwdisplay hwdisplays[] = {
+        // external display 1
+        { HDMI_A_1_ENCODER_ID, HDMI_A_1_CONNECTOR_ID,
+            "/sys/class/drm/card0-HDMI-A-1/status", "video=HDMI-A-1:" },
+
+#if defined(TARGET_BOARD_PLATFORM_R8A7795)
+        // external display 2
+        { HDMI_A_2_ENCODER_ID, HDMI_A_2_CONNECTOR_ID,
+            "/sys/class/drm/card0-HDMI-A-2/status", "video=HDMI-A-2:" },
+#endif
+};
+
+#endif // HWC_CONFIG_FUNCTION_SWITCH_H

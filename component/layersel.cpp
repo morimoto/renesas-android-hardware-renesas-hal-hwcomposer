@@ -1328,7 +1328,7 @@ HWCLayerSelect::HWCLayerSelect(int size, int area, int rotbuf)
 	init_aspect(16, 9);
 
 #if defined(TARGET_BOARD_LAGER) || defined(TARGET_BOARD_KOELSCH) || defined(TARGET_BOARD_ALT) || \
-	defined(TARGET_BOARD_SALVATOR_M3) || defined(TARGET_BOARD_SALVATOR_H3)
+	defined(TARGET_BOARD_SALVATOR)
 	mode.num_layer  = 4;
 	mode.num_scaler = 0;
 	mode.num_yuv    = 1;
@@ -1336,6 +1336,6 @@ HWCLayerSelect::HWCLayerSelect(int size, int area, int rotbuf)
 	mode.vsp_paramA2 = 148500000;
 	mode.vsp_dotclock = mode.vsp_paramA1;
 #else
-	#error unknown target.
+	#error unknown TARGET_BOARD_xxx
 #endif
 }

@@ -19,8 +19,8 @@
 #define __HWC_EXTERNAL_H
 
 
-#if defined(TARGET_BOARD_LAGER) || defined(TARGET_BOARD_SALVATOR_M3) || \
-		defined(TARGET_BOARD_SALVATOR_H3)
+#if defined(TARGET_BOARD_LAGER) || \
+	defined(TARGET_BOARD_SALVATOR)
 #define USE_EXTERNAL (1 && defined(USE_EXTERNAL_DISPLAY))
 #else
 #define USE_EXTERNAL 0
@@ -44,13 +44,14 @@ class HWCExternal : public HWCBase {
 	HWCHotplug  *hotplug;
 
 	DRMDisplay  *dsp;
+	int disp_id;
 
 protected:
 	/* virtual function of base class */
 	bool onSetupLayersel(hwc_display_contents_1_t* list);
 
 public:
-	HWCExternal(HWCNotice *obj, DRMDisplay *drm_disp);
+	HWCExternal(HWCNotice *obj, DRMDisplay *drm_disp, int id);
 	~HWCExternal();
 };
 
