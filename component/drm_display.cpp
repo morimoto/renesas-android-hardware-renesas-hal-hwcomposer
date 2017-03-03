@@ -704,7 +704,7 @@ bool DRMDisplay::setmode(int disp_id, uint32_t enc_id, uint32_t con_id,
 			}
 			comp_fps[matching_count - 1].mode_num = i;
 			comp_fps[matching_count - 1].fps
-				= abs(test->vrefresh - HZ);
+				= fabs(test->vrefresh - HZ);
 			continue;
 		}
 		vrefresh = get_drm_mode_vrefresh(connector, test);
@@ -1118,8 +1118,8 @@ DRMDisplay::IonBuffer::IonBuffer(DRMDisplay *_dsp, int ion_fd, int format, int w
 		uint32_t pitches[4]    = { 0 };
 		uint32_t offsets[4]    = { 0 };
 		struct drm_gem_close arg = {
-			handle: handle,
-			pad:    0,
+			.handle = handle,
+			.pad    = 0,
 		};
 
 		/* configure format and pitch */

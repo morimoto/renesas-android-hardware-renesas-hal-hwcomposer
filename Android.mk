@@ -20,7 +20,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_SHARED_LIBRARIES)/hw
-LOCAL_SHARED_LIBRARIES := libcutils libhardware libutils libhardware_legacy
+LOCAL_SHARED_LIBRARIES := libcutils libhardware libutils libhardware_legacy liblog
 LOCAL_SHARED_LIBRARIES += libsync
 LOCAL_SHARED_LIBRARIES += libion
 LOCAL_SHARED_LIBRARIES += libdrm
