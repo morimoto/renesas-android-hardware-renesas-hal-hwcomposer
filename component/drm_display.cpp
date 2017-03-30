@@ -25,6 +25,8 @@
 
 #include <system/graphics.h>
 #include <cutils/log.h>
+#include <cutils/properties.h>
+
 
 #include "img_gralloc_public.h"
 
@@ -493,17 +495,12 @@ err_exit:
 
 bool DRMDisplay::getResolutionFromBootargs(int disp_id, int& width, int& height, int& refresh) {
 
-	std::ifstream infile { "/proc/cmdline" };
-	std::string args { std::istreambuf_iterator<char>(infile), std::istreambuf_iterator<char>() };
-
-	std::string hdmi_args(hwdisplays[disp_id].bootargs);
-	size_t found = args.find(hdmi_args);
-	if (found == std::string::npos)
-		return false;
+	char value[PROPERTY_VALUE_MAX];
+	property_get(hwdisplays[disp_id].bootargs, value, "");
 
 	int w, h;
-	std::string s = args.substr(found + hdmi_args.length());
-	found = s.find("x");
+	std::string s(value);
+	size_t found = s.find("x");
 	if (found == std::string::npos)
 		return false;
 
