@@ -40,14 +40,11 @@
 #define ALIGN_ROUND_UP_4K(X)    (((X)+4095) & ~4095)
 #define ALIGN_ROUND_UP_128(X)    (((X)+127) & ~127)
 
-#if defined(TARGET_BOARD_LAGER) || \
-	defined(TARGET_BOARD_SALVATOR)
-
-#define EXTERNAL_WIDTH              1920
-#define EXTERNAL_HEIGHT             1080
-
-#define EXT_CRT_INDEX               DRM_MODE_ENCODER_TMDS
-#define EXT_CON_INDEX               DRM_MODE_CONNECTOR_HDMIA
+#if defined(TARGET_BOARD_SALVATOR)
+#define EXTERNAL_WIDTH            1920
+#define EXTERNAL_HEIGHT           1080
+#define EXT_CRT_INDEX DRM_MODE_ENCODER_TMDS
+#define EXT_CON_INDEX DRM_MODE_CONNECTOR_HDMIA
 
 #else
 #error unknown TARGET_BOARD_xxx
@@ -529,7 +526,7 @@ bool HWCHotplug::isValid(void)
  *  \param[in] disp  display type
  *  \param[in] base  pointer to a HWCExternal structure
  */
-HWCHotplug::HWCHotplug(HWCNotice *obj, int /*disp*/, HWCExternal *base, int disp_id): HotplugBase(obj, disp_id), ext_base(base),
+HWCHotplug::HWCHotplug(HWCNotice *obj, int disp, HWCExternal *base, int disp_id): HotplugBase(obj, disp_id), ext_base(base),
 		disp_id(disp_id)
 {
 #if USE_UEVENT

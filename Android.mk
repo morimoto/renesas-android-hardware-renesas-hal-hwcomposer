@@ -80,6 +80,10 @@ ifeq ($(TARGET_BOARD_PLATFORM),r8a7794)
 LOCAL_CFLAGS += -DTARGET_BOARD_ALT
 endif
 
+ifeq ($(THREE_DISPLAY),true)
+LOCAL_CFLAGS += -DTHIRD_DISPLAY_SUPPORT
+endif
+
 # add flag to distinguish a target.
 #
 #LOCAL_C_INCLUDES+= $(SOLUTION_VENDOR_PATH)/include

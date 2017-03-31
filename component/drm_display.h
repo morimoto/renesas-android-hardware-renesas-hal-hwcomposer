@@ -18,6 +18,7 @@
 #ifndef __HWCOMPOSER_DRM_H
 #define __HWCOMPOSER_DRM_H
 
+#include "config.h"
 #include "xf86drm.h"
 #include "xf86drmMode.h"
 #include "drm_fourcc.h"
@@ -157,7 +158,7 @@ private:
 		bool            blank_state;
 		bool            first_draw;
 		int             high_crtc;
-	} display[2];
+	} display[NUM_DISPLAYS];
 
 	static void* _threadLoop(void *arg);
 	static void* _threadLoop_vsync(void *arg);

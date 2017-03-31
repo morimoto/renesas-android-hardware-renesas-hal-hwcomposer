@@ -60,7 +60,7 @@ typedef struct hwc_context_t {
 	DRMDisplay *drm_disp;
 
 	/* display */
-	HWCBase              *base[2 + NUM_OF_VIRTUALDISPLAY];
+	HWCBase              *base[NUM_DISPLAYS + NUM_OF_VIRTUALDISPLAY];
 
 	/* previous used display */
 	int                  prev_used_display;
