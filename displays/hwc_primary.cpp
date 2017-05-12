@@ -353,16 +353,42 @@ DisplayPrimary::DisplayPrimary(HWCNotice *obj, int display, DRMDisplay *drm_disp
 	bool interlace = false;
 
 	int get_width, get_height;
-	int i;
+	int i, fd, len;
 
 	int ion_fd;
 	int map_size;
 	uint32_t drm_handle;
 	int map_fd;
 
-	int encoder_id = hwdisplays[0].encoder_id;
-	int connector_id = hwdisplays[0].connector_id;
+    char value[8];
+	int encoder_id = -1;
+	int connector_id = -1;
 
+	/* Read connector ID from sysfs */
+	if ((fd = open(hwdisplays[0].connector, O_RDONLY)) < 0) {
+		ALOGE("Error open '%s', error %d", hwdisplays[0].connector, errno);
+	} else {
+		if ((len = read(fd, &value, sizeof(value))) > 0) {
+			value[len] = 0;
+			connector_id = atoi(value);
+		}
+
+		close(fd);
+	}
+
+	/* Read encoder ID from sysfs */
+	if ((fd = open(hwdisplays[0].encoder, O_RDONLY)) < 0) {
+		ALOGE("Error open '%s', error %d", hwdisplays[0].encoder, errno);
+	} else {
+		if ((len = read(fd, &value, sizeof(value))) > 0) {
+			value[len] = 0;
+			encoder_id = atoi(value);
+		}
+
+		close(fd);
+	}
+
+	/* */
 	if (!dsp->setmode(PRIM_DISP_ID, encoder_id, connector_id, width, height, interlace)) {
 		ALOGE("can not set mode for primary display ENC:%d CON:%d", encoder_id, connector_id);
 	}

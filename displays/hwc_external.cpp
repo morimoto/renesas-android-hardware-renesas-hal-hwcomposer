@@ -227,12 +227,35 @@ int DisplayExternal::get_attribute_dotclock(uint64_t *dc)
 bool DisplayExternal::set_displaysize(int width, int height)
 {
 	sp<DRMDisplay::IonBuffer> drm_data[NUM_MAX_EXTERNAL_BUFFER];
-	int i;
+	int i, fd;
 	int get_width, get_height;
 
-	int encoder_id = hwdisplays[disp_id].encoder_id;
-	int connector_id = hwdisplays[disp_id].connector_id;
+	int encoder_id = -1;
+	int connector_id = -1;
 
+	/* Read connector ID from sysfs */
+	if ((fd = open(hwdisplays[disp_id].connector, O_RDONLY)) < 0) {
+		ALOGE("Error open '%s', error %d", hwdisplays[disp_id].connector, errno);
+	} else {
+		char id[8];
+		if (read(fd, &id, sizeof(id)) > 0)
+			connector_id = atoi(id);
+
+		close(fd);
+	}
+
+	/* Read encoder ID from sysfs */
+	if ((fd = open(hwdisplays[disp_id].encoder, O_RDONLY)) < 0) {
+		ALOGE("Error open '%s', error %d", hwdisplays[disp_id].encoder, errno);
+	} else {
+		char id[8];
+		if (read(fd, &id, sizeof(id)) > 0)
+			encoder_id = atoi(id);
+
+		close(fd);
+	}
+
+	/* */
 	if (!dsp->setmode(disp_id, encoder_id, connector_id, width, height)) {
 		ALOGE("can not set mode for external display ENC:%d CON:%d", encoder_id, connector_id);
 	}

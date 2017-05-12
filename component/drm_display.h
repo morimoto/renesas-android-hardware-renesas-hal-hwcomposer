@@ -179,11 +179,11 @@ protected:
 	bool getResolutionFromBootargs(int disp_id, int& width, int& height, int& refresh);
 
 public:
-	bool setmode(int disp_id, uint32_t enc_id, uint32_t con_id,
+	bool setmode(int disp_id, uint32_t enc_type, uint32_t con_id,
 		int& width, int& height, bool interlace = false, int HZ = 0);
 	bool getattributes(int disp_id, struct drm_attributes_t *hwc_attr);
 
-	bool getmode(int disp_id, uint32_t mode_enc, uint32_t mode_con, int *width, int *height);
+	bool getmode(int disp_id, uint32_t enc_type, uint32_t con_id, int *width, int *height);
 
 	/* support blank */
 	bool set_blankstate(int disp_id, bool status);

@@ -63,55 +63,37 @@
 
 #define NUM_DISPLAYS (3)
 
-#if defined(TARGET_BOARD_PLATFORM_R8A7795)
-
-#define VGA_ENCODER_ID 65
-#define VGA_CONNECTOR_ID 66
-
-#define HDMI_A_1_ENCODER_ID 67
-#define HDMI_A_1_CONNECTOR_ID 68
-
-#define HDMI_A_2_ENCODER_ID 69
-#define HDMI_A_2_CONNECTOR_ID 70
-
-#elif defined(TARGET_BOARD_PLATFORM_R8A7796)
-
-#define VGA_ENCODER_ID 55
-#define VGA_CONNECTOR_ID 56
-
-#define HDMI_A_1_ENCODER_ID 57
-#define HDMI_A_1_CONNECTOR_ID 58
-
-#endif
-
 struct hwdisplay {
-    int encoder_id;
-    int connector_id;
+    char encoder[64];
+    char connector[64];
     char status[64];
     char bootargs[64];
 };
 
 static const hwdisplay hwdisplays[NUM_DISPLAYS] = {
 #if defined(THIRD_DISPLAY_SUPPORT)
-        // primary display
-        VGA_ENCODER_ID,
-        VGA_CONNECTOR_ID,
+    { // primary display
+        "/sys/class/drm/card0-VGA-1/encoder_type",
+        "/sys/class/drm/card0-VGA-1/connector_id",
         "/sys/class/drm/card0-VGA-1/status",
-        "ro.boot.display.resolution.VGA",
+        "ro.boot.display.resolution.VGA"
+    },
 #endif
 
-        // external display 1
-        HDMI_A_1_ENCODER_ID,
-        HDMI_A_1_CONNECTOR_ID,
+    { // external display 1
+        "/sys/class/drm/card0-HDMI-A-1/encoder_type",
+        "/sys/class/drm/card0-HDMI-A-1/connector_id",
         "/sys/class/drm/card0-HDMI-A-1/status",
         "ro.boot.display.resolution.HDMI1",
+    },
 
 #if defined(TARGET_BOARD_PLATFORM_R8A7795)
-        // external display 2
-        HDMI_A_2_ENCODER_ID,
-        HDMI_A_2_CONNECTOR_ID,
+    { // external display 2
+        "/sys/class/drm/card0-HDMI-A-2/encoder_type",
+        "/sys/class/drm/card0-HDMI-A-2/connector_id",
         "/sys/class/drm/card0-HDMI-A-2/status",
         "ro.boot.display.resolution.HDMI2",
+    }
 #endif
 };
 

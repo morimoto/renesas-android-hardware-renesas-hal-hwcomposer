@@ -377,7 +377,7 @@ void DRMDisplay::get_mode_part1(int disp_id, drmModeRes *resources)
  *  \details
  *  search crtc mode from encoder/connector type
  */
-bool DRMDisplay::getmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
+bool DRMDisplay::getmode(int disp_id, uint32_t enc_type, uint32_t con_id,
 			 int *width, int *height)
 {
 	drmModeRes *resources;
@@ -386,7 +386,7 @@ bool DRMDisplay::getmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 	drmModeModeInfo *mode;
 	drmModeConnector *connector = NULL;
 	float vrefresh;
-	uint32_t crt_id, con_id;
+	uint32_t crt_id, connector_id;
 	int set_flag = 0;
 	bool result = false;
 	int i;
@@ -409,7 +409,7 @@ bool DRMDisplay::getmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 			goto err_exit;
 		}
 
-		if(encoder->encoder_type == mode_enc) {
+		if(encoder->encoder_type == enc_type) {
 			set_flag = 1;
 			break;
 		}
@@ -430,7 +430,7 @@ bool DRMDisplay::getmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 			ERR_PRINT("drmModeGetConnector error");
 			goto err_exit;
 		}
-		if (connector->connector_type == mode_con) {
+		if (connector->connector_id == con_id) {
 			set_flag = 1;
 			break;
 		}
@@ -442,7 +442,7 @@ bool DRMDisplay::getmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 		goto err_exit;
 	}
 
-	con_id = connector->connector_id;
+	connector_id = connector->connector_id;
 
 	crtc = drmModeGetCrtc(drm_fd, crt_id);
 	if (!crtc) {
@@ -462,7 +462,7 @@ bool DRMDisplay::getmode(int disp_id, uint32_t mode_enc, uint32_t mode_con,
 
 	/* record information. */
 	display[disp_id].crtc_id      = crt_id;
-	display[disp_id].connector_id = con_id;
+	display[disp_id].connector_id = connector_id;
 	display[disp_id].plane_id[0]  = 0; /* assume no plane */
 	display[disp_id].mode         = *mode;
 
@@ -554,7 +554,7 @@ bool DRMDisplay::getResolutionFromBootargs(int disp_id, int& width, int& height,
  *  select crtc mode from parameters
  *  this function is called when getmode returns false
  */
-bool DRMDisplay::setmode(int disp_id, uint32_t enc_id, uint32_t con_id,
+bool DRMDisplay::setmode(int disp_id, uint32_t enc_type, uint32_t con_id,
 	int& width, int& height, bool interlace, int HZ)
 {
 	bool result = false;
@@ -592,7 +592,7 @@ bool DRMDisplay::setmode(int disp_id, uint32_t enc_id, uint32_t con_id,
 			ERR_PRINT("drmModeGetEncoder error");
 			goto err_exit;
 		}
-		if (encoder->encoder_id == enc_id) {
+		if (encoder->encoder_type == enc_type) {
 			set_flag = 1;
 			break;
 		}
