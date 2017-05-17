@@ -394,7 +394,7 @@ gralloc_module_get_buffer_handle_img(const gralloc_module_t *module,
 }
 
 static inline int
-gralloc_module_get_get_phys_addr(const gralloc_module_t *module,
+gralloc_module_get_buffer_phys_addr(const gralloc_module_t *module,
 									 int fd,
 									 uint64_t *paddr)
 {
