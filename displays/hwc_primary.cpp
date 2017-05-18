@@ -376,17 +376,7 @@ DisplayPrimary::DisplayPrimary(HWCNotice *obj, int display, DRMDisplay *drm_disp
 		close(fd);
 	}
 
-	/* Read encoder ID from sysfs */
-	if ((fd = open(hwdisplays[0].encoder, O_RDONLY)) < 0) {
-		ALOGE("Error open '%s', error %d", hwdisplays[0].encoder, errno);
-	} else {
-		if ((len = read(fd, &value, sizeof(value))) > 0) {
-			value[len] = 0;
-			encoder_id = atoi(value);
-		}
-
-		close(fd);
-	}
+	encoder_id = connector_id - 1;
 
 	/* */
 	if (!dsp->setmode(PRIM_DISP_ID, encoder_id, connector_id, width, height, interlace)) {

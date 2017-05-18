@@ -554,7 +554,7 @@ bool DRMDisplay::getResolutionFromBootargs(int disp_id, int& width, int& height,
  *  select crtc mode from parameters
  *  this function is called when getmode returns false
  */
-bool DRMDisplay::setmode(int disp_id, uint32_t enc_type, uint32_t con_id,
+bool DRMDisplay::setmode(int disp_id, uint32_t enc_id, uint32_t con_id,
 	int& width, int& height, bool interlace, int HZ)
 {
 	bool result = false;
@@ -592,7 +592,8 @@ bool DRMDisplay::setmode(int disp_id, uint32_t enc_type, uint32_t con_id,
 			ERR_PRINT("drmModeGetEncoder error");
 			goto err_exit;
 		}
-		if (encoder->encoder_type == enc_type) {
+
+		if (encoder->encoder_id == enc_id) {
 			set_flag = 1;
 			break;
 		}

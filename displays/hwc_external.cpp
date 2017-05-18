@@ -244,16 +244,7 @@ bool DisplayExternal::set_displaysize(int width, int height)
 		close(fd);
 	}
 
-	/* Read encoder ID from sysfs */
-	if ((fd = open(hwdisplays[disp_id].encoder, O_RDONLY)) < 0) {
-		ALOGE("Error open '%s', error %d", hwdisplays[disp_id].encoder, errno);
-	} else {
-		char id[8];
-		if (read(fd, &id, sizeof(id)) > 0)
-			encoder_id = atoi(id);
-
-		close(fd);
-	}
+	encoder_id = connector_id -1;
 
 	/* */
 	if (!dsp->setmode(disp_id, encoder_id, connector_id, width, height)) {
