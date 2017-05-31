@@ -76,7 +76,7 @@ static const hwdisplay hwdisplays[NUM_DISPLAYS] = {
         "/sys/class/drm/card0-VGA-1/encoder_type",
         "/sys/class/drm/card0-VGA-1/connector_id",
         "/sys/class/drm/card0-VGA-1/status",
-        "ro.boot.display.resolution.VGA"
+        "ro.boot.display.res.VGA"
     },
 #endif
 
