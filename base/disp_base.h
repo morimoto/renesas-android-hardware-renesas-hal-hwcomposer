@@ -19,6 +19,7 @@
 #define _HWC_INTERFACE_DISPLAY_BASE
 
 #include <hardware/hwcomposer.h>
+#include <android-base/macros.h>
 
 typedef struct hwc_disp_buffer_t {
 	int           buf_index;  /* reserved */
@@ -41,10 +42,6 @@ typedef struct hwc_disp_plane_t {
 	int           win_w;
 	int           win_h;
 } hwc_disp_plane;
-
-#ifndef UNUSED
-#define UNUSED(X) ((void)&X)
-#endif
 
 #define FLIPWAIT_LOG             0
 

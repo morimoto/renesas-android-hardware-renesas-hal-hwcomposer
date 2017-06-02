@@ -20,10 +20,7 @@
 
 #include <hardware/hardware.h>
 #include <hardware/hwcomposer.h>
-
-#ifndef UNUSED
-#define UNUSED(X) ((void)&X)
-#endif
+#include <android-base/macros.h>
 
 /*! @class HWCLayerSelect
  *  @brief Select display methods from each layer

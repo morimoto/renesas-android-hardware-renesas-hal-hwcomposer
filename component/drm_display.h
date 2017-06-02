@@ -26,6 +26,7 @@
 #include "base/hwc_thread.h"
 #include "SyncTimeline.h"
 
+#include <android-base/macros.h>
 #include <hardware/hwcomposer_defs.h>
 
 #include <utils/Mutex.h>
@@ -34,10 +35,6 @@
 #include <utils/List.h>
 
 using namespace android;
-
-#ifndef UNUSED
-#define UNUSED(X) ((void)&X)
-#endif
 
 /* set 1, if drm driver support blank desktop extension. */
 // #define DRMSUPPORT_BLANK_DESKTOP    1
@@ -141,6 +138,8 @@ private:
 	int             request_next;
 	SyncTimeline    sync_timeline;
 
+	bool            is_master;
+
 	struct {
 		List< sp<FlipCallback> >  flip_listners;
 
@@ -195,6 +194,9 @@ public:
 	}
 
 	int getfencefd();
+
+	bool enableDRMMaster();
+	bool disableDRMMaster();
 
 	/* initialize */
 	void init(void);

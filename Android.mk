@@ -23,7 +23,9 @@ LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_SHARED_LIBRARIES)/hw
 LOCAL_SHARED_LIBRARIES := libcutils libhardware libutils libhardware_legacy liblog
 LOCAL_SHARED_LIBRARIES += libsync
 LOCAL_SHARED_LIBRARIES += libion
-LOCAL_SHARED_LIBRARIES += libdrm
+LOCAL_SHARED_LIBRARIES += libdrm \
+              android.hardware.automotive.vehicle@2.0 \
+              libhidlbase \
 
 # source (base class)
 #
@@ -48,6 +50,7 @@ LOCAL_SRC_FILES += displays/hwc_external.cpp
 LOCAL_SRC_FILES += displays/hwc_virtual.cpp
 
 LOCAL_SRC_FILES += hwcomposer.cpp
+LOCAL_SRC_FILES += VehicleListenerThread.cpp
 
 
 # target
