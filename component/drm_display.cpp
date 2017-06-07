@@ -493,10 +493,13 @@ err_exit:
 	return result;
 }
 
-bool DRMDisplay::getResolutionFromBootargs(int disp_id, int& width, int& height, int& refresh) {
+bool DRMDisplay::getResolutionFromProperties(int disp_id, int& width, int& height, int& refresh, bool& interlace) {
 
 	char value[PROPERTY_VALUE_MAX];
-	property_get(hwdisplays[disp_id].bootargs, value, "");
+	property_get(hwdisplays[disp_id].property, value, "");
+
+	// Property has next format:
+	// [<width>x<height>][-<bpp>][@<refresh rate>][i]
 
 	int w, h;
 	std::string s(value);
@@ -524,13 +527,14 @@ bool DRMDisplay::getResolutionFromBootargs(int disp_id, int& width, int& height,
 
 	s = s.substr(found + 1); // 1 - "@" letter
 
-	found = s.find(" ");
-
 	std::string s_refresh;
-	if (found != std::string::npos)
-		s_refresh = s.substr(0, found);
-	else
+
+	if (s.back() == 'i') {
+		interlace = true;
+		s_refresh = s.substr(0, s.length() - 1); // 1 - "i" letter
+	} else {
 		s_refresh = s;
+	}
 
 	width = std::stoi(s_width);
 	height = std::stoi(s_height);
@@ -573,7 +577,7 @@ bool DRMDisplay::setmode(int disp_id, uint32_t enc_id, uint32_t con_id,
 	uint32_t crt_id;
 	int set_flag = 0;
 	float preferred_aspect_ratio = 0;
-	bool isBootargsPresented = false;
+	bool isPropertyPresented = false;
 
 	resources = drmModeGetResources(drm_fd);
 	if (!resources) {
@@ -661,7 +665,7 @@ bool DRMDisplay::setmode(int disp_id, uint32_t enc_id, uint32_t con_id,
 		}
 	}
 
-	isBootargsPresented = getResolutionFromBootargs(disp_id, width, height, HZ);
+	isPropertyPresented = getResolutionFromProperties(disp_id, width, height, HZ, interlace);
 
 	for (i = 0; i < connector->count_modes; i++) {
 		drmModeModeInfo *test;
@@ -670,16 +674,16 @@ bool DRMDisplay::setmode(int disp_id, uint32_t enc_id, uint32_t con_id,
 
 		float aspect = test->hdisplay / (float)test->vdisplay;
 
-		if (!isBootargsPresented && (fabs(aspect - preferred_aspect_ratio) > 0.001)) {
+		if (!isPropertyPresented && (fabs(aspect - preferred_aspect_ratio) > 0.001)) {
 			continue;
 		}
 
-		if (!isBootargsPresented && (test->hdisplay > 1920)) {
+		if (!isPropertyPresented && (test->hdisplay > 1920)) {
 			/* Now we don't support FullHD resolution */
 			continue;
 		}
 
-		if (isBootargsPresented && (test->hdisplay != width ||
+		if (isPropertyPresented && (test->hdisplay != width ||
 				test->vdisplay != height)) {
 			/* display size is not meet request value */
 			continue;

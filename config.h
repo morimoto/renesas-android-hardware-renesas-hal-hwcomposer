@@ -67,7 +67,7 @@ struct hwdisplay {
     char encoder[64];
     char connector[64];
     char status[64];
-    char bootargs[64];
+    char property[64];
 };
 
 static const hwdisplay hwdisplays[NUM_DISPLAYS] = {

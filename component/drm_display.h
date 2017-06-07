@@ -176,7 +176,7 @@ protected:
 	void setattributes(drmModeConnector *connector, drmModeModeInfo *mode, int disp_id, float vrefresh);
 
 	void request_next_vsync(void);
-	bool getResolutionFromBootargs(int disp_id, int& width, int& height, int& refresh);
+	bool getResolutionFromProperties(int disp_id, int& width, int& height, int& refresh,  bool& interlace);
 
 public:
 	bool setmode(int disp_id, uint32_t enc_id, uint32_t con_id,
