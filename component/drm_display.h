@@ -74,7 +74,7 @@ public:
 /* buffer interface  */
 /* use smart pointer */
 /*********************/
-	/*! 
+	/*!
 	 *  @brief inner class of DRMDisplay. ion buffer handling.
 	 */
 	class IonBuffer: public virtual RefBase {
@@ -83,12 +83,18 @@ public:
 		int drm_fbid;
 		IonBuffer(DRMDisplay *_dsp, int ion_fd, int format, int width, int height);
 		IonBuffer(DRMDisplay *_dsp, buffer_handle_t _hnd);
+		bool checkIsBufferRegister();
 		virtual ~IonBuffer();
+	private:
+		int mIon_fd;
+		int mFormat;
+		int mWidth;
+		int mHeight;
 	};
 /********************/
 /* vsync interface  */
 /********************/
-	/*! 
+	/*!
 	 *  @brief inner class of DRMDisplay. vsync callback.
 	 */
 	class VSyncCallback: public virtual RefBase {
