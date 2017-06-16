@@ -52,7 +52,7 @@ bool HWCNotice::proc_register(const hwc_procs_t **entry)
  */
 bool HWCNotice::invalidate(void)
 {
-	if (procs && (*procs)->invalidate) {
+	if (procs && (*procs) && (*procs)->invalidate) {
 
 		Mutex::Autolock _l(notice_mutex);
 

@@ -38,10 +38,6 @@ using namespace android;
 #define MAX_NATIVEBUFFER_USED  3
 #endif
 
-#ifndef UNUSED
-#define UNUSED(X) ((void)&X)
-#endif
-
 /*! @class HWCBase
  *  @brief Control H/W composer event
  */

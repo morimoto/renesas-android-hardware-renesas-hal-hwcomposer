@@ -1005,6 +1005,9 @@ DRMDisplay::DRMDisplay():
 	}
 
 	drmDropMaster(drm_fd_vsync);
+	// for rearview camera
+	drmDropMaster(drm_fd);
+	is_master = false;
 
 	memset(&evctx, 0, sizeof(evctx));
 	evctx.version = DRM_EVENT_CONTEXT_VERSION;
@@ -1252,6 +1255,11 @@ int DRMDisplay::display_pageflip(int dispid, sp<IonBuffer>& buffer, sp<FlipCallb
 {
 	bool result = false;
 	Mutex::Autolock _l(lock_flip);
+
+	if(!is_master) {
+		sync_timeline.inc();
+		return false;
+	}
 
 	if (dispid < 0 || (dispid > (NUM_DISPLAYS - 1))) {
 		ERR_PRINT("invalid dispid");
@@ -1687,4 +1695,34 @@ void DRMDisplay::vblank_handler(int fd, unsigned int frame, unsigned int sec, un
 int DRMDisplay::getfencefd()
 {
 	return sync_timeline.getFenceFd();
+}
+
+bool DRMDisplay::enableDRMMaster() {
+
+	if (is_master)
+		return true;
+
+	if(drmSetMaster(drm_fd) == 0) {
+		is_master = true;
+		for (int i = 0; i < NUM_DISPLAYS; i++)
+			display[i].first_draw = true;
+		return true;
+	} else {
+		ALOGE("drmSetMaster failed");
+		return false;
+	}
+}
+
+bool DRMDisplay::disableDRMMaster() {
+
+	if (!is_master)
+		return true;
+
+	if(drmDropMaster(drm_fd) == 0) {
+		is_master = false;
+		return true;
+	} else {
+		ALOGE("drmDropMaster failed");
+		return false;
+	}
 }

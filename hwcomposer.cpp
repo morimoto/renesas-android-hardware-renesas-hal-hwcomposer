@@ -31,6 +31,8 @@
 #include <utils/String8.h>
 #include <img_gralloc_public.h>
 
+#include "VehicleCallbackListener.h"
+
 #include "displays/hwc_primary.h"
 #include "displays/hwc_external.h"
 #if USE_HWC_VERSION1_3
@@ -905,6 +907,10 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
 	struct hwc_context_t *dev = NULL;
 	int i;
 	int num_displays = sizeof(hwdisplays) / sizeof(hwdisplay);
+	bool is_camera_enabled = false;
+
+	android::sp<VehicleCallbackListener> pListener = new VehicleCallbackListener();
+	android::sp <IVehicle> pVnet = IVehicle::getService();
 
 	ALOGD_IF(USE_DBGLEVEL(1),
 		"open");
@@ -1002,10 +1008,61 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
 		*device = &dev->device.common;
 		status = 0;
 	}
+
+	pListener->setHWCContext(dev);
+
+	if (pVnet.get() == nullptr) {
+			ALOGE("Vehicle HAL getService returned NULL");
+	} else {
+
+		SubscribeOptions optionsData[1] = {
+			{
+				.propId = static_cast<int32_t>(VehicleProperty::GEAR_SELECTION),
+				.flags = SubscribeFlags::DEFAULT
+			}
+		};
+
+		hidl_vec<SubscribeOptions> options;
+		options.setToExternal(optionsData, arraysize(optionsData));
+		StatusCode status = pVnet->subscribe(pListener, options);
+		if (status != StatusCode::OK) {
+			ALOGE("Subscription to vehicle notifications failed with code %d", status);
+		}
+
+		status = StatusCode::TRY_AGAIN;
+		bool called = false;
+		VehiclePropValue gearRequestValue;
+		int32_t gearValue = 0;
+		gearRequestValue.prop = static_cast<int32_t>(VehicleProperty::GEAR_SELECTION);
+
+		pVnet->get(gearRequestValue,
+						[&gearValue, &status, &called]
+						(StatusCode s, const VehiclePropValue& v) {
+							status = s;
+							gearValue = v.value.int32Values[0];
+							called = true;
+						}
+			);
+		if (!called) {
+			ALOGE("Error when get value from Vehicle HAL");
+		} else {
+			if (status != StatusCode::OK) {
+				ALOGE("Got error status when get value from Vehicle HAL");
+			} else {
+				is_camera_enabled = (gearValue == static_cast<int32_t>(VehicleGear::GEAR_REVERSE));
+			}
+		}
+
+		pListener->setCameraStatus(is_camera_enabled);
+
+	}
+
+
 err:
 	if (status) {
 		if (dev) {
 			for (i = 0; i < NELEM(dev->base); i++) {
+
 				if (dev->base[i])
 					delete dev->base[i];
 			}
