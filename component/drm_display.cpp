@@ -1088,7 +1088,6 @@ DRMDisplay::IonBuffer::IonBuffer(DRMDisplay *_dsp, buffer_handle_t _hnd)
 	IonBuffer(_dsp, img_hnd->fd[0], img_hnd->iFormat, img_hnd->iWidth, img_hnd->iHeight);
 }
 
-
 /*! \brief constructor of IonBuffer
  *  \param[in] _dsp      pointer to DRMDisplay class
  *  \param[in] ion_fd    file descriptor of dma-buf. for example. ion fd
@@ -1098,25 +1097,40 @@ DRMDisplay::IonBuffer::IonBuffer(DRMDisplay *_dsp, buffer_handle_t _hnd)
  *  \return none
  */
 DRMDisplay::IonBuffer::IonBuffer(DRMDisplay *_dsp, int ion_fd, int format, int width, int height)
+	: dsp(_dsp)
+	, drm_fbid(-1)
+	, mIon_fd(ion_fd)
+	, mFormat(format)
+	, mWidth(width)
+	, mHeight(height)
 {
+
+}
+
+/**
+ * @brief DRMDisplay::IonBuffer::checkIsBufferRegister check is buffer registered. If not - try register
+ * @return true if buffer is registered or registration is succeess
+ */
+bool DRMDisplay::IonBuffer::checkIsBufferRegister()
+{
+	if (drm_fbid > 0)
+	{
+		return true;
+	}
 	int      stride_width;
 	uint32_t   handle;
 
 	handle   = 0;
-	drm_fbid = -1;
-
-	/* keep pointer */
-	dsp = _dsp;
 
 	/* configure width with align */
-	if (format == HAL_PIXEL_FORMAT_NV12_CUSTOM || format ==HAL_PIXEL_FORMAT_NV21_CUSTOM) {
-		stride_width = ALIGN_ROUND_UP(width, 128);
+	if (mFormat == HAL_PIXEL_FORMAT_NV12_CUSTOM || mFormat ==HAL_PIXEL_FORMAT_NV21_CUSTOM) {
+		stride_width = ALIGN_ROUND_UP(mWidth, 128);
 	} else {
-		stride_width = ALIGN_ROUND_UP(width, HW_ALIGN);
+		stride_width = ALIGN_ROUND_UP(mWidth, HW_ALIGN);
 	}
 
 	/* register ion memory to drm driver */
-	if (drmPrimeFDToHandle(dsp->drm_fd, ion_fd, &handle)) {
+	if (drmPrimeFDToHandle(dsp->drm_fd, mIon_fd, &handle)) {
 		ERR_PRINT("drmPrimeFDToHandle error");
 	} else {
 		uint32_t bo_handles[4] = { 0 };
@@ -1128,41 +1142,41 @@ DRMDisplay::IonBuffer::IonBuffer(DRMDisplay *_dsp, int ion_fd, int format, int w
 		};
 
 		/* configure format and pitch */
-		switch(format) {
+		switch(mFormat) {
 		case HAL_PIXEL_FORMAT_BGRX_8888:
 			bo_handles[0] = handle;
 			pitches[0] = stride_width * 4;
-			format = DRM_FORMAT_XRGB8888;
+			mFormat = DRM_FORMAT_XRGB8888;
 			break;
 		case HAL_PIXEL_FORMAT_BGRA_8888:
 			bo_handles[0] = handle;
 			pitches[0] = stride_width * 4;
-			format = DRM_FORMAT_ARGB8888;
+			mFormat = DRM_FORMAT_ARGB8888;
 			break;
 		case HAL_PIXEL_FORMAT_RGBX_8888:
 			bo_handles[0] = handle;
 			pitches[0] = stride_width * 4;
-			format = DRM_FORMAT_XBGR8888;
+			mFormat = DRM_FORMAT_XBGR8888;
 			break;
 		case HAL_PIXEL_FORMAT_RGBA_8888:
 			bo_handles[0] = handle;
 			pitches[0] = stride_width * 4;
-			format = DRM_FORMAT_ABGR8888;
+			mFormat = DRM_FORMAT_ABGR8888;
 			break;
 		case HAL_PIXEL_FORMAT_RGB_888:
 			bo_handles[0] = handle;
 			pitches[0] = stride_width * 3;
-			format = DRM_FORMAT_RGB888;
+			mFormat = DRM_FORMAT_RGB888;
 			break;
 		case HAL_PIXEL_FORMAT_RGB_565:
 			bo_handles[0] = handle;
 			pitches[0] = stride_width * 2;
-			format = DRM_FORMAT_RGB565;
+			mFormat = DRM_FORMAT_RGB565;
 			break;
 		case HAL_PIXEL_FORMAT_UYVY:
 			bo_handles[0] = handle;
 			pitches[0] = stride_width * 2;
-			format = DRM_FORMAT_UYVY;
+			mFormat = DRM_FORMAT_UYVY;
 			break;
 		case HAL_PIXEL_FORMAT_NV12:
 		case HAL_PIXEL_FORMAT_NV12_CUSTOM:
@@ -1170,8 +1184,8 @@ DRMDisplay::IonBuffer::IonBuffer(DRMDisplay *_dsp, int ion_fd, int format, int w
 			bo_handles[1] = handle;
 			pitches[0] = stride_width;
 			pitches[1] = stride_width;
-			offsets[1] = pitches[0] * height;
-			format = DRM_FORMAT_NV12;
+			offsets[1] = pitches[0] * mHeight;
+			mFormat = DRM_FORMAT_NV12;
 			break;
 		case HAL_PIXEL_FORMAT_NV21:
 		case HAL_PIXEL_FORMAT_NV21_CUSTOM:
@@ -1179,8 +1193,8 @@ DRMDisplay::IonBuffer::IonBuffer(DRMDisplay *_dsp, int ion_fd, int format, int w
 			bo_handles[1] = handle;
 			pitches[0] = stride_width;
 			pitches[1] = stride_width;
-			offsets[1] = pitches[0] * height;
-			format = DRM_FORMAT_NV21;
+			offsets[1] = pitches[0] * mHeight;
+			mFormat = DRM_FORMAT_NV21;
 			break;
 		case HAL_PIXEL_FORMAT_YV12:
 			bo_handles[0] = handle;
@@ -1189,18 +1203,18 @@ DRMDisplay::IonBuffer::IonBuffer(DRMDisplay *_dsp, int ion_fd, int format, int w
 			pitches[0] = stride_width;
 			pitches[1] = stride_width/2;
 			pitches[2] = stride_width/2;
-			offsets[1] =              pitches[0] * height;
-			offsets[2] = offsets[0] + pitches[1] * ((height+1)/2);
-			format = DRM_FORMAT_YVU420;
+			offsets[1] =              pitches[0] * mHeight;
+			offsets[2] = offsets[0] + pitches[1] * ((mHeight+1)/2);
+			mFormat = DRM_FORMAT_YVU420;
 			break;
 		default:
-			format = 0;
+			mFormat = 0;
 		}
 
-		if (drmModeAddFB2(dsp->drm_fd, width, height, format, bo_handles, pitches, offsets, (uint32_t*)&drm_fbid, 0)) {
+		if (drmModeAddFB2(dsp->drm_fd, mWidth, mHeight, mFormat, bo_handles, pitches, offsets, (uint32_t*)&drm_fbid, 0)) {
 			ERR_PRINT("drmModeAddFB2 error");
 		} else {
-			DBG_PRINT("register width:%d height:%d handle:%d fbid:%d ionfd:%d", width, height, handle, drm_fbid, ion_fd);
+			DBG_PRINT("register width:%d height:%d handle:%d fbid:%d ionfd:%d", mWidth, mHeight, handle, drm_fbid, mIon_fd);
 		}
 
 		/* close import reference */
@@ -1209,7 +1223,10 @@ DRMDisplay::IonBuffer::IonBuffer(DRMDisplay *_dsp, int ion_fd, int format, int w
 		}
 		handle = 0;
 	}
+
+	return drm_fbid > 0;
 }
+
 
 /*! \brief deconstructor of IonBuffer
  *  \return none
@@ -1267,7 +1284,7 @@ int DRMDisplay::display_pageflip(int dispid, sp<IonBuffer>& buffer, sp<FlipCallb
 	} else if (display[dispid].blank_state) {
 		DBG_PRINT("ignore flip");
 #endif
-	} else if (buffer->drm_fbid <= 0) {
+	} else if (!buffer->checkIsBufferRegister()) {
 		ERR_PRINT("buffer invalid.");
 	} else {
 		List< sp<FlipCallback> >::iterator it;
