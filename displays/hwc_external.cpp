@@ -270,14 +270,6 @@ bool DisplayExternal::set_displaysize(int width, int height)
 		int map_fd = bufdata[i].buffer.buf_fd;
 
 		drm_data[i] = new DRMDisplay::IonBuffer(dsp, map_fd, HAL_PIXEL_FORMAT_BGRA_8888, width, height);
-		if (drm_data[i]->drm_fbid < 0) {
-			ALOGE("can not change displaysize");
-			while (i >= 0) {
-				drm_data[i] = NULL;
-				i--;
-			}
-			return false;
-		}
 	}
 
 	if (!dsp->getattributes(disp_id, &hwc_attr)) {
