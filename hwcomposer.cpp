@@ -578,10 +578,13 @@ static void hwc_dump(struct hwc_composer_device_1* dev, char *buff, int buff_len
 			g.st_connect[1], g.st_blank[1], (long long unsigned int)g.st_dotclock[1], g.num_overlay[1]);
 	}
 
+#ifdef THIRD_DISPLAY_SUPPORT
 	if (g.st_connect[2]) {
 		msg.appendFormat("    external2 connect:%d blank:%d dotclock:%llu num_overlay:%d\n",
 			g.st_connect[2], g.st_blank[2], (long long unsigned int)g.st_dotclock[2], g.num_overlay[2]);
 	}
+#endif
+
 #if USE_HWC_VERSION1_3
 	msg.appendFormat("    virtual  num_overlay:%d\n", g.num_overlay[2]);
 #endif
