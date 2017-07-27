@@ -54,7 +54,7 @@ public:
         return Return<void>();
     }
 
-    Return<void> onPropertySet(const VehiclePropValue & value) override {
+    Return<void> onPropertySet(const VehiclePropValue & /*value*/) override {
         return Return<void>();
     }
 
