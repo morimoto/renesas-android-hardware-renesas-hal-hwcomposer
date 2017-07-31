@@ -77,11 +77,7 @@
  *  3   use three layer for overlay.
  *  2   use two layer for overlay.
  */
-#if defined(TARGET_BOARD_PLATFORM_R8A7795)
 #define NUM_ASSIGN_OVERLAY    4
-#else
-#define NUM_ASSIGN_OVERLAY    2
-#endif
 
 /*****************************************************************************/
 /*  debug functions                                                          */
