@@ -18,7 +18,7 @@
 #include "hwc_base.h"
 #include "config.h"
 #include <sync/sync.h>
-#include <img_gralloc_public.h>
+#include <img_gralloc1_public.h>
 #include <cutils/log.h>
 #include "component/hwcglobal.h"
 

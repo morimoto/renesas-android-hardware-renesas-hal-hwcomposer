@@ -22,7 +22,7 @@
 #include <ion/ion.h>
 
 #include <cutils/log.h>
-#include "img_gralloc_public.h"
+#include "img_gralloc1_public.h"
 
 #define FLAG_FBTARGET_CONFIGURED   0x80
 

@@ -29,7 +29,7 @@
 #include <cutils/properties.h>
 #include <utils/misc.h>
 #include <utils/String8.h>
-#include <img_gralloc_public.h>
+#include <img_gralloc1_public.h>
 
 #include "VehicleCallbackListener.h"
 

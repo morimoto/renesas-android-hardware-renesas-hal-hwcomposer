@@ -28,7 +28,7 @@
 #include <cutils/properties.h>
 
 
-#include "img_gralloc_public.h"
+#include "img_gralloc1_public.h"
 
 #include <hardware/hwcomposer_defs.h>
 

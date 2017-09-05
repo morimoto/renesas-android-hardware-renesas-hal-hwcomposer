@@ -21,21 +21,18 @@
  * THE SOFTWARE.
  */
 
-#ifndef HAL_PUBLIC_H
-#define HAL_PUBLIC_H
+#ifndef IMG_GRALLOC_COMMON_PUBLIC_H
+#define IMG_GRALLOC_COMMON_PUBLIC_H
 
-/* Authors of third party hardware composer (HWC) modules will need to include
- * this header to access functionality in the gralloc HAL.
- */
-
-#define PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE
-#define PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE_2
-
-#include <hardware/gralloc.h>
+#include <cutils/native_handle.h>
+#include <system/graphics.h>
 #include <linux/ion.h>
 
 #define ALIGN(x,a)	((((x) + (a) - 1L) / (a)) * (a))
 #define HW_ALIGN	64
+
+#define PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE
+#define PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE_2
 
 /* Use bits [0-3] of "vendor format" bits as real format. Customers should
  * use *only* the unassigned bits below for custom pixel formats, YUV or RGB.
@@ -103,22 +100,15 @@ typedef struct
 	/* These fields can be sent cross process. They are also valid
 	 * to duplicate within the same process.
 	 *
-	 * A table is stored within psPrivateData on gralloc_module_t (this
-	 * is obviously per-process) which maps stamps to a mapped
-	 * PVRSRV_MEMDESC in that process. Each map entry has a lock
-	 * count associated with it, satisfying the requirements of the
-	 * Android API. This also prevents us from leaking maps/allocations.
-	 *
-	 * This table has entries inserted either by alloc()
-	 * (alloc_device_t) or map() (gralloc_module_t). Entries are removed
-	 * by free() (alloc_device_t) and unmap() (gralloc_module_t).
+	 * A table is stored within the gralloc implementation's private data
+	 * structure (which is per-process) which maps stamps to a mapped
+	 * PVRSRV_MEMDESC in that process. Each map entry has a lock count
+	 * associated with it, satisfying the requirements of the gralloc API.
+	 * This also prevents us from leaking maps/allocations.
 	 */
 
 #define IMG_NATIVE_HANDLE_NUMFDS (MAX_SUB_ALLOCS)
-	/* The `fd' field is used to "export" a meminfo to another process.
-	 * Therefore, it is allocated by alloc_device_t, and consumed by
-	 * gralloc_module_t.
-	 */
+	/* The `fd' field is used to "export" a meminfo to another process. */
 	int fd[IMG_NATIVE_HANDLE_NUMFDS];
 
 	/* This define should represent the number of packed 'int's required to
@@ -129,12 +119,12 @@ typedef struct
 	 */
 #define IMG_NATIVE_HANDLE_NUMINTS \
 	(sizeof(unsigned long long) / sizeof(int) + \
-	 6 + MAX_SUB_ALLOCS + MAX_SUB_ALLOCS + \
+	 7 + MAX_SUB_ALLOCS + MAX_SUB_ALLOCS + \
 	 sizeof(unsigned long long) / sizeof(int) * MAX_SUB_ALLOCS + \
 	 1)
-	/* A KERNEL unique identifier for any exported kernel meminfo. Each
-	 * exported kernel meminfo will have a unique stamp, but note that in
-	 * userspace, several meminfos across multiple processes could have
+	/* A KERNEL unique identifier for any exported kernel memdesc. Each
+	 * exported kernel memdesc will have a unique stamp, but note that in
+	 * userspace, several memdescs across multiple processes could have
 	 * the same stamp. As the native_handle can be dup(2)'d, there could be
 	 * multiple handles with the same stamp but different file descriptors.
 	 */
@@ -183,16 +173,85 @@ typedef struct
 	 * be initialized, not `iNumSubAllocs'.)
 	 */
 	int iNumSubAllocs;
+
+	/* How many layers a buffer contains. Layers are used to allocate for
+	 * texture arrays shared between processes. The multiple layers are
+	 * contained in one memory allocation. */
+	int iLayers;
 }
 __attribute__((aligned(sizeof(int)),packed)) IMG_native_handle_t;
 
-#define IMG_BFF_YUV					(1 << 0)
-#define IMG_BFF_UVCbCrORDERING		(1 << 1)
-#define IMG_BFF_CPU_CLEAR			(1 << 2)
-#define IMG_BFF_DONT_GPU_CLEAR		(1 << 3)
-#define IMG_BFF_PARTIAL_ALLOC		(1 << 4)
-#define IMG_BFF_NEVER_COMPRESS		(1 << 5)
-#define IMG_BFF_BIFTILED			(1 << 6)
+/* Channel encoding of buffer data.
+ *
+ * If the buffer has only one plane, the ENCODING bits should be interpreted
+ * as a definition of the interleaving pattern. Only two of the possible four
+ * permutations are defined; this is because the YVYU and VYUY patterns are
+ * not seen in the wild.
+ *
+ * If the buffer has more than one plane, the ENCODING bits should be
+ * interpreted as a definition of the plane order in memory. Assuming a YUV
+ * format, Y is always first, but U and V may be defined in 'V then U' or
+ * 'U then V' orders.
+ *
+ * Some bits are not used, to maximize compatibility with older DDKs which
+ * used them in semantically different ways.
+ */
+#define IMG_BFF_ENCODING_MASK                (3 << 0)
+/* For uiPlanes == 1 **********************************/
+/*   Reserved for VYUY (check IsYUV if used) (0 << 0) */
+#define IMG_BFF_ENCODING_INTERLEAVED_YUYV    (1 << 0)
+/*   Reserved for YVYU                       (2 << 0) */
+#define IMG_BFF_ENCODING_INTERLEAVED_UYVY    (3 << 0)
+/* For uiPlanes > 1 ***********************************/
+/*   Unused (check IsYUV if used)            (0 << 0) */
+#define IMG_BFF_ENCODING_VUCrCb              (1 << 0)
+/*   Unused                                  (2 << 0) */
+#define IMG_BFF_ENCODING_UVCbCr              (3 << 0)
+
+/* Whether the buffer should be cleared to zero from userspace, or via the
+ * PowerVR services at import time. This is deprecated functionality as most
+ * platforms use dma-buf or ion now, and for security reasons these allocators
+ * should never return uncleared memory.
+ */
+#define IMG_BFF_CPU_CLEAR                    (1 << 2)
+
+/* Deprecated, do not use */
+#define IMG_BFF_DONT_GPU_CLEAR               (1 << 3)
+
+/* Deprecated, do not use */
+#define IMG_BFF_PARTIAL_ALLOC                (1 << 4)
+
+/* Guarantee that GPU framebuffer compression is never used for buffers in
+ * this format, even if the format is supported by the compressor. This might
+ * be useful if the buffer is being fed to hardware blocks that cannot handle
+ * the framebuffer compression encoding, and the existing HAL overrides are
+ * not sufficiently expressive.
+ */
+#define IMG_BFF_NEVER_COMPRESS               (1 << 5)
+
+/* Indicates that the buffer should be mapped into the GPU 'tiling range'
+ * heaps, rather than the 'linear' general heap. This implies that the raw
+ * buffer data is tiled in physical memory. (The GPU BIF will de-tile it, so
+ * this is distinct from 'tiled texture' support.) The graphics HAL will
+ * select the correct 'tiling range' based on the buffer dimensions.
+ */
+#define IMG_BFF_BIFTILED                     (1 << 6)
+
+/* YUV subsampling encoding of buffer data.
+ * Many YUV formats have less chroma information than luma information. If
+ * this is not the case, use SUBSAMPLING_4_4_4. If each of the U and V channel
+ * data are 1/4 the size of the Y channel data, use SUBSAMPLING_4_2_0.
+ * Otherwise, use SUBSAMPLING_4_2_2.
+ */
+#define IMG_BFF_YUV_SUBSAMPLING_MASK         (3 << 7)
+#define IMG_BFF_YUV_SUBSAMPLING_4_2_0        (0 << 7)
+/* Unused: 4:1:1, 4:2:1, 4:1:0, 3:1:1?       (1 << 7) */
+#define IMG_BFF_YUV_SUBSAMPLING_4_2_2        (2 << 7)
+#define IMG_BFF_YUV_SUBSAMPLING_4_4_4        (3 << 7)
+
+/* Backwards compatibility */
+#define IMG_BFF_YUV             IMG_BFF_ENCODING_VUCrCb
+#define IMG_BFF_UVCbCrORDERING  IMG_BFF_ENCODING_UVCbCr
 
 /* Keep this in sync with SGX */
 typedef struct IMG_buffer_format_public_t
@@ -239,67 +298,22 @@ typedef struct
 }
 IMG_buffer_handle_t;
 
-/* Helpers for using the non-type-safe perform() extension functions. Use
- * these helpers instead of calling perform() directly in your application.
- */
+/* Public extensions, common to v0 and v1 HALs */
 
-#define GRALLOC_MODULE_GET_BUFFER_FORMAT_IMG     1
-#define GRALLOC_MODULE_GET_BUFFER_FORMATS_IMG    2
-#define GRALLOC_MODULE_BLIT_HANDLE_TO_HANDLE_IMG 3
-#define GRALLOC_MODULE_BLIT_STAMP_TO_HANDLE_IMG  4
-#define GRALLOC_MODULE_SET_DATA_SPACE_IMG        5
-#define GRALLOC_MODULE_GET_ION_CLIENT_IMG        6
-#define GRALLOC_MODULE_GET_BUFFER_HANDLE_IMG     7
-#define GRALLOC_MODULE_GET_BUFFER_PHYS_ADDRESS   8
-
-static inline int
-gralloc_module_get_buffer_format_img(const gralloc_module_t *module,
-									 int format,
-									 const IMG_buffer_format_public_t **v)
-{
-	return module->perform(module, GRALLOC_MODULE_GET_BUFFER_FORMAT_IMG,
-						   format, v);
-}
-
-static inline int
-gralloc_module_get_buffer_formats_img(const gralloc_module_t *module,
-									  const IMG_buffer_format_public_t **v)
-{
-	return module->perform(module, GRALLOC_MODULE_GET_BUFFER_FORMATS_IMG, v);
-}
-
-static inline int
-gralloc_module_blit_handle_to_handle_img(const gralloc_module_t *module,
-										 buffer_handle_t src,
-										 buffer_handle_t dest,
-										 int w, int h, int x, int y,
-										 int transform, int input_fence,
-										 int *output_fence)
-{
-	return module->perform(module, GRALLOC_MODULE_BLIT_HANDLE_TO_HANDLE_IMG,
-						   src, dest, w, h, x, y, transform, input_fence,
-						   output_fence);
-}
-
-static inline int
-gralloc_module_blit_stamp_to_handle(const gralloc_module_t *module,
-									unsigned long long src_stamp,
-									int src_width, int src_height,
-									int src_format, int src_stride_in_pixels,
-									int src_rotation, buffer_handle_t dest,
-									int dest_rotation, int input_fence,
-									int *output_fence)
-{
-	return module->perform(module, GRALLOC_MODULE_BLIT_STAMP_TO_HANDLE_IMG,
-						   src_stamp, src_width, src_height, src_format,
-						   src_stride_in_pixels, src_rotation, dest,
-						   dest_rotation, input_fence, output_fence);
-}
+#define GRALLOC_GET_BUFFER_FORMAT_IMG     1
+#define GRALLOC_GET_BUFFER_FORMATS_IMG    2
+#define GRALLOC_BLIT_HANDLE_TO_HANDLE_IMG 3
+#define GRALLOC_BLIT_STAMP_TO_HANDLE_IMG  4
+#define GRALLOC_SET_DATA_SPACE_IMG        5
+#define GRALLOC_GET_ION_CLIENT_IMG        6
+#define GRALLOC_GET_BUFFER_HANDLE_IMG     7
+#define GRALLOC_GET_BUFFER_PHYS_ADDRESS   8
 
 #if !defined(PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE)
 
 enum
 {
+	HAL_DATASPACE_UNKNOWN             = 0x0,
 	HAL_DATASPACE_SRGB_LINEAR         = 0x200,
 	HAL_DATASPACE_SRGB                = 0x201,
 	HAL_DATASPACE_BT601_625           = 0x102,
@@ -335,6 +349,7 @@ enum
 typedef enum
 {
 	/* Identical to upstream enum android_dataspace */
+	HAL_DATASPACE_EXT_UNKNOWN         = HAL_DATASPACE_UNKNOWN,
 	HAL_DATASPACE_EXT_SRGB_LINEAR     = HAL_DATASPACE_SRGB_LINEAR,
 	HAL_DATASPACE_EXT_SRGB            = HAL_DATASPACE_SRGB,
 	HAL_DATASPACE_EXT_BT601_625       = HAL_DATASPACE_BT601_625,
@@ -362,44 +377,4 @@ typedef enum
 }
 android_dataspace_ext_t;
 
-static inline int
-gralloc_module_set_data_space_img(const gralloc_module_t *module,
-								  buffer_handle_t handle,
-								  android_dataspace_ext_t source_dataspace,
-								  android_dataspace_ext_t dest_dataspace)
-{
-	return module->perform(module, GRALLOC_MODULE_SET_DATA_SPACE_IMG,
-						   handle, source_dataspace, dest_dataspace);
-}
-
-static inline int
-gralloc_module_get_ion_client_img(const gralloc_module_t *module, int *client)
-{
-	return module->perform(module, GRALLOC_MODULE_GET_ION_CLIENT_IMG, client);
-}
-
-/* NOTE: The buffer handle returned is a raw memory copy, so if the handle
- *       type contains file descriptors, the caller does not own them and
- *       must not close them. Also, the handles can go away at any time,
- *       so users of this code should work with the implicit gralloc
- *       contract, and not hold onto the handles returned here.
- */
-static inline int
-gralloc_module_get_buffer_handle_img(const gralloc_module_t *module,
-									 buffer_handle_t handle,
-									 IMG_buffer_handle_t *buffer_handle)
-{
-	return module->perform(module, GRALLOC_MODULE_GET_BUFFER_HANDLE_IMG,
-						   handle, buffer_handle);
-}
-
-static inline int
-gralloc_module_get_buffer_phys_addr(const gralloc_module_t *module,
-									 int fd,
-									 uint64_t *paddr)
-{
-	return module->perform(module, GRALLOC_MODULE_GET_BUFFER_PHYS_ADDRESS,
-						   fd, paddr);
-}
-
-#endif /* HAL_PUBLIC_H */
+#endif /* IMG_GRALLOC_COMMON_PUBLIC_H */
