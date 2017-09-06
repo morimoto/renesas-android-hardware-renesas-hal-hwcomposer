@@ -941,6 +941,8 @@ int HWCComposer::request(hwc_display_contents_1_t *list)
 		if (release_fd < 0) {
 			ALOGE("error CMP_IOC_POST");
 		} else {
+			/* HACK: ioctl doesn't return sync fd, so we need to skip it */
+			release_fd = -1;
 			prev_drawbgcolor = (num_layer == 0);
 		}
 	}

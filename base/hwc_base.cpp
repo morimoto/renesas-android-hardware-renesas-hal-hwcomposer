@@ -878,14 +878,8 @@ void HWCBase::onTargetExecute(
 
 	/* display using composer */
 	if (composition_target) {
-		/* for physical display */
-		if (composer_fence >= 0) {
-			/* queue target to display */
-			disp->queue(composition_target, composer_fence, no_plane);
-		} else {
-			/* cancel dequeue */
-			disp->dequeue_cancel(composition_target, no_plane);
-		}
+		/* queue target to display */
+		disp->queue(composition_target, composer_fence, no_plane);
 	}
 
 	/* display using drm plane. */

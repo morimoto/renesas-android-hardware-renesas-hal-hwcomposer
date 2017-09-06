@@ -24,7 +24,7 @@
 
 #define COMPOSER_SRC     4                 /* num of source image that used to blend. */
 #define COMPOSER_BUFFER  (COMPOSER_SRC+1)  /* num of all buffer for dest and source.  */
-#define MAX_COMPOSER_JOBS   5
+#define MAX_COMPOSER_JOBS   1
 
 typedef struct hwc_blend_post_t {
 	int           num_buffer;
