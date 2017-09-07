@@ -19,13 +19,17 @@ LOCAL_PATH := $(call my-dir)
 # hw/<OVERLAY_HARDWARE_MODULE_ID>.<ro.product.board>.so
 include $(CLEAR_VARS)
 
+EVS_HAL_PRESENTED := true
+
 LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_SHARED_LIBRARIES)/hw
 LOCAL_SHARED_LIBRARIES := libcutils libhardware libutils libhardware_legacy liblog
 LOCAL_SHARED_LIBRARIES += libsync
 LOCAL_SHARED_LIBRARIES += libion
-LOCAL_SHARED_LIBRARIES += libdrm \
-              android.hardware.automotive.vehicle@2.0 \
-              libhidlbase \
+LOCAL_SHARED_LIBRARIES += libdrm
+ifeq ($(EVS_HAL_PRESENTED),true)
+LOCAL_SHARED_LIBRARIES += android.hardware.automotive.vehicle@2.0 \
+                          libhidlbase
+endif
 
 # source (base class)
 #
@@ -50,7 +54,9 @@ LOCAL_SRC_FILES += displays/hwc_external.cpp
 LOCAL_SRC_FILES += displays/hwc_virtual.cpp
 
 LOCAL_SRC_FILES += hwcomposer.cpp
+ifeq ($(EVS_HAL_PRESENTED),true)
 LOCAL_SRC_FILES += VehicleListenerThread.cpp
+endif
 
 
 # target
@@ -87,6 +93,10 @@ ifeq ($(THREE_DISPLAY),true)
 LOCAL_CFLAGS += -DTHIRD_DISPLAY_SUPPORT
 endif
 
+ifeq ($(EVS_HAL_PRESENTED),true)
+LOCAL_CFLAGS += -DEVS_HAL
+endif
+
 # add flag to distinguish a target.
 #
 #LOCAL_C_INCLUDES+= $(SOLUTION_VENDOR_PATH)/include
@@ -94,6 +104,7 @@ LOCAL_C_INCLUDES+= $(TOP)/vendor/renesas/include
 LOCAL_C_INCLUDES+= $(TOP)/vendor/renesas/$(TARGET_BOARD_PLATFORM)/include
 LOCAL_C_INCLUDES+= $(TARGET_OUT_HEADERS)/libdrm/
 LOCAL_C_INCLUDES+= $(TOP)/system/core/libsync/
+LOCAL_C_INCLUDES+= $(TOP)/system/core/base/include/
 
 # TARGET_FORCE_HWC_FOR_VIRTUAL_DISPLAYS
 #   set build option for copy HWC_FRAMEBUFFER_TARGET to output buffer.

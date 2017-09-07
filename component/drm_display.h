@@ -144,7 +144,9 @@ private:
 	int             request_next;
 	SyncTimeline    sync_timeline;
 
+#ifdef EVS_HAL
 	bool            is_master;
+#endif
 
 	struct {
 		List< sp<FlipCallback> >  flip_listners;
@@ -201,8 +203,10 @@ public:
 
 	int getfencefd();
 
+#ifdef EVS_HAL
 	bool enableDRMMaster();
 	bool disableDRMMaster();
+#endif
 
 	/* initialize */
 	void init(void);

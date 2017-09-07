@@ -31,7 +31,9 @@
 #include <utils/String8.h>
 #include <img_gralloc1_public.h>
 
+#ifdef EVS_HAL
 #include "VehicleCallbackListener.h"
+#endif
 
 #include "displays/hwc_primary.h"
 #include "displays/hwc_external.h"
@@ -906,10 +908,13 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
 	struct hwc_context_t *dev = NULL;
 	int i;
 	int num_displays = sizeof(hwdisplays) / sizeof(hwdisplay);
+
+#ifdef EVS_HAL
 	bool is_camera_enabled = false;
 
 	android::sp<VehicleCallbackListener> pListener = new VehicleCallbackListener();
 	android::sp <IVehicle> pVnet = IVehicle::getService();
+#endif
 
 	ALOGD_IF(USE_DBGLEVEL(1),
 		"open");
@@ -1008,6 +1013,7 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
 		status = 0;
 	}
 
+#ifdef EVS_HAL
 	pListener->setHWCContext(dev);
 
 	if (pVnet.get() == nullptr) {
@@ -1055,7 +1061,7 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
 		pListener->setCameraStatus(is_camera_enabled);
 
 	}
-
+#endif
 
 err:
 	if (status) {
