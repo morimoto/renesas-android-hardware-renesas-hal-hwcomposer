@@ -823,7 +823,8 @@ static int check_gralloc_handle(struct hwc_context_t *ctx)
 #if defined(TARGET_BOARD_KOELSCH)
 	const char *hal_name = "IMG SGX Graphics HAL";
 #elif defined(TARGET_BOARD_LAGER) || \
-	  defined(TARGET_BOARD_SALVATOR)
+	  defined(TARGET_BOARD_SALVATOR) || \
+	  defined(TARGET_BOARD_ULCB)
 	const char *hal_name = "IMG Rogue Graphics HAL";
 #elif defined(TARGET_BOARD_ALT)
 	const char *hal_name = "IMG SGX Graphics HAL";

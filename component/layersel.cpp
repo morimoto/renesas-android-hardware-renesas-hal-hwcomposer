@@ -1327,8 +1327,10 @@ HWCLayerSelect::HWCLayerSelect(int size, int area, int rotbuf)
 	mode.flags    = MODE_FLAG_DEFAULT;
 	init_aspect(16, 9);
 
-#if defined(TARGET_BOARD_LAGER) || defined(TARGET_BOARD_KOELSCH) || defined(TARGET_BOARD_ALT) || \
-	defined(TARGET_BOARD_SALVATOR)
+#if defined(TARGET_BOARD_LAGER) || defined(TARGET_BOARD_KOELSCH) || \
+	defined(TARGET_BOARD_ALT) || \
+	defined(TARGET_BOARD_SALVATOR) || defined(TARGET_BOARD_ULCB)
+
 	mode.num_layer  = 4;
 	mode.num_scaler = 0;
 	mode.num_yuv    = 1;

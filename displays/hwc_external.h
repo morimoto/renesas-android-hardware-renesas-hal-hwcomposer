@@ -20,7 +20,8 @@
 
 
 #if defined(TARGET_BOARD_LAGER) || \
-	defined(TARGET_BOARD_SALVATOR)
+	defined(TARGET_BOARD_SALVATOR) || \
+	defined(TARGET_BOARD_ULCB)
 #define USE_EXTERNAL (1 && defined(USE_EXTERNAL_DISPLAY))
 #else
 #define USE_EXTERNAL 0
