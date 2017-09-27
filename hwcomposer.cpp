@@ -210,7 +210,7 @@ static bool update_global(size_t numDisplays, hwc_display_contents_1_t** display
 	ALOGD_IF(USE_DBGLEVEL(3),
 		"connected:pri=%d ext=%d", g.st_connect[0], g.st_connect[1]);
 	ALOGD_IF(USE_DBGLEVEL(3),
-		"dotclock:pri=%" PRId64 " ext=%" PRId64, g.st_dotclock[0], g.st_dotclock[1]);
+		"dotclock:pri=%zu ext=%zu", g.st_dotclock[0], g.st_dotclock[1]);
 
 	/* num of available overlay for composer. */
 	max_ovl = 0;
