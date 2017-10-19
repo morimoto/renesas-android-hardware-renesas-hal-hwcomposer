@@ -21,11 +21,13 @@
 
 #if defined(TARGET_BOARD_LAGER) || \
 	defined(TARGET_BOARD_SALVATOR) || \
-	defined(TARGET_BOARD_ULCB)
+	defined(TARGET_BOARD_ULCB) || \
+	defined(TARGET_BOARD_KINGFISHER)
+
 #define USE_EXTERNAL (1 && defined(USE_EXTERNAL_DISPLAY))
 #else
 #define USE_EXTERNAL 0
-#endif
+#endif /* defined(TARGET_BOARD_xxx) */
 
 #if USE_EXTERNAL
 

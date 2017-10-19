@@ -1329,7 +1329,8 @@ HWCLayerSelect::HWCLayerSelect(int size, int area, int rotbuf)
 
 #if defined(TARGET_BOARD_LAGER) || defined(TARGET_BOARD_KOELSCH) || \
 	defined(TARGET_BOARD_ALT) || \
-	defined(TARGET_BOARD_SALVATOR) || defined(TARGET_BOARD_ULCB)
+	defined(TARGET_BOARD_SALVATOR) || defined(TARGET_BOARD_ULCB) || \
+	defined(TARGET_BOARD_KINGFISHER)
 
 	mode.num_layer  = 4;
 	mode.num_scaler = 0;

@@ -40,7 +40,10 @@
 #define ALIGN_ROUND_UP_4K(X)    (((X)+4095) & ~4095)
 #define ALIGN_ROUND_UP_128(X)    (((X)+127) & ~127)
 
-#if defined(TARGET_BOARD_SALVATOR) || defined(TARGET_BOARD_ULCB)
+#if defined(TARGET_BOARD_SALVATOR) || \
+    defined(TARGET_BOARD_ULCB) || \
+    defined(TARGET_BOARD_KINGFISHER)
+
 #define EXTERNAL_WIDTH            1920
 #define EXTERNAL_HEIGHT           1080
 #define EXT_CRT_INDEX DRM_MODE_ENCODER_TMDS
