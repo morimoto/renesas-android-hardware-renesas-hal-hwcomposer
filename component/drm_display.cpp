@@ -696,7 +696,9 @@ bool DRMDisplay::setmode(int disp_id, uint32_t enc_id, uint32_t con_id,
 			continue;
 		}
 
-		if (test->vrefresh != (unsigned int) HZ) {
+		/* Strange HZ range for LVDS panels */
+		if (test->vrefresh < 55.f || test->vrefresh > 60.f)
+		{
 			matching_size_flag = MATCH_SIZE_ON;
 			matching_count++;
 			if (matching_count > 20) {

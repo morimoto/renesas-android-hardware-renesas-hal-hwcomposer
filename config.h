@@ -80,20 +80,19 @@ static const hwdisplay hwdisplays[NUM_DISPLAYS] = {
         "ro.boot.display.res.HDMI2",
     },
     { // secondary display 1
+        "/sys/class/drm/card0-LVDS-1/encoder_type",
+        "/sys/class/drm/card0-LVDS-1/connector_id",
+        "/sys/class/drm/card0-LVDS-1/status",
+        "ro.boot.display.res.LVDS",
+    }
+#if defined(THIRD_DISPLAY_SUPPORT)
+    { // external display 2
         "/sys/class/drm/card0-HDMI-A-1/encoder_type",
         "/sys/class/drm/card0-HDMI-A-1/connector_id",
         "/sys/class/drm/card0-HDMI-A-1/status",
         "ro.boot.display.res.HDMI1"
-    },
-#if defined(THIRD_DISPLAY_SUPPORT)
-    { // external display 2
-        "/sys/class/drm/card0-LVDS-0/encoder_type",
-        "/sys/class/drm/card0-LVDS-0/connector_id",
-        "/sys/class/drm/card0-LVDS-0/status",
-        "ro.boot.display.res.LVDS",
     }
 #endif
-
 #else /* LAGER, KOELSCH, ALT, SALVATOR, ULCB*/
 #if defined(THIRD_DISPLAY_SUPPORT)
     { // primary display
