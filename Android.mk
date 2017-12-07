@@ -105,6 +105,10 @@ ifeq ($(EVS_HAL_PRESENTED),true)
 LOCAL_CFLAGS += -DEVS_HAL
 endif
 
+ifeq ($(ENABLE_LVDS),true)
+LOCAL_CFLAGS += -DENABLE_LVDS
+endif
+
 # add flag to distinguish a target.
 #
 #LOCAL_C_INCLUDES+= $(SOLUTION_VENDOR_PATH)/include
