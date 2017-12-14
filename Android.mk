@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Include only for Renesas ones.
+ifneq (,$(filter $(TARGET_PRODUCT), salvator ulcb kingfisher))
 
 LOCAL_PATH := $(call my-dir)
 
@@ -133,3 +135,4 @@ LOCAL_MULTILIB := 64
 
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_SHARED_LIBRARY)
+endif # Include only for Renesas ones.
