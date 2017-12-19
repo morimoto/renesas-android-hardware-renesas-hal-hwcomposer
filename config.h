@@ -79,21 +79,35 @@ static const hwdisplay hwdisplays[NUM_DISPLAYS] = {
         "/sys/class/drm/card0-HDMI-A-2/status",
         "ro.boot.display.res.HDMI2",
     },
-#if defined(ENABLE_LVDS)
-    { // secondary display 1
+#if defined(ENABLE_LVDS) && defined(THIRD_DISPLAY_SUPPORT)
+    { // external display
+        "/sys/class/drm/card0-HDMI-A-1/encoder_type",
+        "/sys/class/drm/card0-HDMI-A-1/connector_id",
+        "/sys/class/drm/card0-HDMI-A-1/status",
+        "ro.boot.display.res.HDMI1"
+    },
+    { // secondary display
         "/sys/class/drm/card0-LVDS-1/encoder_type",
         "/sys/class/drm/card0-LVDS-1/connector_id",
         "/sys/class/drm/card0-LVDS-1/status",
         "ro.boot.display.res.LVDS",
     },
-#endif
-#if defined(THIRD_DISPLAY_SUPPORT)
-    { // external display 2
+#else /* defined(ENABLE_LVDS) && defined(THIRD_DISPLAY_SUPPORT) */
+#if defined(ENABLE_LVDS)
+    { // external display
+        "/sys/class/drm/card0-LVDS-1/encoder_type",
+        "/sys/class/drm/card0-LVDS-1/connector_id",
+        "/sys/class/drm/card0-LVDS-1/status",
+        "ro.boot.display.res.LVDS",
+    },
+#else
+    { // external display
         "/sys/class/drm/card0-HDMI-A-1/encoder_type",
         "/sys/class/drm/card0-HDMI-A-1/connector_id",
         "/sys/class/drm/card0-HDMI-A-1/status",
         "ro.boot.display.res.HDMI1"
-    }
+    },
+#endif
 #endif
 #else /* LAGER, KOELSCH, ALT, SALVATOR, ULCB*/
 #if defined(THIRD_DISPLAY_SUPPORT)
