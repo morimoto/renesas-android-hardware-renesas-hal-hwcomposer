@@ -1057,6 +1057,7 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
 				ALOGE("Got error status when get value from Vehicle HAL");
 			} else {
 				is_camera_enabled = (gearValue == static_cast<int32_t>(VehicleGear::GEAR_REVERSE));
+				is_camera_enabled |= (gearValue == static_cast<int32_t>(VehicleGear::GEAR_PARK));
 			}
 		}
 

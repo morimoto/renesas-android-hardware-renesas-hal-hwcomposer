@@ -45,7 +45,8 @@ public:
     // Methods from ::android::hardware::automotive::vehicle::V2_0::IVehicleCallback follow.
     Return<void> onPropertyEvent(const hidl_vec <VehiclePropValue> & values) override {
         if (getPropType(values[0].prop) == VehiclePropertyType::INT32) {
-            if (values[0].value.int32Values[0] == static_cast<int32_t>(VehicleGear::GEAR_REVERSE)) {
+            if (values[0].value.int32Values[0] == static_cast<int32_t>(VehicleGear::GEAR_REVERSE) ||
+                values[0].value.int32Values[0] == static_cast<int32_t>(VehicleGear::GEAR_PARK)) {
                 mThread->setCameraStatus(true);
             } else {
                 mThread->setCameraStatus(false);
