@@ -523,11 +523,15 @@ static int hwc_query(struct hwc_composer_device_1* dev, int what, int* value)
 		*value = 0;
 		if (ctx->base[0])
 			*value |= HWC_DISPLAY_PRIMARY_BIT;
+#if NUM_DISPLAYS > 1
 		if (ctx->base[1])
 			*value |= HWC_DISPLAY_EXTERNAL_BIT;
+#endif
+#if NUM_DISPLAYS > 2
 		if (ctx->base[2])
 			*value |= HWC_DISPLAY_EXTERNAL_BIT;
-#if USE_HWC_VERSION1_3 && NUM_OF_VIRTUALDISPLAY
+#endif
+#if USE_HWC_VERSION1_3 && NUM_OF_VIRTUALDISPLAY && NUM_DISPLAYS > 3
 		if (ctx->base[3])
 			*value |= HWC_DISPLAY_VIRTUAL_BIT;
 #endif
@@ -1057,7 +1061,6 @@ static int hwc_device_open(const struct hw_module_t* module, const char* name,
 				ALOGE("Got error status when get value from Vehicle HAL");
 			} else {
 				is_camera_enabled = (gearValue == static_cast<int32_t>(VehicleGear::GEAR_REVERSE));
-				is_camera_enabled |= (gearValue == static_cast<int32_t>(VehicleGear::GEAR_PARK));
 			}
 		}
 

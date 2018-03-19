@@ -352,12 +352,10 @@ DisplayPrimary::DisplayPrimary(HWCNotice *obj, int display, DRMDisplay *drm_disp
 	int width = 1920, height = 1080;
 	bool interlace = false;
 
-	int get_width, get_height;
 	int i, fd, len;
 
 	int ion_fd;
 	int map_size;
-	uint32_t drm_handle;
 	int map_fd;
 
     char value[8];
@@ -400,11 +398,8 @@ DisplayPrimary::DisplayPrimary(HWCNotice *obj, int display, DRMDisplay *drm_disp
 	map_size = ALIGN_ROUND_UP_4K(map_size);
 
 	for (i = 0; i < NUM_MAX_PRIMARY_BUFFER; i++) {
-		//const int alloc_flag = ION_FLAG_CACHED | ION_FLAG_CACHED_NEEDS_SYNC;
 		const int alloc_flag = 0;
-		//const int heap_mask  = 1 << (ION_HEAP_TYPE_CUSTOM);
-		const int heap_mask  = ION_HEAP_TYPE_DMA_MASK;
-		drm_handle = 0; /* does not use libkms so drm_handle is always zero. */
+		const int heap_mask  = (1 << ION_HEAP_TYPE_DMA);
 		map_fd = -1;
 		if (ion_alloc_fd(ion_fd, map_size, 4096, heap_mask, alloc_flag, &map_fd) < 0) {
 			/* error */

@@ -32,7 +32,6 @@ class HWCVirtual : public HWCBase {
 private:
 	void onTargetPrepare_part1(hwc_display_contents_1_t* list, struct target_t& info, bool& use_opengl, bool& use_composer, const int log_flag, int& next_log_flag);
 private:
-	HWCNotice *notice;
 	bool       outbuf_invalid;
 
 	/* virtual function */

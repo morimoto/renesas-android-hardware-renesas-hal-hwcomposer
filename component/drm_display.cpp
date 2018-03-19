@@ -501,7 +501,6 @@ bool DRMDisplay::getResolutionFromProperties(int disp_id, int& width, int& heigh
 	// Property has next format:
 	// [<width>x<height>][-<bpp>][@<refresh rate>][i]
 
-	int w, h;
 	std::string s(value);
 	size_t found = s.find("x");
 	if (found == std::string::npos)

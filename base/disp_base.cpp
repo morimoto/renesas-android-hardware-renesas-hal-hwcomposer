@@ -498,8 +498,7 @@ void DisplayBase::deinit(void)
  *  \param[in] obj  pointer to a HWCNotice structure
  *  \param[in] _disp  display type
  */
-DisplayBase::DisplayBase(HWCNotice *obj, int _disp) :
-	notice(obj),
+DisplayBase::DisplayBase(HWCNotice */*obj*/, int _disp) :
 	terminate(false),
 #if FLIPWAIT_LOG
 	msg_flipwaitlog(0),

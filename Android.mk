@@ -21,14 +21,13 @@ LOCAL_PATH := $(call my-dir)
 # hw/<OVERLAY_HARDWARE_MODULE_ID>.<ro.product.board>.so
 include $(CLEAR_VARS)
 
-EVS_HAL_PRESENTED := true
-
 LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_SHARED_LIBRARIES)/hw
 LOCAL_SHARED_LIBRARIES := libcutils libhardware libutils libhardware_legacy liblog
 LOCAL_SHARED_LIBRARIES += libsync
 LOCAL_SHARED_LIBRARIES += libion
 LOCAL_SHARED_LIBRARIES += libdrm
-ifeq ($(EVS_HAL_PRESENTED),true)
+
+ifeq ($(EVS_HAL_PRESENT),true)
 LOCAL_SHARED_LIBRARIES += android.hardware.automotive.vehicle@2.0 \
                           libhidlbase
 endif
@@ -103,7 +102,7 @@ ifeq ($(THREE_DISPLAY),true)
 LOCAL_CFLAGS += -DTHIRD_DISPLAY_SUPPORT
 endif
 
-ifeq ($(EVS_HAL_PRESENTED),true)
+ifeq ($(EVS_HAL_PRESENT),true)
 LOCAL_CFLAGS += -DEVS_HAL
 endif
 
@@ -134,5 +133,6 @@ LOCAL_CFLAGS += -DUSE_EXTERNAL_DISPLAY
 LOCAL_MULTILIB := 64
 
 LOCAL_MODULE_TAGS := optional
+
 include $(BUILD_SHARED_LIBRARY)
 endif # Include only for Renesas ones.

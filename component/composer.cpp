@@ -1053,6 +1053,9 @@ HWCComposer::HWCComposer():
 	if(fd == -1) {
 		fd = open("/dev/composer", O_RDWR);
 
+        if (fd < 0)
+            ALOGE("Failed to open /dev/composer (permissions?)");
+
 		memset(&data, 0 , sizeof(data));
 		data.operation_type = OPTYPE_BLENDONLY;
 

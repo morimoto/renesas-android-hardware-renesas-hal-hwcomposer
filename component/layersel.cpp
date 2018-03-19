@@ -17,7 +17,9 @@
 
 #include "component/layersel.h"
 #include "config.h"
+
 #include <math.h>
+#include <string.h>
 #include <img_gralloc1_public.h>
 #include <cutils/log.h>
 #include <utils/misc.h>

@@ -231,7 +231,6 @@ bool DisplayExternal::set_displaysize(int width, int height)
 {
 	sp<DRMDisplay::IonBuffer> drm_data[NUM_MAX_EXTERNAL_BUFFER];
 	int i, fd;
-	int get_width, get_height;
 
 	int encoder_id = -1;
 	int connector_id = -1;
@@ -319,9 +318,6 @@ DisplayExternal::DisplayExternal(HWCNotice *obj, int display, DRMDisplay *drm_di
 	dsp(drm_disp),
 	disp_id(id)
 {
-	/* fake buffer register */
-	int i;
-
 	/* to avoid error in SurfaceFlinger. configure dummy param */
 	hwc_attr.display_vsync_period = 1000000000 / 60;
 	hwc_attr.display_width = EXTERNAL_WIDTH;
@@ -466,10 +462,8 @@ int HWCHotplug::onEventHotplug(void)
 	char uevent_desc[4096];
 	const char *dev = "change@/devices/platform/soc/feb00000.display/drm/card0";
 	const char *s;
-	int        len;
-	int state = 0;
-
-	bool curr_connected = false;
+	int         len;
+	bool        curr_connected = false;
 
 	len = uevent_next_event(uevent_desc, sizeof(uevent_desc) - 2);
 	s   = &uevent_desc[0];
@@ -535,7 +529,7 @@ bool HWCHotplug::isValid(void)
  *  \param[in] disp  display type
  *  \param[in] base  pointer to a HWCExternal structure
  */
-HWCHotplug::HWCHotplug(HWCNotice *obj, int disp, HWCExternal *base, int disp_id): HotplugBase(obj, disp_id), ext_base(base),
+HWCHotplug::HWCHotplug(HWCNotice *obj, int /*disp*/, HWCExternal *base, int disp_id): HotplugBase(obj, disp_id), ext_base(base),
 		disp_id(disp_id)
 {
 #if USE_UEVENT

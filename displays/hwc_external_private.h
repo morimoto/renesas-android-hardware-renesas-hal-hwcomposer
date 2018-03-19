@@ -50,10 +50,8 @@ class DisplayExternal : public DisplayBase {
 	DRMDisplay *dsp;
 	struct drm_attributes_t hwc_attr;
 
-	HWCNotice               *notice;
 	Mutex                   lock;
 	Condition               cond_flip_flag;
-	bool                    vsync_enable;
 	int                     disp_id;
 
 

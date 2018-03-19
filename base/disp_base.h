@@ -59,7 +59,6 @@ using namespace android;
  *  @brief Control display buffer
  */
 class DisplayBase {
-	HWCNotice     *notice;
 	HWCThread     thread;
 
 	Mutex   lock_disp;

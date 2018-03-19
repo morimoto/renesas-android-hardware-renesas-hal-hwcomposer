@@ -263,8 +263,8 @@ void HWCVirtual::onTargetExecute(
 /*! \brief HWCVirtual initialize
  *  \param[in] obj  pointer to a HWCNotice structure
  */
-HWCVirtual::HWCVirtual(HWCNotice *obj) :
-	notice(obj), outbuf_invalid(true)
+HWCVirtual::HWCVirtual(HWCNotice * /*obj*/) :
+	outbuf_invalid(true)
 {
 
 	display_type = HWC_DISPLAY_VIRTUAL;

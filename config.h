@@ -64,7 +64,6 @@
 #define NUM_DISPLAYS (3)
 
 struct hwdisplay {
-    char encoder[64];
     char connector[64];
     char status[64];
     char property[64];
@@ -74,20 +73,17 @@ static const hwdisplay hwdisplays[NUM_DISPLAYS] = {
 
 #if defined(TARGET_BOARD_KINGFISHER)
     { // primary display
-        "/sys/class/drm/card0-HDMI-A-2/encoder_type",
         "/sys/class/drm/card0-HDMI-A-2/connector_id",
         "/sys/class/drm/card0-HDMI-A-2/status",
-        "ro.boot.display.res.HDMI2",
+        "ro.boot.display.res.HDMI2"
     },
 #if defined(ENABLE_LVDS) && defined(THIRD_DISPLAY_SUPPORT)
     { // external display
-        "/sys/class/drm/card0-HDMI-A-1/encoder_type",
         "/sys/class/drm/card0-HDMI-A-1/connector_id",
         "/sys/class/drm/card0-HDMI-A-1/status",
         "ro.boot.display.res.HDMI1"
     },
     { // secondary display
-        "/sys/class/drm/card0-LVDS-1/encoder_type",
         "/sys/class/drm/card0-LVDS-1/connector_id",
         "/sys/class/drm/card0-LVDS-1/status",
         "ro.boot.display.res.LVDS",
@@ -95,14 +91,12 @@ static const hwdisplay hwdisplays[NUM_DISPLAYS] = {
 #else /* defined(ENABLE_LVDS) && defined(THIRD_DISPLAY_SUPPORT) */
 #if defined(ENABLE_LVDS)
     { // external display
-        "/sys/class/drm/card0-LVDS-1/encoder_type",
         "/sys/class/drm/card0-LVDS-1/connector_id",
         "/sys/class/drm/card0-LVDS-1/status",
         "ro.boot.display.res.LVDS",
     },
 #else
     { // external display
-        "/sys/class/drm/card0-HDMI-A-1/encoder_type",
         "/sys/class/drm/card0-HDMI-A-1/connector_id",
         "/sys/class/drm/card0-HDMI-A-1/status",
         "ro.boot.display.res.HDMI1"
@@ -112,7 +106,6 @@ static const hwdisplay hwdisplays[NUM_DISPLAYS] = {
 #else /* LAGER, KOELSCH, ALT, SALVATOR, ULCB*/
 #if defined(THIRD_DISPLAY_SUPPORT)
     { // primary display
-        "/sys/class/drm/card0-VGA-1/encoder_type",
         "/sys/class/drm/card0-VGA-1/connector_id",
         "/sys/class/drm/card0-VGA-1/status",
         "ro.boot.display.res.VGA"
@@ -120,7 +113,6 @@ static const hwdisplay hwdisplays[NUM_DISPLAYS] = {
 #endif
 
     { // external display 1
-        "/sys/class/drm/card0-HDMI-A-1/encoder_type",
         "/sys/class/drm/card0-HDMI-A-1/connector_id",
         "/sys/class/drm/card0-HDMI-A-1/status",
         "ro.boot.display.res.HDMI1",
@@ -128,7 +120,6 @@ static const hwdisplay hwdisplays[NUM_DISPLAYS] = {
 
 #if defined(TARGET_BOARD_PLATFORM_R8A7795)
     { // external display 2
-        "/sys/class/drm/card0-HDMI-A-2/encoder_type",
         "/sys/class/drm/card0-HDMI-A-2/connector_id",
         "/sys/class/drm/card0-HDMI-A-2/status",
         "ro.boot.display.res.HDMI2",
