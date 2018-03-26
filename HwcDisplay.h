@@ -35,6 +35,13 @@
 #include <memory>
 #include <deque>
 
+/* DEBUG_FRAMERATE
+ * report frame rate every second.
+ *  1   effective.
+ *  0   unavailable.
+ */
+#define DEBUG_FRAMERATE 1 // report frame rate if 1 specified
+
 namespace android {
 
 class HwcDisplay {
@@ -91,6 +98,13 @@ public:
     void stopEVSCameraLayer();
     void invalidate();
 
+#if DEBUG_FRAMERATE
+    int mFpsFrameCount = 0;
+    uint32_t mFpsStartSec = 0;
+    uint32_t mFpsStartUsec = 0;
+    std::string mDispName;
+#endif //DEBUG_FRAMERATE
+
 private:
     void addFenceToRetireFence(int fd);
     int loadDisplayModes();
@@ -132,6 +146,9 @@ private:
 
     std::unique_ptr<DrmDisplayComposition> mActiveComposition;
 
+#if DEBUG_FRAMERATE
+    drmEventContext mEventContext;
+#endif //DEBUG_FRAMERATE
     VSyncWorker mVsyncWorker;
     hwc2_display_t mHandle;
     HWC2::DisplayType mType;

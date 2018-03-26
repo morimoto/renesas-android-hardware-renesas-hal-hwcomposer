@@ -56,6 +56,50 @@ private:
     hwc2_function_pointer_t hook_;
 };
 
+#if DEBUG_FRAMERATE
+static void page_flip_handler(int //fd
+                              , uint32_t //sequence
+                              , uint32_t tv_sec
+                              , uint32_t tv_usec
+                              , void* user_data
+                              ) {
+    char value[PROPERTY_VALUE_MAX];
+    property_get("debug.hwc.showfps", value, "0");
+
+    if (atoi(value)) {
+        HwcDisplay* disp = reinterpret_cast<HwcDisplay*>(user_data);
+        if (!disp)
+            return;
+
+        int& fps_frame_count = disp->mFpsFrameCount;
+        uint32_t& start_sec = disp->mFpsStartSec;
+        uint32_t& start_usec = disp->mFpsStartUsec;
+
+        if (fps_frame_count == 0) {
+            start_sec = tv_sec;
+            start_usec = tv_usec;
+            fps_frame_count++;
+
+        } else {
+            int sec = tv_sec - start_sec;
+            int usec = tv_usec - start_usec;
+            int time = usec;
+            time += sec*1000000;
+
+            if (sec > 2 || time >= 1*1000000) {
+                float float_sec = (float)usec / (float)1000000;
+                float_sec += sec;
+                ALOGD("%s fps:%5.1f (%d frame per %f sec)", disp->mDispName.c_str(), (float)fps_frame_count / float_sec, fps_frame_count, float_sec);
+                start_sec = tv_sec;
+                start_usec = tv_usec;
+                fps_frame_count = 0;
+            }
+            fps_frame_count++;
+        }
+    }
+}
+#endif //DEBUG_FRAMERATE
+
 HwcDisplay::HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
                        HWC2::DisplayType type, std::shared_ptr<Importer> importer)
     : mDrmFd(drmFd)
@@ -86,6 +130,15 @@ Error HwcDisplay::init() {
     if (err != 0) {
         return Error::NO_RESOURCES;
     }
+
+#if DEBUG_FRAMERATE
+    std::ostringstream oss;
+    oss << "display-" << mHandle;
+    mDispName = oss.str();
+
+    mEventContext.version = DRM_EVENT_CONTEXT_VERSION;
+    mEventContext.page_flip_handler = page_flip_handler;
+#endif //DEBUG_FRAMERATE
 
     int ret = mVsyncWorker.init(mDrmFd, display);
 
@@ -319,7 +372,7 @@ Error HwcDisplay::getDisplayName(uint32_t* size, char* name) {
         return Error::NONE;
     }
 
-    *size = std::min<uint32_t>(static_cast<uint32_t>(length - 1), *size);
+    *size = std::min<uint32_t>(static_cast<uint32_t>(length), *size);
     strncpy(name, string.c_str(), *size);
     return Error::NONE;
 }
@@ -524,15 +577,23 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
 
     uint32_t flags = 0;
 
+#if DEBUG_FRAMERATE
+    flags |= DRM_MODE_PAGE_FLIP_EVENT;
+#endif //DEBUG_FRAMERATE
+
     if (mFirstDraw)
         flags |= DRM_MODE_ATOMIC_ALLOW_MODESET;
 
     ret = -EBUSY;
 
     while (ret == -EBUSY)
-        ret = drmModeAtomicCommit(mDrmFd, pset, flags, nullptr);
+        ret = drmModeAtomicCommit(mDrmFd, pset, flags, this);
 
     CHECK_RES_WARN(ret);
+
+#if DEBUG_FRAMERATE
+    CHECK_RES_WARN(drmHandleEvent(mDrmFd, &mEventContext));
+#endif //DEBUG_FRAMERATE
 
     if (mFirstDraw) {
         ret = destroyPropertyBlob(mMode.mOldBlobId);
