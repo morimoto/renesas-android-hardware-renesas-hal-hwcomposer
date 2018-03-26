@@ -146,6 +146,7 @@ private:
     DummyImporter mDummyImp;
     std::deque<DRMPlane> mPlanes;
     std::mutex mLock;
+    int32_t mColorTransform = 0;
     bool mInitialized = false;
     bool mUsingCameraLayer = false;
 };

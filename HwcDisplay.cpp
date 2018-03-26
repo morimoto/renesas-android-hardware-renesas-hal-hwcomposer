@@ -689,6 +689,7 @@ Error HwcDisplay::setColorMode(int32_t mode) {
 Error HwcDisplay::setColorTransform(const float* matrix, int32_t hint) {
     unsupported(__func__, matrix, hint);
     // TODO: Force client composition if we get this
+    mColorTransform = hint;
     return Error::NONE;
 }
 
@@ -743,7 +744,8 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
     *num_types = 0;
     *num_requests = 0;
     int num_device_planes = 0;
-    int max_device_planes = mPlanes.size() > 2 ? mPlanes.size() - 1 : 0;
+    int max_device_planes = (mPlanes.size() > 2 && !mColorTransform)
+        ? mPlanes.size() - 1 : 0;
     mLayersSortedByZ.clear();
 
     for (auto& l : mLayers) {
