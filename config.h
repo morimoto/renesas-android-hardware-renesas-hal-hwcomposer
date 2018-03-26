@@ -15,55 +15,17 @@
  * limitations under the License.
  */
 
-#ifndef HWC_CONFIG_FUNCTION_SWITCH_H
-#define HWC_CONFIG_FUNCTION_SWITCH_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_CONFIG_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_CONFIG_H
 
 /***********************************
  define function switch
 ***********************************/
 
-/* DEBUG_HWC
- * controlled whether the debug function is made effective.
- *  4   log level 4   log full debug information.
- *  3   log level 3
- *  2   log level 2
- *  1   log level 1.  minimum debug information.
- *  0   unavailable.
- */
-#define DEBUG_HWC        0
-
-#define USE_DBGLEVEL(X)   (DEBUG_HWC >= (X))
-
-
-/* DEBUG_USE_ATRACE
- * controlled whether the debug function is made effective.
- *  1   effective.
- *  0   unavailable.
- */
-#define DEBUG_USE_ATRACE     0
-
-/* num of virtual display supported
- *  2   two display effective. (reserved.)
- *  1   one display effective.
- *  0   unavailable. all virtual display handled same as HWC1.2.
- */
-#define NUM_OF_VIRTUALDISPLAY   1
-
-/* support HWC V1.2
- *  1   hwc version 1.2 used.
- *  0   hwc version 1.1 used.
- */
-#define USE_HWC_VERSION1_2   1
-
-/* support HWC V1.3
- *  1   hwc version 1.3 used. necessary to set USE_HWC_VERSION1_2.
- *  0   -
- */
-#define USE_HWC_VERSION1_3   0
-
 #define NUM_DISPLAYS (3)
 
 struct hwdisplay {
+    char encoder[64];
     char connector[64];
     char status[64];
     char property[64];
@@ -72,54 +34,46 @@ struct hwdisplay {
 static const hwdisplay hwdisplays[NUM_DISPLAYS] = {
 
 #if defined(TARGET_BOARD_KINGFISHER)
-    { // primary display
+    {
+        // primary display
+        "/sys/class/drm/card0-HDMI-A-2/encoder_type",
         "/sys/class/drm/card0-HDMI-A-2/connector_id",
         "/sys/class/drm/card0-HDMI-A-2/status",
-        "ro.boot.display.res.HDMI2"
+        "ro.boot.display.res.HDMI2",
     },
-#if defined(ENABLE_LVDS) && defined(THIRD_DISPLAY_SUPPORT)
-    { // external display
+    {
+        // secondary display 1
+        "/sys/class/drm/card0-HDMI-A-1/encoder_type",
         "/sys/class/drm/card0-HDMI-A-1/connector_id",
         "/sys/class/drm/card0-HDMI-A-1/status",
         "ro.boot.display.res.HDMI1"
     },
-    { // secondary display
+    {
+        // external display 2
+        "/sys/class/drm/card0-LVDS-1/encoder_type",
         "/sys/class/drm/card0-LVDS-1/connector_id",
         "/sys/class/drm/card0-LVDS-1/status",
         "ro.boot.display.res.LVDS",
-    },
-#else /* defined(ENABLE_LVDS) && defined(THIRD_DISPLAY_SUPPORT) */
-#if defined(ENABLE_LVDS)
-    { // external display
-        "/sys/class/drm/card0-LVDS-1/connector_id",
-        "/sys/class/drm/card0-LVDS-1/status",
-        "ro.boot.display.res.LVDS",
-    },
-#else
-    { // external display
-        "/sys/class/drm/card0-HDMI-A-1/connector_id",
-        "/sys/class/drm/card0-HDMI-A-1/status",
-        "ro.boot.display.res.HDMI1"
-    },
-#endif
-#endif
+    }
 #else /* LAGER, KOELSCH, ALT, SALVATOR, ULCB*/
-#if defined(THIRD_DISPLAY_SUPPORT)
-    { // primary display
+    {
+        // primary display
+        "/sys/class/drm/card0-VGA-1/encoder_type",
         "/sys/class/drm/card0-VGA-1/connector_id",
         "/sys/class/drm/card0-VGA-1/status",
         "ro.boot.display.res.VGA"
     },
-#endif
-
-    { // external display 1
+    {
+        // external display 1
+        "/sys/class/drm/card0-HDMI-A-1/encoder_type",
         "/sys/class/drm/card0-HDMI-A-1/connector_id",
         "/sys/class/drm/card0-HDMI-A-1/status",
         "ro.boot.display.res.HDMI1",
     },
-
 #if defined(TARGET_BOARD_PLATFORM_R8A7795)
-    { // external display 2
+    {
+        // external display 2
+        "/sys/class/drm/card0-HDMI-A-2/encoder_type",
         "/sys/class/drm/card0-HDMI-A-2/connector_id",
         "/sys/class/drm/card0-HDMI-A-2/status",
         "ro.boot.display.res.HDMI2",
@@ -128,4 +82,4 @@ static const hwdisplay hwdisplays[NUM_DISPLAYS] = {
 #endif /* defined(TARGET_BOARD_KINGFISHER) */
 };
 
-#endif // HWC_CONFIG_FUNCTION_SWITCH_H
+#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_CONFIG_H

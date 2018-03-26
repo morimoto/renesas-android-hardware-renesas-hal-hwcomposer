@@ -1,4 +1,4 @@
-# Copyright (C) 2008 The Android Open Source Project
+# Copyright (C) 2016 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,54 +21,52 @@ LOCAL_PATH := $(call my-dir)
 # hw/<OVERLAY_HARDWARE_MODULE_ID>.<ro.product.board>.so
 include $(CLEAR_VARS)
 
-LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_SHARED_LIBRARIES)/hw
-LOCAL_SHARED_LIBRARIES := libcutils libhardware libutils libhardware_legacy liblog
+LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_EXECUTABLES)/hw
+LOCAL_SHARED_LIBRARIES := libcutils libhardware libutils libhardware_legacy liblog libhidlbase
+LOCAL_SHARED_LIBRARIES +=android.hardware.graphics.mapper@2.0
+LOCAL_SHARED_LIBRARIES += libhidltransport
+LOCAL_SHARED_LIBRARIES += android.hardware.graphics.common@1.0
+LOCAL_SHARED_LIBRARIES += libhwbinder
+LOCAL_SHARED_LIBRARIES += android.hardware.graphics.composer@2.1
+LOCAL_SHARED_LIBRARIES += vendor.renesas.graphics.composer@1.0_vendor
+LOCAL_SHARED_LIBRARIES += android.hardware.graphics.mapper@2.0
+LOCAL_SHARED_LIBRARIES += libfmq
 LOCAL_SHARED_LIBRARIES += libsync
 LOCAL_SHARED_LIBRARIES += libion
 LOCAL_SHARED_LIBRARIES += libdrm
-
-ifeq ($(EVS_HAL_PRESENT),true)
-LOCAL_SHARED_LIBRARIES += android.hardware.automotive.vehicle@2.0 \
-                          libhidlbase
-endif
+LOCAL_SHARED_LIBRARIES += libbinder
+LOCAL_SHARED_LIBRARIES += libbase
+LOCAL_SHARED_LIBRARIES += libui
 
 # source (base class)
 #
-LOCAL_SRC_FILES += base/disp_base.cpp
-LOCAL_SRC_FILES += base/hotplug_base.cpp
-LOCAL_SRC_FILES += base/hwc_base.cpp
-LOCAL_SRC_FILES += base/hwc_thread.cpp
 LOCAL_C_INCLUDES += $(LOCAL_PATH)
 
 # source (implement)
 #
-LOCAL_SRC_FILES += base/hwc_notice.cpp
-LOCAL_SRC_FILES += component/fencemerge.cpp
-LOCAL_SRC_FILES += component/composer.cpp
-LOCAL_SRC_FILES += component/layersel.cpp
-LOCAL_SRC_FILES += component/drm_display.cpp
-LOCAL_SRC_FILES += component/hwcglobal.cpp
-LOCAL_SRC_FILES += component/SyncTimeline.cpp
-
-LOCAL_SRC_FILES += displays/hwc_primary.cpp
-LOCAL_SRC_FILES += displays/hwc_external.cpp
-LOCAL_SRC_FILES += displays/hwc_virtual.cpp
-
-LOCAL_SRC_FILES += hwcomposer.cpp
-ifeq ($(EVS_HAL_PRESENTED),true)
-LOCAL_SRC_FILES += VehicleListenerThread.cpp
-endif
-
+LOCAL_SRC_FILES += drm/DRMMode.cpp
+LOCAL_SRC_FILES += drm/DRMPlane.cpp
+LOCAL_SRC_FILES += drm/DRMProperty.cpp
+LOCAL_SRC_FILES += ComposerClient.cpp
+LOCAL_SRC_FILES += DrmDisplayComposition.cpp
+LOCAL_SRC_FILES += Hwc.cpp
+LOCAL_SRC_FILES += HwcBuffer.cpp
+LOCAL_SRC_FILES += HwcDisplay.cpp
+LOCAL_SRC_FILES += HwcDump.cpp
+LOCAL_SRC_FILES += HwcLayer.cpp
+LOCAL_SRC_FILES += platformrcar.cpp
+LOCAL_SRC_FILES += service.cpp
+LOCAL_SRC_FILES += vsyncworker.cpp
+LOCAL_SRC_FILES += worker.cpp
 
 # target
 #
-LOCAL_MODULE := hwcomposer.$(TARGET_BOARD_PLATFORM)
+LOCAL_MODULE := android.hardware.graphics.composer@2.1-service.renesas
 LOCAL_CFLAGS += -DLOG_TAG=\"hwcomposer\"
-# LOCAL_CFLAGS += -Wall -Werror
-
-ifeq ($(TARGET_BOARD_PLATFORM),r8a7790)
-LOCAL_CFLAGS += -DTARGET_BOARD_LAGER
-endif
+LOCAL_CFLAGS += -DHWC2_USE_CPP11
+LOCAL_CFLAGS += -DHWC2_INCLUDE_STRINGIFICATION
+LOCAL_CFLAGS += -Wall -Werror
+LOCAL_INIT_RC := android.hardware.graphics.composer@2.1-service.renesas.rc
 
 ifeq ($(TARGET_DEVICE),salvator)
 LOCAL_CFLAGS += -DTARGET_BOARD_SALVATOR
@@ -98,41 +96,21 @@ ifeq ($(TARGET_BOARD_PLATFORM),r8a7794)
 LOCAL_CFLAGS += -DTARGET_BOARD_ALT
 endif
 
-ifeq ($(THREE_DISPLAY),true)
-LOCAL_CFLAGS += -DTHIRD_DISPLAY_SUPPORT
-endif
-
-ifeq ($(EVS_HAL_PRESENT),true)
-LOCAL_CFLAGS += -DEVS_HAL
-endif
-
-ifeq ($(ENABLE_LVDS),true)
-LOCAL_CFLAGS += -DENABLE_LVDS
-endif
-
 # add flag to distinguish a target.
 #
-#LOCAL_C_INCLUDES+= $(SOLUTION_VENDOR_PATH)/include
-LOCAL_C_INCLUDES+= $(TOP)/vendor/renesas/include
-LOCAL_C_INCLUDES+= $(TOP)/vendor/renesas/$(TARGET_BOARD_PLATFORM)/include
-LOCAL_C_INCLUDES+= $(TARGET_OUT_HEADERS)/libdrm/
 LOCAL_C_INCLUDES+= $(TOP)/system/core/libsync/
 LOCAL_C_INCLUDES+= $(TOP)/system/core/base/include/
-
-# TARGET_FORCE_HWC_FOR_VIRTUAL_DISPLAYS
-#   set build option for copy HWC_FRAMEBUFFER_TARGET to output buffer.
-ifeq ($(TARGET_FORCE_HWC_FOR_VIRTUAL_DISPLAYS),true)
-    LOCAL_CFLAGS += -DFORCE_HWC_COPY_FOR_VIRTUAL_DISPLAYS
-endif
-
-# USE_EXTERNAL_DISPLAY
-#   comment out next statement is necessary,
-#   if support external display.
-LOCAL_CFLAGS += -DUSE_EXTERNAL_DISPLAY
+LOCAL_C_INCLUDES+= $(TOP)/system/libhidl/base/
+LOCAL_C_INCLUDES+= $(TOP)/system/libhidl/base/include/
+LOCAL_C_INCLUDES+= $(TOP)/system/core/base/include/
+LOCAL_C_INCLUDES+= $(TOP)/system/core/base/
+LOCAL_C_INCLUDES+= $(TOP)/system/libfmq/
+LOCAL_C_INCLUDES+= $(TOP)/system/libfmq/include
 
 LOCAL_MULTILIB := 64
+LOCAL_VENDOR_MODULE := true
 
 LOCAL_MODULE_TAGS := optional
+include $(BUILD_EXECUTABLE)
 
-include $(BUILD_SHARED_LIBRARY)
 endif # Include only for Renesas ones.

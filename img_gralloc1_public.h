@@ -42,24 +42,23 @@
 //static_assert(GRALLOC1_LAST_FUNCTION <= GRALLOC1_FUNCTION_IMG_EXT_OFF,
 //               "gralloc1 function descriptors overlap with extension range");
 
-enum
-{
-	GRALLOC1_FUNCTION_GET_BUFFER_FORMAT_IMG =
-		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_BUFFER_FORMAT_IMG),
-	GRALLOC1_FUNCTION_GET_BUFFER_FORMATS_IMG =
-		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_BUFFER_FORMATS_IMG),
-	GRALLOC1_FUNCTION_BLIT_HANDLE_TO_HANDLE_IMG =
-		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_BLIT_HANDLE_TO_HANDLE_IMG),
-	GRALLOC1_FUNCTION_BLIT_STAMP_TO_HANDLE_IMG =
-		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_BLIT_STAMP_TO_HANDLE_IMG),
-	GRALLOC1_FUNCTION_SET_DATA_SPACE_IMG =
-		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_SET_DATA_SPACE_IMG),
-	GRALLOC1_FUNCTION_GET_ION_CLIENT_IMG =
-		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_ION_CLIENT_IMG),
-	GRALLOC1_FUNCTION_GET_BUFFER_HANDLE_IMG =
-		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_BUFFER_HANDLE_IMG),
-	GRALLOC1_FUNCTION_GET_BUFFER_PHYS_ADDRESS =
-		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_BUFFER_PHYS_ADDRESS),
+enum {
+    GRALLOC1_FUNCTION_GET_BUFFER_FORMAT_IMG =
+        (GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_BUFFER_FORMAT_IMG),
+    GRALLOC1_FUNCTION_GET_BUFFER_FORMATS_IMG =
+        (GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_BUFFER_FORMATS_IMG),
+    GRALLOC1_FUNCTION_BLIT_HANDLE_TO_HANDLE_IMG =
+        (GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_BLIT_HANDLE_TO_HANDLE_IMG),
+    GRALLOC1_FUNCTION_BLIT_STAMP_TO_HANDLE_IMG =
+        (GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_BLIT_STAMP_TO_HANDLE_IMG),
+    GRALLOC1_FUNCTION_SET_DATA_SPACE_IMG =
+        (GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_SET_DATA_SPACE_IMG),
+    GRALLOC1_FUNCTION_GET_ION_CLIENT_IMG =
+        (GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_ION_CLIENT_IMG),
+    GRALLOC1_FUNCTION_GET_BUFFER_HANDLE_IMG =
+        (GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_BUFFER_HANDLE_IMG),
+    GRALLOC1_FUNCTION_GET_BUFFER_PHYS_ADDRESS =
+        (GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_BUFFER_PHYS_ADDRESS),
 };
 
 /* Public HAL extension API */
@@ -67,95 +66,83 @@ enum
 typedef gralloc1_device_t gralloc_t;
 
 typedef int (*GRALLOC1_PFN_GET_BUFFER_FORMAT_IMG)
-	(gralloc_t *g, int format, const IMG_buffer_format_public_t **v);
+(gralloc_t* g, int format, const IMG_buffer_format_public_t** v);
 
 static inline int gralloc_get_buffer_format_img
-	(gralloc_t *g, int format, const IMG_buffer_format_public_t **v)
-{
-	GRALLOC1_PFN_GET_BUFFER_FORMAT_IMG f =
-		(GRALLOC1_PFN_GET_BUFFER_FORMAT_IMG)
-			g->getFunction(g, GRALLOC1_FUNCTION_GET_BUFFER_FORMAT_IMG);
-
-	return f(g, format, v);
+(gralloc_t* g, int format, const IMG_buffer_format_public_t** v) {
+    GRALLOC1_PFN_GET_BUFFER_FORMAT_IMG f =
+        (GRALLOC1_PFN_GET_BUFFER_FORMAT_IMG)
+        g->getFunction(g, GRALLOC1_FUNCTION_GET_BUFFER_FORMAT_IMG);
+    return f(g, format, v);
 }
 
 typedef int (*GRALLOC1_PFN_GET_BUFFER_FORMATS_IMG)
-	(gralloc_t *g, const IMG_buffer_format_public_t **v);
+(gralloc_t* g, const IMG_buffer_format_public_t** v);
 
 static inline int gralloc_get_buffer_formats_img
-	(gralloc_t *g, const IMG_buffer_format_public_t **v)
-{
-	GRALLOC1_PFN_GET_BUFFER_FORMATS_IMG f =
-		(GRALLOC1_PFN_GET_BUFFER_FORMATS_IMG)
-			g->getFunction(g, GRALLOC1_FUNCTION_GET_BUFFER_FORMATS_IMG);
-
-	return f(g, v);
+(gralloc_t* g, const IMG_buffer_format_public_t** v) {
+    GRALLOC1_PFN_GET_BUFFER_FORMATS_IMG f =
+        (GRALLOC1_PFN_GET_BUFFER_FORMATS_IMG)
+        g->getFunction(g, GRALLOC1_FUNCTION_GET_BUFFER_FORMATS_IMG);
+    return f(g, v);
 }
 
 typedef int (*GRALLOC1_PFN_BLIT_HANDLE_TO_HANDLE_IMG)
-	(gralloc_t *g, buffer_handle_t src, buffer_handle_t dest, int w, int h,
-	 int x, int y, int transform, int input_fence, int *output_fence);
+(gralloc_t* g, buffer_handle_t src, buffer_handle_t dest, int w, int h,
+ int x, int y, int transform, int input_fence, int* output_fence);
 
 static inline int gralloc_blit_handle_to_handle_img
-	(gralloc_t *g, buffer_handle_t src, buffer_handle_t dest, int w, int h,
-	 int x, int y, int transform, int input_fence, int *output_fence)
-{
-	GRALLOC1_PFN_BLIT_HANDLE_TO_HANDLE_IMG f =
-		(GRALLOC1_PFN_BLIT_HANDLE_TO_HANDLE_IMG)
-			g->getFunction(g, GRALLOC1_FUNCTION_BLIT_HANDLE_TO_HANDLE_IMG);
-
-	return f(g, src, dest, w, h, x, y, transform, input_fence, output_fence);
+(gralloc_t* g, buffer_handle_t src, buffer_handle_t dest, int w, int h,
+ int x, int y, int transform, int input_fence, int* output_fence) {
+    GRALLOC1_PFN_BLIT_HANDLE_TO_HANDLE_IMG f =
+        (GRALLOC1_PFN_BLIT_HANDLE_TO_HANDLE_IMG)
+        g->getFunction(g, GRALLOC1_FUNCTION_BLIT_HANDLE_TO_HANDLE_IMG);
+    return f(g, src, dest, w, h, x, y, transform, input_fence, output_fence);
 }
 
 typedef int (*GRALLOC1_PFN_BLIT_STAMP_TO_HANDLE_IMG)
-	(gralloc_t *g, unsigned long long src_stamp, int src_width, int src_height,
-	 int src_format, int src_stride_in_pixels, int src_rotation,
-	 buffer_handle_t dest, int dest_rotation, int input_fence,
-	 int *output_fence);
+(gralloc_t* g, unsigned long long src_stamp, int src_width, int src_height,
+ int src_format, int src_stride_in_pixels, int src_rotation,
+ buffer_handle_t dest, int dest_rotation, int input_fence,
+ int* output_fence);
 
 static inline int gralloc_blit_stamp_to_handle
-	(gralloc_t *g, unsigned long long src_stamp, int src_width, int src_height,
-	 int src_format, int src_stride_in_pixels, int src_rotation,
-	 buffer_handle_t dest, int dest_rotation, int input_fence,
-	 int *output_fence)
-{
-	GRALLOC1_PFN_BLIT_STAMP_TO_HANDLE_IMG f =
-		(GRALLOC1_PFN_BLIT_STAMP_TO_HANDLE_IMG)
-			g->getFunction(g, GRALLOC1_FUNCTION_BLIT_STAMP_TO_HANDLE_IMG);
-
-	return f(g, src_stamp, src_width, src_height, src_format,
-			 src_stride_in_pixels, src_rotation, dest, dest_rotation,
-			 input_fence, output_fence);
+(gralloc_t* g, unsigned long long src_stamp, int src_width, int src_height,
+ int src_format, int src_stride_in_pixels, int src_rotation,
+ buffer_handle_t dest, int dest_rotation, int input_fence,
+ int* output_fence) {
+    GRALLOC1_PFN_BLIT_STAMP_TO_HANDLE_IMG f =
+        (GRALLOC1_PFN_BLIT_STAMP_TO_HANDLE_IMG)
+        g->getFunction(g, GRALLOC1_FUNCTION_BLIT_STAMP_TO_HANDLE_IMG);
+    return f(g, src_stamp, src_width, src_height, src_format,
+             src_stride_in_pixels, src_rotation, dest, dest_rotation,
+             input_fence, output_fence);
 }
 
 typedef int (*GRALLOC1_PFN_SET_DATA_SPACE_IMG)
-	(gralloc_t *g, buffer_handle_t handle,
-	 android_dataspace_ext_t source_dataspace,
-	 android_dataspace_ext_t dest_dataspace);
+(gralloc_t* g, buffer_handle_t handle,
+ android_dataspace_ext_t source_dataspace,
+ android_dataspace_ext_t dest_dataspace);
 
 static inline int gralloc_set_data_space_img
-	(gralloc_t *g, buffer_handle_t handle,
-	 android_dataspace_ext_t source_dataspace,
-	 android_dataspace_ext_t dest_dataspace)
-{
-	GRALLOC1_PFN_SET_DATA_SPACE_IMG f =
-		(GRALLOC1_PFN_SET_DATA_SPACE_IMG)
-			g->getFunction(g, GRALLOC1_FUNCTION_SET_DATA_SPACE_IMG);
-
-	return f(g, handle, source_dataspace, dest_dataspace);
+(gralloc_t* g, buffer_handle_t handle,
+ android_dataspace_ext_t source_dataspace,
+ android_dataspace_ext_t dest_dataspace) {
+    GRALLOC1_PFN_SET_DATA_SPACE_IMG f =
+        (GRALLOC1_PFN_SET_DATA_SPACE_IMG)
+        g->getFunction(g, GRALLOC1_FUNCTION_SET_DATA_SPACE_IMG);
+    return f(g, handle, source_dataspace, dest_dataspace);
 }
 
 typedef int (*GRALLOC1_PFN_GET_ION_CLIENT_IMG)
-	(gralloc_t *g, int *client);
+(gralloc_t* g, int* client);
 
 static inline int gralloc_get_ion_client_img
-	(gralloc_t *g, int *client)
-{
-	GRALLOC1_PFN_GET_ION_CLIENT_IMG f =
-		(GRALLOC1_PFN_GET_ION_CLIENT_IMG)
-			g->getFunction(g, GRALLOC1_FUNCTION_GET_ION_CLIENT_IMG);
-
-	return f(g, client);
+(gralloc_t* g, int* client) {
+    GRALLOC1_PFN_GET_ION_CLIENT_IMG f =
+        (GRALLOC1_PFN_GET_ION_CLIENT_IMG)
+        g->getFunction(g, GRALLOC1_FUNCTION_GET_ION_CLIENT_IMG);
+    return f(g, client);
 }
 
 /* NOTE: The buffer handle returned is a raw memory copy, so if the handle
@@ -166,28 +153,25 @@ static inline int gralloc_get_ion_client_img
  */
 
 typedef int (*GRALLOC1_PFN_GET_BUFFER_HANDLE_IMG)
-	(gralloc_t *g, buffer_handle_t handle, IMG_buffer_handle_t *buffer_handle);
+(gralloc_t* g, buffer_handle_t handle, IMG_buffer_handle_t* buffer_handle);
 
 static inline int gralloc_get_buffer_handle_img
-	(gralloc_t *g, buffer_handle_t handle, IMG_buffer_handle_t *buffer_handle)
-{
-	GRALLOC1_PFN_GET_BUFFER_HANDLE_IMG f =
-		(GRALLOC1_PFN_GET_BUFFER_HANDLE_IMG)
-			g->getFunction(g, GRALLOC1_FUNCTION_GET_BUFFER_HANDLE_IMG);
-
-	return f(g, handle, buffer_handle);
+(gralloc_t* g, buffer_handle_t handle, IMG_buffer_handle_t* buffer_handle) {
+    GRALLOC1_PFN_GET_BUFFER_HANDLE_IMG f =
+        (GRALLOC1_PFN_GET_BUFFER_HANDLE_IMG)
+        g->getFunction(g, GRALLOC1_FUNCTION_GET_BUFFER_HANDLE_IMG);
+    return f(g, handle, buffer_handle);
 }
 
 typedef int (*GRALLOC1_PFN_GET_BUFFER_PHYS_ADDRESS)
-	(gralloc_t *g, int fd, uint64_t *paddr);
+(gralloc_t* g, int fd, uint64_t* paddr);
 
 static inline int
-gralloc_get_buffer_phys_addr(gralloc_t *g, int fd, uint64_t *paddr)
-{
-	GRALLOC1_PFN_GET_BUFFER_PHYS_ADDRESS f =
-		(GRALLOC1_PFN_GET_BUFFER_PHYS_ADDRESS)
-		g->getFunction(g, GRALLOC1_FUNCTION_GET_BUFFER_PHYS_ADDRESS);
-	return f(g, fd, paddr);
+gralloc_get_buffer_phys_addr(gralloc_t* g, int fd, uint64_t* paddr) {
+    GRALLOC1_PFN_GET_BUFFER_PHYS_ADDRESS f =
+        (GRALLOC1_PFN_GET_BUFFER_PHYS_ADDRESS)
+        g->getFunction(g, GRALLOC1_FUNCTION_GET_BUFFER_PHYS_ADDRESS);
+    return f(g, fd, paddr);
 }
 
 #endif /* IMG_GRALLOC_PUBLIC_H */
