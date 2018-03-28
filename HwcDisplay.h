@@ -117,6 +117,8 @@ private:
     int mDrmFd;
     int mCurrConfig;
     uint32_t mConnectorId;
+    uint32_t mmWidth = 0;
+    uint32_t mmHeight = 0;
 
     DRMProperty mCrtcModeProperty;
     DRMProperty mCrtcActiveProperty;

@@ -252,6 +252,8 @@ Error HwcDisplay::getDisplayAttribute(hwc2_config_t config,
 
     const DRMMode& mode = mDrmModes[config];
     auto attribute = static_cast<HWC2::Attribute>(attribute_in);
+    static const int32_t kUmPerInch = 25400;
+    static const int32_t defaultDpi = 38100;
 
     switch (attribute) {
     case HWC2::Attribute::Width:
@@ -272,12 +274,12 @@ Error HwcDisplay::getDisplayAttribute(hwc2_config_t config,
 
     case HWC2::Attribute::DpiX:
         // Dots per 1000 inches
-        *value = 150; //mm_width ? (mode.h_display() * kUmPerInch) / mm_width : -1;
+        *value = mmWidth ? (mode.getHDisplay() * kUmPerInch) / mmWidth : defaultDpi;
         break;
 
     case HWC2::Attribute::DpiY:
         // Dots per 1000 inches
-        *value = 150; //mm_height ? (mode.v_display() * kUmPerInch) / mm_height : -1;
+        *value = mmHeight ? (mode.getVDisplay() * kUmPerInch) / mmHeight : defaultDpi;
         break;
 
     default:
@@ -860,6 +862,8 @@ int HwcDisplay::loadDisplayModes() {
 
         if (connector->connector_id == mConnectorId) {
             set_flag = 1;
+            mmWidth = connector->mmWidth;
+            mmHeight = connector->mmHeight;
 
             if (connector->connection == DRM_MODE_DISCONNECTED) {
                 ALOGD("disconnected\n");
