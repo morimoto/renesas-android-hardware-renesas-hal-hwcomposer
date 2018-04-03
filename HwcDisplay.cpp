@@ -264,7 +264,10 @@ Error HwcDisplay::getDisplayAttribute(hwc2_config_t config,
 
     case HWC2::Attribute::VsyncPeriod:
         // in nanoseconds
-        *value = 1000 * 1000 * 1000 / mode.getVRefresh();
+        if (mode.getFlags() & DRM_MODE_FLAG_INTERLACE)
+            *value = 1000 * 1000 * 1000 * 2 / mode.getVRefresh();
+        else
+            *value = 1000 * 1000 * 1000 / mode.getVRefresh();
         break;
 
     case HWC2::Attribute::DpiX:
@@ -1079,28 +1082,29 @@ int HwcDisplay::selectConfig() {
     }
 
     uint32_t width = 0, height = 0, HZ = 60;
-    bool isInterlased = false;
-    bool isBootargsPresented = getResolutionFromProperties(width, height, HZ,
-                               isInterlased);
+    bool isInterlace = false;
+    bool isBootargsPresent = getResolutionFromProperties(width, height, HZ,
+                             isInterlace);
+    isInterlace = isInterlace && isBootargsPresent;
     i = 0;
 
     for (const DRMMode& mode : mDrmModes) {
         i++;
         float aspect = mode.getHDisplay() / (float) mode.getVDisplay();
 
-        if (!isBootargsPresented
+        if (!isBootargsPresent
             && (fabs(aspect - preferred_aspect_ratio) > 0.001)) {
             ALOGD("aspect = %f preferred_aspect_ratio = %f", aspect,
                   preferred_aspect_ratio);
             continue;
         }
 
-        if (!isBootargsPresented && (mode.getHDisplay() > 1920)) {
+        if (!isBootargsPresent && (mode.getHDisplay() > 1920)) {
             // Now we don't support FullHD resolution
             continue;
         }
 
-        if (isBootargsPresented
+        if (isBootargsPresent
             && (mode.getHDisplay() > width || mode.getVDisplay() > height)) {
             // display size is not meet request value
             continue;
@@ -1108,6 +1112,10 @@ int HwcDisplay::selectConfig() {
 
         if (fabs(mode.getVRefresh() - HZ) > 3) {
             ALOGD("mode.v_refresh() = %f HZ = %d", mode.getVRefresh(), HZ);
+            continue;
+        }
+
+        if (isInterlace && !(mode.getFlags() & DRM_MODE_FLAG_INTERLACE)) {
             continue;
         }
 
