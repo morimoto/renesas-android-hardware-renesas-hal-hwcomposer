@@ -686,14 +686,18 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
         return Error::BAD_CONFIG;
     }
 
-    if (mActiveComposition)
-        addFenceToRetireFence(mActiveComposition->takeOutFence());
-
     ret = applyComposition(std::move(composition));
 
     if (ret) {
         ALOGE("Failed to apply the frame composition ret=%d", ret);
         return Error::BAD_PARAMETER;
+    }
+
+    if (mActiveComposition) {
+        for (HwcLayer* layer : sorted_layers) {
+            layer->manageReleaseFence();
+            addFenceToRetireFence(layer->takeReleaseFence());
+        }
     }
 
     // The retire fence returned here is for the last frame, so return it and
