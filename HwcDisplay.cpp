@@ -814,7 +814,8 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
     *num_types = 0;
     *num_requests = 0;
     int num_device_planes = 0;
-    int max_device_planes = (mPlanes.size() > 2 && !mColorTransform)
+    int max_device_planes = (mPlanes.size() > 2 && !mColorTransform
+                             && !(mDrmModes[mCurrConfig].getFlags() & DRM_MODE_FLAG_INTERLACE))
         ? mPlanes.size() - 1 : 0;
     mLayersSortedByZ.clear();
 
