@@ -815,7 +815,8 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
     *num_requests = 0;
     int num_device_planes = 0;
     int max_device_planes = (mPlanes.size() > 2 && !mColorTransform
-                             && !(mDrmModes[mCurrConfig].getFlags() & DRM_MODE_FLAG_INTERLACE))
+                             && !(mDrmModes[mCurrConfig].getFlags() & DRM_MODE_FLAG_INTERLACE)
+                             && !mUseOnlySFComposition)
         ? mPlanes.size() - 1 : 0;
     mLayersSortedByZ.clear();
 
@@ -893,6 +894,7 @@ int HwcDisplay::loadDisplayModes() {
     char value[8];
     uint32_t enc_id = 0;
     int fd = -1;
+    int display = static_cast<int>(mHandle);
 
     // Read connector ID from sysfs
     if ((fd = open(mDisplayParams.connector, O_RDONLY)) < 0) {
@@ -951,6 +953,14 @@ int HwcDisplay::loadDisplayModes() {
         drmModeFreeResources(resources);
         return -1;
     }
+
+#if defined(TARGET_BOARD_KINGFISHER)
+    //FIXME: Kingfisher VGA (workaround for updating buffers on vga display)
+    mUseOnlySFComposition = (display != 0); // not primary display
+#else
+    //FIXME: it's Salvator VGA
+    mUseOnlySFComposition = (connector->connector_type == DRM_MODE_CONNECTOR_VGA);
+#endif
 
     set_flag = 0;
 
@@ -1021,7 +1031,6 @@ int HwcDisplay::loadDisplayModes() {
         return ret;
     }
 
-    int display = static_cast<int>(mHandle);
     ALOGD("LoadDisplayModes for display: %d; mCrtId: %d; mConnectorId: %d; open [%s]"
           , display, mCrtId, mConnectorId, mDisplayParams.connector);
     drmModePlaneResPtr pr = drmModeGetPlaneResources(mDrmFd);
