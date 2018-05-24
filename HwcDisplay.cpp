@@ -22,6 +22,7 @@
 #include "drm/DRMProperty.h"
 #include "img_gralloc1_public.h"
 
+#include <algorithm>
 #include <cmath>
 #include <string>
 #include <fstream>
@@ -814,10 +815,9 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
     *num_types = 0;
     *num_requests = 0;
     int num_device_planes = 0;
-    int max_device_planes = (mPlanes.size() > 2 && !mColorTransform
-                             && !(mDrmModes[mCurrConfig].getFlags() & DRM_MODE_FLAG_INTERLACE)
-                             && !mUseOnlySFComposition)
-        ? mPlanes.size() - 1 : 0;
+    int max_device_planes = (mPlanes.size() > 1 && !mColorTransform
+                             && !(mDrmModes[mCurrConfig].getFlags() & DRM_MODE_FLAG_INTERLACE))
+                             ? mPlanes.size() - 1 : 0;
     mLayersSortedByZ.clear();
 
     for (auto& l : mLayers) {
@@ -956,10 +956,10 @@ int HwcDisplay::loadDisplayModes() {
 
 #if defined(TARGET_BOARD_KINGFISHER)
     //FIXME: Kingfisher VGA (workaround for updating buffers on vga display)
-    mUseOnlySFComposition = (display != 0); // not primary display
+    mIsVGAConnectorType = (display != 0); // not primary display
 #else
     //FIXME: it's Salvator VGA
-    mUseOnlySFComposition = (connector->connector_type == DRM_MODE_CONNECTOR_VGA);
+    mIsVGAConnectorType = (connector->connector_type == DRM_MODE_CONNECTOR_VGA);
 #endif
 
     set_flag = 0;
@@ -1003,6 +1003,18 @@ int HwcDisplay::loadDisplayModes() {
     for (int i = 0; i < connector->count_modes; i++) {
         DRMMode m(&connector->modes[i]);
         mDrmModes.push_back(m);
+    }
+
+    //sorting modes
+    if (mDrmModes.size()) {
+        std::sort(mDrmModes.begin(), mDrmModes.end(), [](const DRMMode& s1, const DRMMode& s2) {
+            int w1 = s1.getHDisplay();
+            int w2 = s2.getHDisplay();
+            int h1 = s1.getVDisplay();
+            int h2 = s2.getVDisplay();
+
+            return ((w1 > w2) || ((w1 == w2) && (h1 > h2)));
+        });
     }
 
     ret = DRMProperty::getCrtcProperty(mDrmFd, mCrtId, "MODE_ID",
@@ -1169,32 +1181,37 @@ int HwcDisplay::selectConfig() {
 
     for (const DRMMode& mode : mDrmModes) {
         i++;
-        float aspect = mode.getHDisplay() / (float) mode.getVDisplay();
 
-        if (!isBootargsPresent
-            && (fabs(aspect - preferred_aspect_ratio) > 0.001)) {
-            ALOGD("aspect = %f preferred_aspect_ratio = %f", aspect,
-                  preferred_aspect_ratio);
+        if (!isBootargsPresent && mIsVGAConnectorType
+                && (mode.getHDisplay() > 1280 || mode.getVDisplay() > 720)) {
+            // VGA connector mIsVGAConnectorType use 720p as default
             continue;
         }
 
-        if (!isBootargsPresent && (mode.getHDisplay() > 1920)) {
-            // Now we don't support FullHD resolution
+        float aspect = mode.getHDisplay() / (float) mode.getVDisplay();
+
+        if (!isBootargsPresent && !mIsVGAConnectorType
+                && (fabs(aspect - preferred_aspect_ratio) > 0.001)) {
+            continue;
+        }
+
+        if (!isBootargsPresent && ((mode.getHDisplay() > 1920) || (mode.getVDisplay() > 1080))) {
+            // Now we don't support greater than 1080p resolution
             continue;
         }
 
         if (isBootargsPresent
-            && (mode.getHDisplay() > width || mode.getVDisplay() > height)) {
+                && (mode.getHDisplay() != width || mode.getVDisplay() != height)) {
             // display size is not meet request value
             continue;
         }
 
         if (fabs(mode.getVRefresh() - HZ) > 3) {
-            ALOGD("mode.v_refresh() = %f HZ = %d", mode.getVRefresh(), HZ);
+            // refresh rate doesn't meet request value
             continue;
         }
 
-        if (isInterlace && !(mode.getFlags() & DRM_MODE_FLAG_INTERLACE)) {
+        if (isInterlace != !!(mode.getFlags() & DRM_MODE_FLAG_INTERLACE)) {
             continue;
         }
 

@@ -166,7 +166,7 @@ private:
     std::deque<DRMPlane> mPlanes;
     std::mutex mLock;
     int32_t mColorTransform = 0;
-    bool mUseOnlySFComposition = false;
+    bool mIsVGAConnectorType = false;
     bool mInitialized = false;
     bool mUsingCameraLayer = false;
 };
