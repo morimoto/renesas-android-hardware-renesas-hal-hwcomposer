@@ -108,9 +108,9 @@ LOCAL_C_INCLUDES+= $(TOP)/system/libfmq/
 LOCAL_C_INCLUDES+= $(TOP)/system/libfmq/include
 
 LOCAL_MULTILIB := 64
-LOCAL_VENDOR_MODULE := true
-
+LOCAL_PROPRIETARY_MODULE := true
 LOCAL_MODULE_TAGS := optional
+
 include $(BUILD_EXECUTABLE)
 
 endif # Include only for Renesas ones.

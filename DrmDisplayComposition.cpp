@@ -20,13 +20,22 @@
 #include <algorithm>
 #include <unordered_set>
 
-#include <sw_sync.h>
 #include <sync/sync.h>
 #include <xf86drmMode.h>
-#include <cutils/log.h>
+#include <log/log.h>
 #include <stdlib.h>
 
 namespace android {
+
+struct sw_sync_create_fence_data {
+    __u32 value;
+    char name[32];
+    __s32 fence;
+};
+
+#define SW_SYNC_IOC_MAGIC 'W'
+#define SW_SYNC_IOC_CREATE_FENCE _IOWR(SW_SYNC_IOC_MAGIC, 0, struct sw_sync_create_fence_data)
+#define SW_SYNC_IOC_INC _IOW(SW_SYNC_IOC_MAGIC, 1, __u32)
 
 DrmDisplayComposition::~DrmDisplayComposition() {
     if (mTimelineFd >= 0) {
@@ -38,15 +47,17 @@ DrmDisplayComposition::~DrmDisplayComposition() {
 int DrmDisplayComposition::init(int drm, uint32_t crtc) {
     mDrm = drm;
     mCrtc = crtc;  // Can be NULL if we haven't modeset yet
-    // init timeline
-    int ret = sw_sync_timeline_create();
 
-    if (ret < 0) {
-        ALOGE("Failed to create sw sync timeline %d", ret);
-        return ret;
+    // init timeline
+    mTimelineFd = open("/sys/kernel/debug/sync/sw_sync", O_RDWR);
+    if (mTimelineFd < 0)
+        mTimelineFd = open("/dev/sw_sync", O_RDWR);
+
+    if (mTimelineFd < 0) {
+        ALOGE("Failed to create sw sync timeline, error=%d", -errno);
+        return -1;
     }
 
-    mTimelineFd = ret;
     return 0;
 }
 
@@ -56,8 +67,17 @@ bool DrmDisplayComposition::validateCompositionType(DrmCompositionType des) {
 
 int DrmDisplayComposition::createNextTimelineFence() {
     ++mTimeline;
-    return sw_sync_fence_create(mTimelineFd, "hwc drm display composition fence",
-                                mTimeline);
+
+    struct sw_sync_create_fence_data fence_data = {
+        .name = "drm display composition fence",
+        .value = (__u32)mTimeline
+    };
+
+    int err = ioctl(mTimelineFd, SW_SYNC_IOC_CREATE_FENCE, &fence_data);
+    if (err < 0)
+        return err;
+
+    return fence_data.fence;
 }
 
 int DrmDisplayComposition::signalCompositionDone() {
@@ -70,7 +90,7 @@ int DrmDisplayComposition::increaseTimelineToPoint(int point) {
     if (timeline_increase <= 0)
         return 0;
 
-    int ret = sw_sync_timeline_inc(mTimelineFd, timeline_increase);
+    int ret = ioctl(mTimelineFd, SW_SYNC_IOC_INC, &timeline_increase);
 
     if (ret)
         ALOGE("Failed to increment sync timeline %d", ret);
