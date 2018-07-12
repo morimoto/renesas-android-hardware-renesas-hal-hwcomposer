@@ -980,7 +980,7 @@ int HwcDisplay::loadDisplayModes() {
 
 #if defined(TARGET_BOARD_KINGFISHER)
     //FIXME: Kingfisher VGA (workaround for updating buffers on vga display)
-    mIsVGAConnectorType = (display != 0); // not primary display
+    mIsVGAConnectorType = (display != 0) && (connector->connector_type != DRM_MODE_CONNECTOR_LVDS); // not primary display
 #else
     //FIXME: it's Salvator VGA
     mIsVGAConnectorType = (connector->connector_type == DRM_MODE_CONNECTOR_VGA);
