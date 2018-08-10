@@ -52,10 +52,10 @@
 /*      HAL_PIXEL_FORMAT_BGRA_8888   HAL_PIXEL_FORMAT_VENDOR_EXT(5) */
 #define HAL_PIXEL_FORMAT_NV12        HAL_PIXEL_FORMAT_VENDOR_EXT(6)
 #define HAL_PIXEL_FORMAT_NV12_CUSTOM HAL_PIXEL_FORMAT_VENDOR_EXT(7)
-/*      Free for customer use        HAL_PIXEL_FORMAT_VENDOR_EXT(8) */
-#define HAL_PIXEL_FORMAT_NV21_CUSTOM HAL_PIXEL_FORMAT_VENDOR_EXT(9)
-#define HAL_PIXEL_FORMAT_UYVY        HAL_PIXEL_FORMAT_VENDOR_EXT(10)
-/*      Free for customer use        HAL_PIXEL_FORMAT_VENDOR_EXT(11) */
+#define HAL_PIXEL_FORMAT_sRGB_A_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(8)
+#define HAL_PIXEL_FORMAT_sRGB_X_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(9)
+#define HAL_PIXEL_FORMAT_NV21_CUSTOM HAL_PIXEL_FORMAT_VENDOR_EXT(10)
+#define HAL_PIXEL_FORMAT_UYVY        HAL_PIXEL_FORMAT_VENDOR_EXT(11)
 /*      Free for customer use        HAL_PIXEL_FORMAT_VENDOR_EXT(12) */
 /*      Free for customer use        HAL_PIXEL_FORMAT_VENDOR_EXT(13) */
 /*      Free for customer use        HAL_PIXEL_FORMAT_VENDOR_EXT(14) */
@@ -93,92 +93,93 @@
  */
 #define MAX_SUB_ALLOCS (3)
 
-typedef struct {
-    native_handle_t base;
+typedef struct
+{
+	native_handle_t base;
 
-    /* These fields can be sent cross process. They are also valid
-     * to duplicate within the same process.
-     *
-     * A table is stored within the gralloc implementation's private data
-     * structure (which is per-process) which maps stamps to a mapped
-     * PVRSRV_MEMDESC in that process. Each map entry has a lock count
-     * associated with it, satisfying the requirements of the gralloc API.
-     * This also prevents us from leaking maps/allocations.
-     */
+	/* These fields can be sent cross process. They are also valid
+	 * to duplicate within the same process.
+	 *
+	 * A table is stored within the gralloc implementation's private data
+	 * structure (which is per-process) which maps stamps to a mapped
+	 * PVRSRV_MEMDESC in that process. Each map entry has a lock count
+	 * associated with it, satisfying the requirements of the gralloc API.
+	 * This also prevents us from leaking maps/allocations.
+	 */
 
 #define IMG_NATIVE_HANDLE_NUMFDS (MAX_SUB_ALLOCS)
-    /* The `fd' field is used to "export" a meminfo to another process. */
-    int fd[IMG_NATIVE_HANDLE_NUMFDS];
+	/* The `fd' field is used to "export" a meminfo to another process. */
+	int fd[IMG_NATIVE_HANDLE_NUMFDS];
 
-    /* This define should represent the number of packed 'int's required to
-     * represent the fields following it. If you add a data type that is
-     * 64-bit, for example using 'unsigned long long', you should write that
-     * as "sizeof(unsigned long long) / sizeof(int)". Please keep the order
-     * of the additions the same as the defined field order.
-     */
+	/* This define should represent the number of packed 'int's required to
+	 * represent the fields following it. If you add a data type that is
+	 * 64-bit, for example using 'unsigned long long', you should write that
+	 * as "sizeof(unsigned long long) / sizeof(int)". Please keep the order
+	 * of the additions the same as the defined field order.
+	 */
 #define IMG_NATIVE_HANDLE_NUMINTS \
-    (sizeof(unsigned long long) / sizeof(int) + \
-     7 + MAX_SUB_ALLOCS + MAX_SUB_ALLOCS + \
-     sizeof(unsigned long long) / sizeof(int) * MAX_SUB_ALLOCS + \
-     1)
-    /* A KERNEL unique identifier for any exported kernel memdesc. Each
-     * exported kernel memdesc will have a unique stamp, but note that in
-     * userspace, several memdescs across multiple processes could have
-     * the same stamp. As the native_handle can be dup(2)'d, there could be
-     * multiple handles with the same stamp but different file descriptors.
-     */
-    unsigned long long ui64Stamp;
+	(sizeof(unsigned long long) / sizeof(int) + \
+	 7 + MAX_SUB_ALLOCS + MAX_SUB_ALLOCS + \
+	 sizeof(unsigned long long) / sizeof(int) * MAX_SUB_ALLOCS + \
+	 1)
+	/* A KERNEL unique identifier for any exported kernel memdesc. Each
+	 * exported kernel memdesc will have a unique stamp, but note that in
+	 * userspace, several memdescs across multiple processes could have
+	 * the same stamp. As the native_handle can be dup(2)'d, there could be
+	 * multiple handles with the same stamp but different file descriptors.
+	 */
+	unsigned long long ui64Stamp;
 
-    /* This is used for buffer usage validation */
-    int usage;
+	/* This is used for buffer usage validation */
+	int usage;
 
-    /* In order to do efficient cache flushes we need the buffer dimensions,
-     * format and bits per pixel. There are ANativeWindow queries for the
-     * width, height and format, but the graphics HAL might have remapped the
-     * request to different values at allocation time. These are the 'true'
-     * values of the buffer allocation.
-     */
-    int iWidth;
-    int iHeight;
-    int iFormat;
-    unsigned int uiBpp;
+	/* In order to do efficient cache flushes we need the buffer dimensions,
+	 * format and bits per pixel. There are ANativeWindow queries for the
+	 * width, height and format, but the graphics HAL might have remapped the
+	 * request to different values at allocation time. These are the 'true'
+	 * values of the buffer allocation.
+	 */
+	int iWidth;
+	int iHeight;
+	int iFormat;
+	unsigned int uiBpp;
 
-    /* Planes are not the same as the `fd' suballocs. A multi-planar YUV
-     * allocation has different planes (interleaved = 1, semi-planar = 2,
-     * fully-planar = 3) but might be spread across 1, 2 or 3 independent
-     * memory allocations (or not).
-     */
-    int iPlanes;
+	/* Planes are not the same as the `fd' suballocs. A multi-planar YUV
+	 * allocation has different planes (interleaved = 1, semi-planar = 2,
+	 * fully-planar = 3) but might be spread across 1, 2 or 3 independent
+	 * memory allocations (or not).
+	 */
+	int iPlanes;
 
-    /* For multi-planar allocations, there will be multiple hstrides */
-    int aiStride[MAX_SUB_ALLOCS];
+	/* For multi-planar allocations, there will be multiple hstrides */
+	int aiStride[MAX_SUB_ALLOCS];
 
-    /* For multi-planar allocations, there will be multiple vstrides */
-    int aiVStride[MAX_SUB_ALLOCS];
+	/* For multi-planar allocations, there will be multiple vstrides */
+	int aiVStride[MAX_SUB_ALLOCS];
 
-    /* These byte offsets are reconciled with the number of sub-allocs used
-     * for a multi-planar allocation. If there is a 1:1 mapping between the
-     * number of planes and the number of sub-allocs, these will all be zero.
-     *
-     * Otherwise, normally the zeroth entry will be zero, and the latter
-     * entries will be non-zero.
-     */
-    unsigned long long aulPlaneOffset[MAX_SUB_ALLOCS];
+	/* These byte offsets are reconciled with the number of sub-allocs used
+	 * for a multi-planar allocation. If there is a 1:1 mapping between the
+	 * number of planes and the number of sub-allocs, these will all be zero.
+	 *
+	 * Otherwise, normally the zeroth entry will be zero, and the latter
+	 * entries will be non-zero.
+	 */
+	unsigned long long aulPlaneOffset[MAX_SUB_ALLOCS];
 
-    /* This records the number of MAX_SUB_ALLOCS fds actually used by the
-     * buffer allocation. File descriptors up to fd[iNumSubAllocs - 1] are
-     * guaranteed to be valid. (This does not have any bearing on the aiStride,
-     * aiVStride or aulPlaneOffset fields, as `iPlanes' of those arrays should
-     * be initialized, not `iNumSubAllocs'.)
-     */
-    int iNumSubAllocs;
+	/* This records the number of MAX_SUB_ALLOCS fds actually used by the
+	 * buffer allocation. File descriptors up to fd[iNumSubAllocs - 1] are
+	 * guaranteed to be valid. (This does not have any bearing on the aiStride,
+	 * aiVStride or aulPlaneOffset fields, as `iPlanes' of those arrays should
+	 * be initialized, not `iNumSubAllocs'.)
+	 */
+	int iNumSubAllocs;
 
-    /* How many layers a buffer contains. Layers are used to allocate for
-     * texture arrays shared between processes. The multiple layers are
-     * contained in one memory allocation. */
-    int iLayers;
+	/* How many layers a buffer contains. Layers are used to allocate for
+	 * texture arrays shared between processes. The multiple layers are
+	 * contained in one memory allocation. */
+	int iLayers;
 }
-__attribute__((aligned(sizeof(int)), packed)) IMG_native_handle_t;
+__attribute__((aligned(sizeof(int)),packed)) IMG_native_handle_t;
 
 /* Channel encoding of buffer data.
  *
@@ -248,89 +249,113 @@ __attribute__((aligned(sizeof(int)), packed)) IMG_native_handle_t;
 #define IMG_BFF_YUV_SUBSAMPLING_4_2_2        (2 << 7)
 #define IMG_BFF_YUV_SUBSAMPLING_4_4_4        (3 << 7)
 
+/* Move the format to the end of the list when returning configs to EGL. */
+#define IMG_BFF_EGL_LOW_PRIORITY             (1 << 9)  
+
 /* Backwards compatibility */
 #define IMG_BFF_YUV             IMG_BFF_ENCODING_VUCrCb
 #define IMG_BFF_UVCbCrORDERING  IMG_BFF_ENCODING_UVCbCr
 
 /* Keep this in sync with SGX */
-typedef struct IMG_buffer_format_public_t {
-    /* Buffer formats are returned as a linked list */
-    struct IMG_buffer_format_public_t* psNext;
+typedef struct IMG_buffer_format_public_t
+{
+	/* Buffer formats are returned as a linked list */
+	struct IMG_buffer_format_public_t *psNext;
 
-    /* HAL_PIXEL_FORMAT_... enumerant */
-    int iHalPixelFormat;
+	/* HAL_PIXEL_FORMAT_... enumerant */
+	int iHalPixelFormat;
 
-    /* IMG_PIXFMT_... enumerant */
-    int iIMGPixelFormat;
+	/* IMG_PIXFMT_... enumerant */
+	int iIMGPixelFormat;
 
-    /* Friendly name for format */
-    const char* const szName;
+	/* Friendly name for format */
+	const char *const szName;
 
-    /* Bits (not bytes) per pixel */
-    unsigned int uiBpp;
+	/* Bits (not bytes) per pixel */
+	unsigned int uiBpp;
 
-    /* Supported HW usage bits. If this is GRALLOC_USAGE_HW_MASK, all usages
-     * are supported. Used for HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED.
-     */
-    int iSupportedUsage;
+	/* Supported HW usage bits. If this is GRALLOC_USAGE_HW_MASK, all usages
+	 * are supported. Used for HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED.
+	 */
+	int iSupportedUsage;
 
-    /* Allocation description flags */
-    unsigned int uiFlags;
+	/* Allocation description flags */
+	unsigned int uiFlags;
 }
 IMG_buffer_format_public_t;
 
-typedef struct {
-    enum {
-        IMG_BUFFER_HANDLE_TYPE_ION    = 0,
-        IMG_BUFFER_HANDLE_TYPE_DMABUF = 1,
-    }
-    eType;
+typedef struct
+{
+	enum
+	{
+		IMG_BUFFER_HANDLE_TYPE_ION    = 0,
+		IMG_BUFFER_HANDLE_TYPE_DMABUF = 1,
+	}
+	eType;
 
-    union {
-        ion_user_handle_t aiIonUserHandle[MAX_SUB_ALLOCS];
-        int aiDmaBufShareFd[MAX_SUB_ALLOCS];
-    };
+	union
+	{
+		int aiIonUserHandleFd[MAX_SUB_ALLOCS];
+		int aiDmaBufShareFd[MAX_SUB_ALLOCS];
+	};
 }
 IMG_buffer_handle_t;
 
 /* Public extensions, common to v0 and v1 HALs */
 
-#define GRALLOC_GET_BUFFER_FORMAT_IMG     1
-#define GRALLOC_GET_BUFFER_FORMATS_IMG    2
-#define GRALLOC_BLIT_HANDLE_TO_HANDLE_IMG 3
-#define GRALLOC_BLIT_STAMP_TO_HANDLE_IMG  4
-#define GRALLOC_SET_DATA_SPACE_IMG        5
-#define GRALLOC_GET_ION_CLIENT_IMG        6
-#define GRALLOC_GET_BUFFER_HANDLE_IMG     7
-#define GRALLOC_GET_BUFFER_PHYS_ADDRESS   8
+#define GRALLOC_GET_BUFFER_FORMAT_IMG                1
+#define GRALLOC_GET_BUFFER_FORMATS_IMG               2
+#define GRALLOC_BLIT_HANDLE_TO_HANDLE_IMG            3
+#define GRALLOC_BLIT_STAMP_TO_HANDLE_IMG             4
+#define GRALLOC_SET_DATA_SPACE_IMG                   5
+#define GRALLOC_GET_ION_CLIENT_IMG                   6
+#define GRALLOC_GET_BUFFER_HANDLE_IMG                7
+#define GRALLOC_GET_COLORSPACE_BUFFER_FORMAT_IMG     8
+#define GRALLOC_GET_BUFFER_PHYS_ADDRESS              9
 
 #if !defined(PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE)
 
-enum {
-    HAL_DATASPACE_UNKNOWN             = 0x0,
-    HAL_DATASPACE_SRGB_LINEAR         = 0x200,
-    HAL_DATASPACE_SRGB                = 0x201,
-    HAL_DATASPACE_BT601_625           = 0x102,
-    HAL_DATASPACE_BT601_525           = 0x103,
-    HAL_DATASPACE_BT709               = 0x104,
+enum
+{
+	HAL_DATASPACE_UNKNOWN             = 0x0,
+	HAL_DATASPACE_SRGB_LINEAR         = 0x200,
+	HAL_DATASPACE_SRGB                = 0x201,
+#if defined(PVR_ANDROID_HAS_HAL_DATASPACE_SCRGB)
+	HAL_DATASPACE_V0_SCRGB            = 0x18810000,
+	HAL_DATASPACE_V0_SCRGB_LINEAR     = 0x18410000,
+#endif
+#if defined(PVR_ANDROID_HAS_HAL_DATASPACE_DISPLAY_P3)
+	HAL_DATASPACE_DISPLAY_P3_LINEAR   = 0x084a0000,
+	HAL_DATASPACE_DISPLAY_P3          = 0x088a0000,
+#endif
+#if defined(PVR_ANDROID_HAS_HAL_DATASPACE_BT2020)
+	HAL_DATASPACE_BT2020_LINEAR       = 0x8460000,
+	HAL_DATASPACE_BT2020_PQ           = 0x9c60000,
+#endif
+	HAL_DATASPACE_BT601_625           = 0x102,
+	HAL_DATASPACE_BT601_525           = 0x103,
+	HAL_DATASPACE_BT709               = 0x104,
 };
 
 #endif /* !defined(PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE) */
 
 #if !defined(PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE_2)
 
-enum {
-    HAL_DATASPACE_STANDARD_SHIFT      = 16,
-    HAL_DATASPACE_TRANSFER_SHIFT      = 22,
-    HAL_DATASPACE_RANGE_SHIFT         = 27,
+enum
+{
+	HAL_DATASPACE_STANDARD_SHIFT      = 16,
+	HAL_DATASPACE_TRANSFER_SHIFT      = 22,
+	HAL_DATASPACE_RANGE_SHIFT         = 27,
 
-    HAL_DATASPACE_STANDARD_BT2020     = 6 << HAL_DATASPACE_STANDARD_SHIFT,
+	HAL_DATASPACE_STANDARD_BT2020     = 6 << HAL_DATASPACE_STANDARD_SHIFT,
 
-    HAL_DATASPACE_TRANSFER_SMPTE_170M = 3 << HAL_DATASPACE_TRANSFER_SHIFT,
+	HAL_DATASPACE_TRANSFER_LINEAR     = 1 << HAL_DATASPACE_TRANSFER_SHIFT,
+	HAL_DATASPACE_TRANSFER_SRGB       = 2 << HAL_DATASPACE_TRANSFER_SHIFT,
+	HAL_DATASPACE_TRANSFER_SMPTE_170M = 3 << HAL_DATASPACE_TRANSFER_SHIFT,
 
-    HAL_DATASPACE_RANGE_MASK          = 7 << HAL_DATASPACE_RANGE_SHIFT,
-    HAL_DATASPACE_RANGE_FULL          = 1 << HAL_DATASPACE_RANGE_SHIFT,
-    HAL_DATASPACE_RANGE_LIMITED       = 2 << HAL_DATASPACE_RANGE_SHIFT,
+	HAL_DATASPACE_RANGE_MASK          = 7 << HAL_DATASPACE_RANGE_SHIFT,
+	HAL_DATASPACE_RANGE_FULL          = 1 << HAL_DATASPACE_RANGE_SHIFT,
+	HAL_DATASPACE_RANGE_LIMITED       = 2 << HAL_DATASPACE_RANGE_SHIFT,
 };
 
 #endif /* !defined(PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE_2) */
@@ -339,33 +364,46 @@ enum {
  * enums. These are extensions, so define a new android_dataspace_ext_t.
  * If you only have an android_dataspace_t, you can simply cast it.
  */
-typedef enum {
-    /* Identical to upstream enum android_dataspace */
-    HAL_DATASPACE_EXT_UNKNOWN         = HAL_DATASPACE_UNKNOWN,
-    HAL_DATASPACE_EXT_SRGB_LINEAR     = HAL_DATASPACE_SRGB_LINEAR,
-    HAL_DATASPACE_EXT_SRGB            = HAL_DATASPACE_SRGB,
-    HAL_DATASPACE_EXT_BT601_625       = HAL_DATASPACE_BT601_625,
-    HAL_DATASPACE_EXT_BT601_525       = HAL_DATASPACE_BT601_525,
-    HAL_DATASPACE_EXT_BT709           = HAL_DATASPACE_BT709,
+typedef enum
+{
+	/* Identical to upstream enum android_dataspace */
+	HAL_DATASPACE_EXT_UNKNOWN           = HAL_DATASPACE_UNKNOWN,
+	HAL_DATASPACE_EXT_SRGB_LINEAR       = HAL_DATASPACE_SRGB_LINEAR,
+	HAL_DATASPACE_EXT_SRGB              = HAL_DATASPACE_SRGB,
+#if defined(PVR_ANDROID_HAS_HAL_DATASPACE_SCRGB)
+	HAL_DATASPACE_EXT_V0_SCRGB          = HAL_DATASPACE_V0_SCRGB,
+	HAL_DATASPACE_EXT_V0_SCRGB_LINEAR   = HAL_DATASPACE_V0_SCRGB_LINEAR,
+#endif
+#if defined(PVR_ANDROID_HAS_HAL_DATASPACE_DISPLAY_P3)
+	HAL_DATASPACE_EXT_DISPLAY_P3_LINEAR = HAL_DATASPACE_DISPLAY_P3_LINEAR,
+	HAL_DATASPACE_EXT_DISPLAY_P3        = HAL_DATASPACE_DISPLAY_P3,
+#endif
+#if defined(PVR_ANDROID_HAS_HAL_DATASPACE_BT2020)
+	HAL_DATASPACE_EXT_BT2020_LINEAR     = HAL_DATASPACE_BT2020_LINEAR,
+	HAL_DATASPACE_EXT_BT2020_PQ         = HAL_DATASPACE_BT2020_PQ,
+#endif
+	HAL_DATASPACE_EXT_BT601_625         = HAL_DATASPACE_BT601_625,
+	HAL_DATASPACE_EXT_BT601_525         = HAL_DATASPACE_BT601_525,
+	HAL_DATASPACE_EXT_BT709             = HAL_DATASPACE_BT709,
 
-    /* IMG extension for BT.2020 support */
-    HAL_DATASPACE_EXT_BT2020          = HAL_DATASPACE_STANDARD_BT2020     |
-                                        HAL_DATASPACE_TRANSFER_SMPTE_170M |
-                                        HAL_DATASPACE_RANGE_LIMITED,
+	/* IMG extension for BT.2020 support */
+	HAL_DATASPACE_EXT_BT2020            = HAL_DATASPACE_STANDARD_BT2020     |
+	                                      HAL_DATASPACE_TRANSFER_SMPTE_170M |
+	                                      HAL_DATASPACE_RANGE_LIMITED,
 
-    /* IMG extensions for 'full range' versions of previous enums */
-    HAL_DATASPACE_EXT_BT601_625_FULL  = ( HAL_DATASPACE_BT601_625 &
-                                          ~HAL_DATASPACE_RANGE_MASK) |
-                                        HAL_DATASPACE_RANGE_FULL,
-    HAL_DATASPACE_EXT_BT601_525_FULL  = ( HAL_DATASPACE_BT601_525 &
-                                          ~HAL_DATASPACE_RANGE_MASK) |
-                                        HAL_DATASPACE_RANGE_FULL,
-    HAL_DATASPACE_EXT_BT709_FULL      = ( HAL_DATASPACE_BT709 &
-                                          ~HAL_DATASPACE_RANGE_MASK) |
-                                        HAL_DATASPACE_RANGE_FULL,
-    HAL_DATASPACE_EXT_BT2020_FULL     = ( HAL_DATASPACE_EXT_BT2020 &
-                                          ~HAL_DATASPACE_RANGE_MASK) |
-                                        HAL_DATASPACE_RANGE_FULL,
+	/* IMG extensions for 'full range' versions of previous enums */
+	HAL_DATASPACE_EXT_BT601_625_FULL    = ( HAL_DATASPACE_BT601_625 &
+	                                       ~HAL_DATASPACE_RANGE_MASK) |
+	                                      HAL_DATASPACE_RANGE_FULL,
+	HAL_DATASPACE_EXT_BT601_525_FULL    = ( HAL_DATASPACE_BT601_525 &
+	                                       ~HAL_DATASPACE_RANGE_MASK) |
+	                                      HAL_DATASPACE_RANGE_FULL,
+	HAL_DATASPACE_EXT_BT709_FULL        = ( HAL_DATASPACE_BT709 &
+	                                       ~HAL_DATASPACE_RANGE_MASK) |
+	                                      HAL_DATASPACE_RANGE_FULL,
+	HAL_DATASPACE_EXT_BT2020_FULL       = ( HAL_DATASPACE_EXT_BT2020 &
+	                                       ~HAL_DATASPACE_RANGE_MASK) |
+	                                      HAL_DATASPACE_RANGE_FULL,
 }
 android_dataspace_ext_t;
 
