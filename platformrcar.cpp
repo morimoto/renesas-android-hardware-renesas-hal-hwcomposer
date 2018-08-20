@@ -154,7 +154,7 @@ int RCarImporter::getIonBufferFd(int bufferFd, int format
             pitches[1] = stride_width / 2;
             pitches[2] = stride_width / 2;
             offsets[1] = pitches[0] * height;
-            offsets[2] = offsets[0] + pitches[1] * ((height + 1) / 2);
+            offsets[2] = offsets[1] + pitches[1] * ((height + 1) / 2);
             format = DRM_FORMAT_YVU420;
             break;
 
