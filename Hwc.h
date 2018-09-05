@@ -71,7 +71,8 @@ public:  // functions
     // Methods from IComposer follow.
     Return<::android::hardware::graphics::composer::V2_1::Error> setEVSCameraData(
         const hidl_handle& buffer, int8_t currDisplay) override;
-
+    Return<uint32_t> getDisplayHeight() override;
+    Return<uint32_t> getDisplayWidth()  override;
 
     // ComposerBase interface
     void removeClient() override;
@@ -209,6 +210,9 @@ private:  // members
 
     hidl_handle mCameraHidlHandle;
     bool mIsHotplugInitialized;
+
+    uint32_t mDisplayHeight;
+    uint32_t mDisplayWidth;
 };
 
 }  // namespace implementation

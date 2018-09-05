@@ -84,6 +84,15 @@ void HwcHal::initDisplays() {
             mDisplays.erase(type);
         }
     }
+    mDisplays.at(HWC_DISPLAY_PRIMARY).getCurrentDisplaySize(mDisplayWidth, mDisplayHeight);
+}
+
+Return<uint32_t> HwcHal::getDisplayHeight()  {
+    return mDisplayHeight;
+}
+
+Return<uint32_t> HwcHal::getDisplayWidth() {
+    return mDisplayWidth;
 }
 
 bool HwcHal::hasCapability(Capability capability) const {

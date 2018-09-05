@@ -99,6 +99,7 @@ public:
     void startEVSCameraLayer(buffer_handle_t layer);
     void stopEVSCameraLayer();
     void invalidate();
+    void getCurrentDisplaySize(uint32_t & inWidth, uint32_t & inHeight);
 
 #if DEBUG_FRAMERATE
     int mFpsFrameCount = 0;
@@ -137,6 +138,9 @@ private:
     uint32_t mConnectorId;
     uint32_t mmWidth = 0;
     uint32_t mmHeight = 0;
+
+    uint32_t mCurrentDisplayHeight = 0;
+    uint32_t mCurrentDisplayWidth  = 0;
 
     DRMProperty mCrtcModeProperty;
     DRMProperty mCrtcActiveProperty;

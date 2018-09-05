@@ -237,6 +237,11 @@ void HwcDisplay::invalidate() {
     close(retire_fence);
 }
 
+void HwcDisplay::getCurrentDisplaySize(uint32_t & inWidth, uint32_t & inHeight) {
+    inWidth  = mCurrentDisplayWidth;
+    inHeight = mCurrentDisplayHeight;
+}
+
 Error HwcDisplay::getActiveConfig(hwc2_config_t* config) {
     supported(__func__);
 
@@ -1237,6 +1242,8 @@ int HwcDisplay::selectConfig() {
         mCurrConfig = i - 1;
         ALOGD("selected mode %d name = %s vrefresh = %f", i - 1,
               mode.getName().c_str(), mode.getVRefresh());
+        mCurrentDisplayHeight = mode.getVDisplay();
+        mCurrentDisplayWidth  = mode.getHDisplay();
         break;
     }
 
