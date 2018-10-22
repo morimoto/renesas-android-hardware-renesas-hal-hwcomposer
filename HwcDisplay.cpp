@@ -844,6 +844,7 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
                     || !layer->checkLayer() || i > 0 || !imgHnd2
                     || imgHnd2->iFormat == HAL_PIXEL_FORMAT_RGBA_1010102
                     || imgHnd2->iFormat == HAL_PIXEL_FORMAT_RGBA_8888
+                    || imgHnd2->iFormat == HAL_PIXEL_FORMAT_RGBX_8888
                    ) {
                     layer->setValidatedType (HWC2::Composition::Client);
                     ++*num_types;
