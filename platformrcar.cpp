@@ -187,6 +187,7 @@ int RCarImporter::getIonBufferFd(int bufferFd, int format
 }
 
 int RCarImporter::importBuffer(buffer_handle_t handle, DrmHwcBo* bo) {
+    std::lock_guard<std::mutex> lock(mLock);
     const IMG_native_handle_t* imgHnd2 =
         reinterpret_cast<const IMG_native_handle_t*>(handle);
 

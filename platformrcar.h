@@ -19,6 +19,7 @@
 #define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_PLATFORM_RCAR_H
 
 #include "platform.h"
+#include <mutex>
 
 namespace android {
 
@@ -40,6 +41,7 @@ private:
 
     int mDrmFd;
     std::map<uint64_t, int> mIonBuffers;
+    std::mutex mLock;
 };
 
 } // namespace android
