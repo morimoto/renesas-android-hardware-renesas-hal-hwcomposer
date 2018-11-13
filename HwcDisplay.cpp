@@ -20,7 +20,6 @@
 #include "HwcDump.h"
 #include "DrmDisplayComposition.h"
 #include "drm/DRMProperty.h"
-#include "img_gralloc1_public.h"
 
 #include <algorithm>
 #include <cmath>
@@ -149,6 +148,7 @@ Error HwcDisplay::init() {
     }
 
     setActiveConfig(mCurrConfig);
+    mMaxDevicePlanes = calcMaxDevicePlanes();
     mInitialized = true;
     return Error::NONE;
 }
@@ -809,15 +809,35 @@ Error HwcDisplay::setVsyncEnabled(int32_t enabled_in) {
     return Error::NONE;
 }
 
+int HwcDisplay::calcMaxDevicePlanes() {
+    return (mPlanes.size() > 1
+            && !mColorTransform //doesn't support color transformations on DEVICE
+            && !(mDrmModes[mCurrConfig].getFlags() & DRM_MODE_FLAG_INTERLACE))
+            ? mPlanes.size() - 1 : 0;
+}
+
+bool HwcDisplay::layerSupported(HwcLayer* layer, const uint32_t& num_device_planes) {
+    if (!layer)
+        return false;
+
+    const IMG_native_handle_t* imgHnd =
+            reinterpret_cast<const IMG_native_handle_t*>(layer->getBuffer());
+
+    const bool formatSupported = mSupportedFormats.find(imgHnd->iFormat) != mSupportedFormats.end();
+    return ((num_device_planes < mMaxDevicePlanes)
+            && imgHnd
+            && (layer->getSfType() == HWC2::Composition::Device)
+            && (layer->getTransform() == HWC2::Transform::None)
+            && layer->checkLayer()
+            && formatSupported);
+}
+
 Error HwcDisplay::validateDisplay(uint32_t* num_types,
                                   uint32_t* num_requests) {
     supported(__func__);
     *num_types = 0;
     *num_requests = 0;
     int num_device_planes = 0;
-    int max_device_planes = (mPlanes.size() > 1 && !mColorTransform
-                             && !(mDrmModes[mCurrConfig].getFlags() & DRM_MODE_FLAG_INTERLACE))
-                             ? mPlanes.size() - 1 : 0;
     mLayersSortedByZ.clear();
 
     for (auto& l : mLayers) {
@@ -830,48 +850,46 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
             ++*num_types;
         }
     } else {
-        int i = 0;
+        bool lastDeviceLayer = true;
 
         for (auto& l : mLayersSortedByZ) {
             HwcLayer* layer = l.second;
-            const IMG_native_handle_t* imgHnd2 =
-                reinterpret_cast<const IMG_native_handle_t*>(layer->getBuffer());
 
             switch (layer->getSfType()) {
             case HWC2::Composition::Device:
-                if (num_device_planes >= max_device_planes
-                    || layer->getTransform() != HWC2::Transform::None
-                    || !layer->checkLayer() || i > 0 || !imgHnd2
-                    || imgHnd2->iFormat == HAL_PIXEL_FORMAT_RGBA_1010102
-                    || imgHnd2->iFormat == HAL_PIXEL_FORMAT_RGBA_8888
-                    || imgHnd2->iFormat == HAL_PIXEL_FORMAT_RGBX_8888
-                   ) {
-                    layer->setValidatedType (HWC2::Composition::Client);
-                    ++*num_types;
-                    ++i;
-                } else {
+                if (layerSupported(layer, num_device_planes) && lastDeviceLayer) {
                     layer->setValidatedType (HWC2::Composition::Device);
                     ++num_device_planes;
+                    break;
                 }
-
-                break;
-
-            case HWC2::Composition::Client:
-                layer->setValidatedType(HWC2::Composition::Client);
-                ++i;
-                break;
 
             case HWC2::Composition::SolidColor:
             case HWC2::Composition::Sideband:
             case HWC2::Composition::Cursor:
                 layer->setValidatedType(HWC2::Composition::Client);
+                lastDeviceLayer = false;
                 ++*num_types;
-                ++i;
+                break;
+
+            case HWC2::Composition::Client:
+                layer->setValidatedType(HWC2::Composition::Client);
+                lastDeviceLayer = false;
                 break;
 
             default:
                 layer->setValidatedType(layer->getSfType());
                 break;
+            }
+        }
+
+        // Check possibility of composition all layers on Device
+        if (mLayersSortedByZ.size() == mPlanes.size() && mLayersSortedByZ.size() > 0) {
+            HwcLayer* layer = mLayersSortedByZ.rbegin()->second;
+            int current_planes = num_device_planes - 1;
+            if (layerSupported(layer, current_planes)
+                    && !lastDeviceLayer && (num_device_planes == (int)mPlanes.size() - 1)) {
+                layer->setValidatedType (HWC2::Composition::Device);
+                --*num_types;
             }
         }
     }

@@ -25,6 +25,7 @@
 #include "vsyncworker.h"
 #include "drm/DRMMode.h"
 #include "drm/DRMPlane.h"
+#include "img_gralloc1_public.h"
 
 #include <hardware/hardware.h>
 #include <hardware/hwcomposer2.h>
@@ -34,6 +35,7 @@
 #include <vector>
 #include <memory>
 #include <deque>
+#include <unordered_set>
 
 /* DEBUG_FRAMERATE
  * report frame rate every second.
@@ -119,6 +121,8 @@ private:
 
     uint32_t createModeBlob(const DRMMode& mode);
     int destroyPropertyBlob(uint32_t blob_id);
+    int calcMaxDevicePlanes();
+    bool layerSupported(HwcLayer* layer, const uint32_t &num_device_planes);
 
     std::vector<DRMMode> mDrmModes;
     struct ModeState {
@@ -164,8 +168,23 @@ private:
     std::shared_ptr<Importer> mImporter;
     DummyImporter mDummyImp;
     std::deque<DRMPlane> mPlanes;
+
+    const std::unordered_set<int> mSupportedFormats = {
+        HAL_PIXEL_FORMAT_BGRX_8888,
+        HAL_PIXEL_FORMAT_BGRA_8888,
+        HAL_PIXEL_FORMAT_RGB_888,
+        HAL_PIXEL_FORMAT_RGB_565,
+        HAL_PIXEL_FORMAT_UYVY,
+        HAL_PIXEL_FORMAT_NV12,
+        HAL_PIXEL_FORMAT_NV12_CUSTOM,
+        HAL_PIXEL_FORMAT_NV21,
+        HAL_PIXEL_FORMAT_NV21_CUSTOM,
+        HAL_PIXEL_FORMAT_YV12
+    };
+
     std::mutex mLock;
     int32_t mColorTransform = 0;
+    uint32_t mMaxDevicePlanes = 0;
     bool mIsVGAConnectorType = false;
     bool mInitialized = false;
     bool mUsingCameraLayer = false;
