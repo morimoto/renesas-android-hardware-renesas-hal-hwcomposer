@@ -16,7 +16,7 @@
 
 #include "worker.h"
 
-#include <cutils/log.h>
+#include <log/log.h>
 #include <sys/resource.h>
 #include <sys/signal.h>
 #include <errno.h>

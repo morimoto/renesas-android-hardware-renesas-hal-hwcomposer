@@ -24,7 +24,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
-#include <cutils/log.h>
+#include <log/log.h>
 
 #define ALIGN_ROUND_UP(X, Y)  (((X)+(Y)-1) & ~((Y)-1))
 

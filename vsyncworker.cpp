@@ -17,7 +17,7 @@
 #include "vsyncworker.h"
 #include "worker.h"
 
-#include <cutils/log.h>
+#include <log/log.h>
 #include <hardware/hardware.h>
 #include <map>
 #include <stdlib.h>

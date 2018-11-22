@@ -25,7 +25,7 @@
 #define LOG_NDEBUG 0
 
 #include <android/hardware/graphics/composer/2.1/IComposer.h>
-#include <cutils/log.h>
+#include <log/log.h>
 #include <sync/sync.h>
 #include <fmq/MessageQueue.h>
 

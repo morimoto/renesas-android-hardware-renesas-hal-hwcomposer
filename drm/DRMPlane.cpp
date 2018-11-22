@@ -19,7 +19,7 @@
 #include "DRMProperty.h"
 #include "HwcLayer.h"
 
-#include <cutils/log.h>
+#include <log/log.h>
 #include <cinttypes>
 #include <errno.h>
 

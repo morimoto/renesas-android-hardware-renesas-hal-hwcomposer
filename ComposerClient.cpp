@@ -17,7 +17,7 @@
 #include "ComposerClient.h"
 
 #include <android/hardware/graphics/mapper/2.0/IMapper.h>
-#include <cutils/log.h>
+#include <log/log.h>
 
 namespace android {
 namespace hardware {

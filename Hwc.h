@@ -26,7 +26,7 @@
 
 #include <vendor/renesas/graphics/composer/1.0/IComposer.h>
 #include <hardware/hwcomposer2.h>
-#include <cutils/log.h>
+#include <log/log.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 

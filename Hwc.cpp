@@ -23,7 +23,7 @@
 #include "img_gralloc1_public.h"
 #include <hardware/hwcomposer.h>
 
-#include <cutils/log.h>
+#include <log/log.h>
 #include <config.h>
 #include <type_traits>
 
