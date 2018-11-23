@@ -51,9 +51,9 @@
 /*      HAL_PIXEL_FORMAT_RGB_565     HAL_PIXEL_FORMAT_VENDOR_EXT(4) */
 /*      HAL_PIXEL_FORMAT_BGRA_8888   HAL_PIXEL_FORMAT_VENDOR_EXT(5) */
 #define HAL_PIXEL_FORMAT_NV12        HAL_PIXEL_FORMAT_VENDOR_EXT(6)
-#define HAL_PIXEL_FORMAT_NV12_CUSTOM HAL_PIXEL_FORMAT_VENDOR_EXT(7)
-#define HAL_PIXEL_FORMAT_sRGB_A_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(8)
-#define HAL_PIXEL_FORMAT_sRGB_X_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(9)
+#define HAL_PIXEL_FORMAT_sRGB_A_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(7)
+#define HAL_PIXEL_FORMAT_sRGB_X_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(8)
+#define HAL_PIXEL_FORMAT_NV12_CUSTOM HAL_PIXEL_FORMAT_VENDOR_EXT(9)
 #define HAL_PIXEL_FORMAT_NV21_CUSTOM HAL_PIXEL_FORMAT_VENDOR_EXT(10)
 #define HAL_PIXEL_FORMAT_UYVY        HAL_PIXEL_FORMAT_VENDOR_EXT(11)
 /*      Free for customer use        HAL_PIXEL_FORMAT_VENDOR_EXT(12) */
@@ -61,12 +61,13 @@
 /*      Free for customer use        HAL_PIXEL_FORMAT_VENDOR_EXT(14) */
 /*      Free for customer use        HAL_PIXEL_FORMAT_VENDOR_EXT(15) */
 
-#define HAL_PIXEL_FORMAT_NV21          (HAL_PIXEL_FORMAT_YCrCb_420_SP)
+#define HAL_PIXEL_FORMAT_NV21        (HAL_PIXEL_FORMAT_YCrCb_420_SP)
 
-/* One of the below compression modes is OR'ed into bits [4-6] of the 8 bit
- * "vendor format" field. If no bits are set in this "compression mask", the
- * normal memory format for the pixel format is used. Otherwise the pixel
- * data will be compressed in memory with the Rogue framebuffer compressor.
+/* One of the below compression modes is out of "vendor format" field and
+ * OR'ed into bits [12-14] format. If no bits are set in this "compression
+ * mask", the normal memory format for the pixel format is used. Otherwise
+ * the pixel data will be compressed in memory with the Rogue framebuffer
+ * compressor.
  */
 
 #define HAL_FB_COMPRESSION_NONE                0
@@ -121,7 +122,7 @@ typedef struct
 	(sizeof(unsigned long long) / sizeof(int) + \
 	 7 + MAX_SUB_ALLOCS + MAX_SUB_ALLOCS + \
 	 sizeof(unsigned long long) / sizeof(int) * MAX_SUB_ALLOCS + \
-	 1)
+	 2)
 	/* A KERNEL unique identifier for any exported kernel memdesc. Each
 	 * exported kernel memdesc will have a unique stamp, but note that in
 	 * userspace, several memdescs across multiple processes could have
@@ -178,6 +179,9 @@ typedef struct
 	 * texture arrays shared between processes. The multiple layers are
 	 * contained in one memory allocation. */
 	int iLayers;
+
+	/* This records reserved bits for implementation-specific usage flags */
+	int iPrivUsage;
 }
 __attribute__((aligned(sizeof(int)),packed)) IMG_native_handle_t;
 
