@@ -58,8 +58,6 @@ enum
 		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_ION_CLIENT_IMG),
 	GRALLOC1_FUNCTION_GET_BUFFER_HANDLE_IMG =
 		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_BUFFER_HANDLE_IMG),
-	GRALLOC1_FUNCTION_GET_COLORSPACE_BUFFER_FORMAT_IMG =
-		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_COLORSPACE_BUFFER_FORMAT_IMG),
 	GRALLOC1_FUNCTION_GET_BUFFER_PHYS_ADDRESS =
 		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_BUFFER_PHYS_ADDRESS),
 };
@@ -178,21 +176,6 @@ static inline int gralloc_get_buffer_handle_img
 			g->getFunction(g, GRALLOC1_FUNCTION_GET_BUFFER_HANDLE_IMG);
 
 	return f(g, handle, buffer_handle);
-}
-
-typedef int (*GRALLOC1_PFN_GET_COLORSPACE_BUFFER_FORMAT_IMG)
-	(gralloc_t *g, int format, android_dataspace_ext_t eColorspace,
-     const IMG_buffer_format_public_t **v);
-
-static inline int gralloc_get_colorspace_buffer_format_img
-	(gralloc_t *g, int format, android_dataspace_ext_t eColorspace,
-     const IMG_buffer_format_public_t **v)
-{
-	GRALLOC1_PFN_GET_COLORSPACE_BUFFER_FORMAT_IMG f =
-		(GRALLOC1_PFN_GET_COLORSPACE_BUFFER_FORMAT_IMG)
-			g->getFunction(g, GRALLOC1_FUNCTION_GET_COLORSPACE_BUFFER_FORMAT_IMG);
-
-	return f(g, format, eColorspace, v);
 }
 
 typedef int (*GRALLOC1_PFN_GET_BUFFER_PHYS_ADDRESS)
