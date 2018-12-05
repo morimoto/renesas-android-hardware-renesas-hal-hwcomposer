@@ -113,6 +113,7 @@ HwcDisplay::HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
 
 {
     supported(__func__);
+    init();
 }
 
 Error HwcDisplay::init() {

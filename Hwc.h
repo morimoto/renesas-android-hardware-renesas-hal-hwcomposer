@@ -176,6 +176,10 @@ private:  // types
         hwc2_callback_data_t data;
         hwc2_function_pointer_t func;
     };
+    struct DisplayInfo {
+        bool isConnected;
+        hwc2_display_t displayType;
+    } mConnectDisplays[NUM_DISPLAYS];
 
 private:  // functions
     void RegisterCallback(
@@ -184,6 +188,7 @@ private:  // functions
 
     void initCapabilities();
     void initDisplays();
+    void hookEventHotPlug();
 
     sp<ComposerClient> getClient();
     static void hotplugHook(
@@ -203,6 +208,7 @@ private:  // members
     std::unordered_set<Capability> mCapabilities;
 
     std::mutex mClientMutex;
+    std::atomic<bool> mInitDisplay;
     wp<ComposerClient> mClient;
 
     std::map<hwc2_display_t, HwcDisplay> mDisplays;

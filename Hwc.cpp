@@ -27,12 +27,18 @@
 #include <config.h>
 #include <type_traits>
 
+#include <thread>
+#include <chrono>
+#include <fstream>
+
 namespace android {
 namespace hardware {
 namespace graphics {
 namespace composer {
 namespace V2_1 {
 namespace implementation {
+
+static const size_t sTimeOutConnectDisplay = 1000;
 
 HwcHal::HwcHal()
     : mDrmFd(-1)
@@ -67,24 +73,62 @@ void HwcHal::initCapabilities() {
     supported(__func__);
 }
 
-void HwcHal::initDisplays() {
+void HwcHal::hookEventHotPlug() {
     mDisplays.clear();
     ALOGD("initDisplays. displays count: %d.", NUM_DISPLAYS);
 
-    for (int i = 0; i < NUM_DISPLAYS; ++i) {
-        hwc2_display_t type = static_cast<hwc2_display_t>(mDisplays.size());
-        mDisplays.emplace(
-            std::piecewise_construct,
-            std::forward_as_tuple(type),
-            std::forward_as_tuple(mDrmFd, type, hwdisplays[i], HWC2::DisplayType::Physical,
-                                  mImporter));
+    const char ConnectedDevice    = 'c';
+    const char DisconnectedDevice = 'd';
 
-        if (mDisplays.at(type).init() != Error::NONE) {
-            ALOGE("initDisplays. Init failed index: %d.", i);
-            mDisplays.erase(type);
+    while (true) {
+        for (int i = 0; i < NUM_DISPLAYS; ++i) {
+            if (!hwdisplays[i].status[0]) {
+                continue;
+            }
+
+            std::ifstream inStatusDevice(hwdisplays[i].status);
+            char currentStatusDevice;
+
+            inStatusDevice >> currentStatusDevice;
+            inStatusDevice.close();
+
+            if (currentStatusDevice == DisconnectedDevice && mConnectDisplays[i].isConnected) {
+                if (mConnectDisplays[i].displayType == HWC_DISPLAY_PRIMARY) {
+                    continue;
+                }
+
+                hotplugHook(this, mConnectDisplays[i].displayType, static_cast<int32_t>(HWC2::Connection::Disconnected));
+                mConnectDisplays[i].isConnected = false;
+
+            } else if (currentStatusDevice == ConnectedDevice && !mConnectDisplays[i].isConnected) {
+                hwc2_display_t type = static_cast<hwc2_display_t>(mDisplays.size());
+                if (type < NUM_DISPLAYS) {
+                    mDisplays.emplace(
+                                std::piecewise_construct,
+                                std::forward_as_tuple(type),
+                                std::forward_as_tuple(mDrmFd, type, hwdisplays[i], HWC2::DisplayType::Physical,
+                                                      mImporter));
+                    if (type == HWC_DISPLAY_PRIMARY) {
+                        mDisplays.at(HWC_DISPLAY_PRIMARY).getCurrentDisplaySize(mDisplayWidth, mDisplayHeight);
+                    }
+                    mConnectDisplays[i].displayType = type;
+                }
+                hotplugHook(this, mConnectDisplays[i].displayType, static_cast<int32_t>(HWC2::Connection::Connected));
+                mConnectDisplays[i].isConnected = true;
+                mInitDisplay = true;
+            }
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(sTimeOutConnectDisplay));
     }
-    mDisplays.at(HWC_DISPLAY_PRIMARY).getCurrentDisplaySize(mDisplayWidth, mDisplayHeight);
+}
+
+void HwcHal::initDisplays() {
+    std::thread thread(&HwcHal::hookEventHotPlug, this);
+    thread.detach();
+
+    while (!mInitDisplay) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(sTimeOutConnectDisplay));
+    }
 }
 
 Return<uint32_t> HwcHal::getDisplayHeight()  {
@@ -600,16 +644,19 @@ void HwcHal::RegisterCallback(
 
     switch (descriptor) {
     case HWC2::Callback::Hotplug: {
-        auto hotplug = reinterpret_cast<HWC2_PFN_HOTPLUG>(function);
-        hotplug(data, HWC_DISPLAY_PRIMARY,
+       hotplugHook(data, HWC_DISPLAY_PRIMARY,
                 static_cast<int32_t>(HWC2::Connection::Connected));
+        break;
+    }
+
+    case HWC2::Callback::Refresh: {
+        refreshHook(data, HWC_DISPLAY_PRIMARY);
         break;
     }
 
     case HWC2::Callback::Vsync: {
         for (std::pair<const hwc2_display_t, HwcDisplay>& d : mDisplays)
             d.second.registerVsyncCallback(data, function);
-
         break;
     }
 
