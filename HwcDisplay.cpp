@@ -137,14 +137,14 @@ Error HwcDisplay::init() {
     mEventContext.page_flip_handler = page_flip_handler;
 #endif //DEBUG_FRAMERATE
 
-    int ret = mVsyncWorker.init(mDrmFd, display);
+    setActiveConfig(mCurrConfig);
 
+    int ret = mVsyncWorker.init(mDrmFd, display, (int)mDrmModes[mCurrConfig].getVRefresh());
     if (ret) {
         ALOGE("Failed to create event worker for d=%d %d", display, ret);
         return Error::BAD_DISPLAY;
     }
 
-    setActiveConfig(mCurrConfig);
     mMaxDevicePlanes = calcMaxDevicePlanes();
     mInitialized = true;
     return Error::NONE;
@@ -839,9 +839,11 @@ bool HwcDisplay::layerSupported(HwcLayer* layer, const uint32_t& num_device_plan
     const IMG_native_handle_t* imgHnd =
             reinterpret_cast<const IMG_native_handle_t*>(layer->getBuffer());
 
+    if (!imgHnd)
+        return false;
+
     const bool formatSupported = mSupportedFormats.find(imgHnd->iFormat) != mSupportedFormats.end();
     return ((num_device_planes < mMaxDevicePlanes)
-            && imgHnd
             && (layer->getSfType() == HWC2::Composition::Device)
             && (layer->getTransform() == HWC2::Transform::None)
             && layer->checkLayer()

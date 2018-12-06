@@ -39,7 +39,7 @@ public:
     VSyncWorker();
     ~VSyncWorker() override;
 
-    int init(int drmFd, int display);
+    int init(int drmFd, int display, int refresh);
     int registerCallback(std::shared_ptr<VsyncCallback> callback);
 
     int controlVSync(bool enabled);
@@ -59,6 +59,7 @@ private:
     std::shared_ptr<VsyncCallback> mCallback = NULL;
 
     int mDisplay;
+    int mRefreshRate = 60; // Default to 60Hz refresh rate
     bool mEnabled;
     int64_t mLastTimestamp;
 };

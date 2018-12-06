@@ -39,9 +39,11 @@ VSyncWorker::VSyncWorker()
 VSyncWorker::~VSyncWorker() {
 }
 
-int VSyncWorker::init(int drmFd , int display) {
+int VSyncWorker::init(int drmFd , int display, int refresh) {
     mDrmFd = drmFd;
     mDisplay = display;
+    if (refresh)
+        mRefreshRate = refresh;
     return initWorker();
 }
 
@@ -111,14 +113,7 @@ static const int64_t kOneSecondNs = 1 * 1000 * 1000 * 1000;
 int VSyncWorker::syntheticWaitVBlank(int64_t* timestamp) {
     struct timespec vsync;
     int ret = clock_gettime(CLOCK_MONOTONIC, &vsync);
-    float refresh = 60.0f;  // Default to 60Hz refresh rate
-    //    DrmConnector *conn = drm_->GetConnectorForDisplay(display_);
-    //    if (conn && conn->active_mode().v_refresh() != 0.0f)
-    //        refresh = conn->active_mode().v_refresh();
-    //    else
-    //        ALOGW("Vsync worker active with conn=%p refresh=%f\n", conn,
-    //                conn ? conn->active_mode().v_refresh() : 0.0f);
-    int64_t phased_timestamp = getPhasedVSync(kOneSecondNs / refresh,
+    int64_t phased_timestamp = getPhasedVSync(kOneSecondNs / mRefreshRate,
                                vsync.tv_sec * kOneSecondNs + vsync.tv_nsec);
     vsync.tv_sec = phased_timestamp / kOneSecondNs;
     vsync.tv_nsec = phased_timestamp - (vsync.tv_sec * kOneSecondNs);
@@ -163,16 +158,11 @@ void VSyncWorker::routine() {
     if (!enabled)
         return;
 
-    //    DrmCrtc *crtc = drm_->GetCrtcForDisplay(display);
-    //    if (!crtc) {
-    //        ALOGE("Failed to get crtc for display");
-    //        return;
-    //    }
-    //    uint32_t high_crtc = (crtc->pipe() << DRM_VBLANK_HIGH_CRTC_SHIFT);
+    uint32_t high_crtc = (display << DRM_VBLANK_HIGH_CRTC_SHIFT);
     drmVBlank vblank;
     memset(&vblank, 0, sizeof(vblank));
     vblank.request.type = (drmVBlankSeqType) (DRM_VBLANK_RELATIVE
-                          /*| (high_crtc & DRM_VBLANK_HIGH_CRTC_MASK)*/);
+                          | (high_crtc & DRM_VBLANK_HIGH_CRTC_MASK));
     vblank.request.sequence = 1;
     int64_t timestamp;
     ret = drmWaitVBlank(mDrmFd, &vblank);
