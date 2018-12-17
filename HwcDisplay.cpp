@@ -462,17 +462,24 @@ std::vector<HwcLayer*> HwcDisplay::getSortedLayersByZOrder() {
     bool use_client_layer = false;
     uint32_t client_z_order = 0;
     std::vector<HwcLayer*> layers;
-    int dev_layers_num = 0;
-    {
-        for (auto& l : mLayersSortedByZ) {
-            if (HWC2::Composition::Device == l.second->getValidatedType()) {
-                if (++dev_layers_num > 0) {
-                    layers.push_back(l.second);
-                }
-            } else if (HWC2::Composition::Client == l.second->getValidatedType()) {
-                use_client_layer = true;
-                client_z_order = std::max(client_z_order, l.second->getZorder());
-            }
+
+    if (!mValidated) {
+        mLayersSortedByZ.clear();
+        for (auto& l : mLayers) {
+            mLayersSortedByZ.emplace(std::make_pair(l.second.getZorder(), &l.second));
+        }
+    }
+
+    for (auto& l : mLayersSortedByZ) {
+        HWC2::Composition validated_type = l.second->getValidatedType();
+        if (HWC2::Composition::Device == validated_type || mUsingCameraLayer) {
+            layers.push_back(l.second);
+        } else if (HWC2::Composition::Client == validated_type) {
+            use_client_layer = true;
+            client_z_order = std::max(client_z_order, l.second->getZorder());
+        } else if (!mValidated) {
+            // layer Composition not suported, need to validate
+            return std::vector<HwcLayer*>();
         }
     }
 
@@ -635,11 +642,11 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
     }
 
     std::vector<HwcLayer*> sorted_layers = getSortedLayersByZOrder();
+    mValidated = false; // from here mLayersSortedByZ is not reliable
 
     if (sorted_layers.empty()) {
-        ALOGE("PresentDisplay| layers empty after getSortedLayersByZOrder");
         *retire_fence = -1;
-        return Error::NONE;
+        return Error::NOT_VALIDATED;
     }
 
     std::vector<DrmHwcLayer> layers;
@@ -899,6 +906,7 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
         }
     }
 
+    mValidated = true;
     return Error::NONE;
 }
 

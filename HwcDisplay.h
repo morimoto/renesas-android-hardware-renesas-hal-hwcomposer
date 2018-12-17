@@ -192,6 +192,7 @@ private:
     bool mIsVGAConnectorType = false;
     bool mInitialized = false;
     bool mUsingCameraLayer = false;
+    bool mValidated = false;
 };
 
 } // namespace android
