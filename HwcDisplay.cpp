@@ -823,13 +823,12 @@ Error HwcDisplay::setVsyncEnabled(int32_t enabled_in) {
 
 int HwcDisplay::calcMaxDevicePlanes() {
     return (mPlanes.size() > 1
-            && !mColorTransform //doesn't support color transformations on DEVICE
             && !(mDrmModes[mCurrConfig].getFlags() & DRM_MODE_FLAG_INTERLACE))
             ? mPlanes.size() - 1 : 0;
 }
 
 bool HwcDisplay::layerSupported(HwcLayer* layer, const uint32_t& num_device_planes) {
-    if (!layer)
+    if (!layer || mColorTransform)
         return false;
 
     const IMG_native_handle_t* imgHnd =
