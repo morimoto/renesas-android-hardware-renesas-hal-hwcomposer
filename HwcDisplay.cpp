@@ -930,7 +930,6 @@ int HwcDisplay::loadDisplayModes() {
     drmModeEncoderPtr encoder = nullptr;
     int len;
     char value[8];
-    uint32_t enc_id = 0;
     int fd = -1;
     int display = static_cast<int>(mHandle);
 
@@ -946,7 +945,6 @@ int HwcDisplay::loadDisplayModes() {
         close(fd);
     }
 
-    enc_id = mConnectorId - 1;
     int ret = 0;
     drmModeResPtr resources = drmModeGetResources(mDrmFd);
 
@@ -955,39 +953,75 @@ int HwcDisplay::loadDisplayModes() {
         return -1;
     }
 
-    int set_flag = 0;
+    bool modesetIsPossible = true;
 
-    for (int i = 0; i < resources->count_connectors; i++) {
-        connector = drmModeGetConnector(mDrmFd, resources->connectors[i]);
-
-        if (!connector) {
-            ALOGE("drmModeGetConnector error");
-            drmModeFreeResources(resources);
-            return -1;
-        }
-
-        if (connector->connector_id == mConnectorId) {
-            set_flag = 1;
-            mmWidth = connector->mmWidth;
-            mmHeight = connector->mmHeight;
-
-            if (connector->connection == DRM_MODE_DISCONNECTED) {
-                ALOGD("disconnected\n");
-                set_flag = -1;
-            } else if (connector->connection == DRM_MODE_UNKNOWNCONNECTION) {
-                ALOGE("unknown connection\n");
-                set_flag = -1;
-            }
-
-            break;
-        }
-
-        drmModeFreeConnector(connector);
-        connector = NULL;
+    connector = drmModeGetConnector(mDrmFd, mConnectorId);
+    if (!connector) {
+        ALOGE("drmModeGetConnector %d error", mConnectorId);
+        drmModeFreeResources(resources);
+        return -1;
     }
 
-    if (set_flag <= 0) {
+    mmWidth = connector->mmWidth;
+    mmHeight = connector->mmHeight;
+
+    if (connector->connection == DRM_MODE_DISCONNECTED) {
+        ALOGD("disconnected\n");
+        modesetIsPossible = false;
+    } else if (connector->connection == DRM_MODE_UNKNOWNCONNECTION) {
+        ALOGE("unknown connection\n");
+        modesetIsPossible = false;
+    }
+
+    if (connector->count_encoders == 0) {
+        ALOGE("connector has no encoders\n");
+        modesetIsPossible = false;
+    } else if (modesetIsPossible) {
+
+        mCrtId = 0;
+
+        /* Find an encoder for this connector */
+        for (int i = 0; i < connector->count_encoders; i++) {
+
+            encoder = drmModeGetEncoder(mDrmFd, connector->encoders[i]);
+            if (!encoder) {
+                ALOGD("drmModeGetEncoder id %d error", connector->encoders[i]);
+                continue;
+            }
+
+            mCrtId = encoder->crtc_id;
+            if (mCrtId == 0) {
+                /* This encoder is available, find a suiteable crtc */
+                ALOGD("Found available encoder (id = %d)", encoder->encoder_id);
+                for (int j = 0; j < resources->count_crtcs; ++j) {
+                    if (encoder->possible_crtcs & (1 << j)) {
+                        ALOGD("crtc_id  %d is compatible with encoder %d", resources->crtcs[j], encoder->encoder_id);
+                        mCrtId = resources->crtcs[j];
+                        break;
+                    }
+                }
+
+                if (mCrtId) {
+                    /* crtc found, break out the loop */
+                    drmModeFreeEncoder(encoder);
+                    break;
+                }
+            }
+
+            /* If we get here it means this encoder is available but
+             * no crtc were found. Try with the next encoder.*/
+            drmModeFreeEncoder(encoder);
+        }
+
+        if (mCrtId == 0) {
+            ALOGE("no crtc found\n");
+            modesetIsPossible = false;
+        }
+    }
+
+    if (!modesetIsPossible) {
         ALOGE("no matching connector_type");
+        drmModeFreeConnector(connector);
         drmModeFreeResources(resources);
         return -1;
     }
@@ -1000,43 +1034,6 @@ int HwcDisplay::loadDisplayModes() {
     mIsVGAConnectorType = (connector->connector_type == DRM_MODE_CONNECTOR_VGA);
 #endif
 
-    set_flag = 0;
-
-    for (int i = 0; i < resources->count_encoders; i++) {
-        encoder = drmModeGetEncoder(mDrmFd, resources->encoders[i]);
-
-        if (!encoder) {
-            ALOGE("drmModeGetEncoder error");
-            drmModeFreeResources(resources);
-            return -1;
-        }
-
-        if (encoder->encoder_id == enc_id) {
-            set_flag = 1;
-            break;
-        }
-
-        drmModeFreeEncoder(encoder);
-    }
-
-    if (!set_flag) {
-        ALOGE("no matching encoder_type");
-        drmModeFreeResources(resources);
-        return -1;
-    }
-
-    mCrtId = encoder->crtc_id;
-
-    if (mCrtId == 0) {
-        for (int i = 0; i < resources->count_crtcs; ++i) {
-            if (!(encoder->possible_crtcs & (1 << i)))
-                continue;
-
-            mCrtId = resources->crtcs[i];
-        }
-    }
-
-    drmModeFreeEncoder(encoder);
 
     for (int i = 0; i < connector->count_modes; i++) {
         DRMMode m(&connector->modes[i]);
