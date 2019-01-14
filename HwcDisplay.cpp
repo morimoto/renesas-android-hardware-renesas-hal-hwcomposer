@@ -63,10 +63,7 @@ static void page_flip_handler(int //fd
                               , uint32_t tv_usec
                               , void* user_data
                               ) {
-    char value[PROPERTY_VALUE_MAX];
-    property_get("debug.hwc.showfps", value, "0");
 
-    if (atoi(value)) {
         HwcDisplay* disp = reinterpret_cast<HwcDisplay*>(user_data);
         if (!disp)
             return;
@@ -96,7 +93,6 @@ static void page_flip_handler(int //fd
             }
             fps_frame_count++;
         }
-    }
 }
 #endif //DEBUG_FRAMERATE
 
@@ -223,13 +219,12 @@ void HwcDisplay::startEVSCameraLayer(buffer_handle_t layer) {
 }
 
 void HwcDisplay::stopEVSCameraLayer() {
+    invalidate();
     if (mUsingCameraLayer) {
         mUsingCameraLayer = false;
         //SelectConfig();
         //updateConfig();
     }
-
-    invalidate();
 }
 
 void HwcDisplay::invalidate() {
@@ -592,7 +587,14 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
     uint32_t flags = 0;
 
 #if DEBUG_FRAMERATE
+    static char value[PROPERTY_VALUE_MAX];
+    property_get("debug.hwc.showfps", value, "0");
+    bool show_fps = std::atoi(value);
+    bool isConnectCamera = mUsingCameraLayer;
+
+    if (show_fps && !isConnectCamera) {
     flags |= DRM_MODE_PAGE_FLIP_EVENT;
+    }
 #endif //DEBUG_FRAMERATE
 
     if (mFirstDraw)
@@ -606,7 +608,9 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
     CHECK_RES_WARN(ret);
 
 #if DEBUG_FRAMERATE
+    if (show_fps && !isConnectCamera) {
     CHECK_RES_WARN(drmHandleEvent(mDrmFd, &mEventContext));
+    }
 #endif //DEBUG_FRAMERATE
 
     if (mFirstDraw) {

@@ -23,6 +23,12 @@
 ***********************************/
 
 #define NUM_DISPLAYS (3)
+/* DEBUG_FRAMERATE
+ * report frame rate every second.
+ *  1   effective.
+ *  0   unavailable.
+ */
+#define DEBUG_FRAMERATE 1 // report frame rate if 1 specified
 
 struct hwdisplay {
     char encoder[64];
