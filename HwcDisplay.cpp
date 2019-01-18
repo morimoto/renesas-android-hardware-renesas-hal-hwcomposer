@@ -1029,10 +1029,10 @@ int HwcDisplay::loadDisplayModes() {
     }
 
 #if defined(TARGET_BOARD_KINGFISHER)
-    //FIXME: Kingfisher VGA (workaround for updating buffers on vga display)
-    mIsVGAConnectorType = (display != 0) && (connector->connector_type != DRM_MODE_CONNECTOR_LVDS); // not primary display
+    // on Kingfisher VGA shows as HDMI (there is hw converter), and it's not primary display
+    mIsVGAConnectorType = (display != 0) && (connector->connector_type != DRM_MODE_CONNECTOR_LVDS);
 #else
-    //FIXME: it's Salvator VGA
+    // it's Salvator VGA
     mIsVGAConnectorType = (connector->connector_type == DRM_MODE_CONNECTOR_VGA);
 #endif
 
@@ -1219,9 +1219,12 @@ int HwcDisplay::selectConfig() {
     for (const DRMMode& mode : mDrmModes) {
         i++;
 
-        if (!isBootargsPresent && mIsVGAConnectorType
+        if (!isBootargsPresent && mIsVGAConnectorType // if no bootargs and it's VGA
+#if defined(TARGET_BOARD_KINGFISHER)
+                && !(mode.getFlags() & DRM_MODE_FLAG_INTERLACE) // for KF default is 1080i
+#endif // TARGET_BOARD_KINGFISHER
                 && (mode.getHDisplay() > 1280 || mode.getVDisplay() > 720)) {
-            // VGA connector mIsVGAConnectorType use 720p as default
+            // VGA connector mIsVGAConnectorType use 720p as default on Salvator
             continue;
         }
 
@@ -1229,6 +1232,7 @@ int HwcDisplay::selectConfig() {
 
         if (!isBootargsPresent && !mIsVGAConnectorType
                 && (fabs(aspect - preferred_aspect_ratio) > 0.001)) {
+            // use only prefered aspect ratio, except VGA
             continue;
         }
 
@@ -1239,16 +1243,26 @@ int HwcDisplay::selectConfig() {
 
         if (isBootargsPresent
                 && (mode.getHDisplay() != width || mode.getVDisplay() != height)) {
-            // display size is not meet request value
+            // display size is not meet request value from bootargs
             continue;
         }
 
-        if (fabs(mode.getVRefresh() - HZ) > 3) {
+        if (fabs(mode.getVRefresh() - HZ) > 3) { // there are cases where refresh not strictly 60 hz
             // refresh rate doesn't meet request value
             continue;
         }
 
-        if (isInterlace != !!(mode.getFlags() & DRM_MODE_FLAG_INTERLACE)) {
+        if (isBootargsPresent   // if bootargs with interlace - skip all not interlace, and vice versa
+                && (isInterlace != !!(mode.getFlags() & DRM_MODE_FLAG_INTERLACE))) {
+            continue;
+        }
+
+        if (!isBootargsPresent          // if no bootargs
+                && !!(mode.getFlags() & DRM_MODE_FLAG_INTERLACE) // skip all interlace
+#if defined(TARGET_BOARD_KINGFISHER)
+                && !mIsVGAConnectorType // except VGA on Kingfisher
+#endif // TARGET_BOARD_KINGFISHER
+                ) {
             continue;
         }
 
