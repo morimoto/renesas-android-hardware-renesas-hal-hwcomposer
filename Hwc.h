@@ -35,6 +35,7 @@
 #include <unordered_set>
 #include <map>
 #include <vector>
+#include <future>
 
 namespace android {
 class HWC2On1Adapter;
@@ -176,6 +177,10 @@ private:  // types
         hwc2_callback_data_t data;
         hwc2_function_pointer_t func;
     };
+    struct DisplayInfo {
+        bool isConnected;
+        hwc2_display_t displayType;
+    } mConnectDisplays[NUM_DISPLAYS];
 
 private:  // functions
     void RegisterCallback(
@@ -184,6 +189,7 @@ private:  // functions
 
     void initCapabilities();
     void initDisplays();
+    void hookEventHotPlug();
 
     sp<ComposerClient> getClient();
     static void hotplugHook(
@@ -203,6 +209,7 @@ private:  // members
     std::unordered_set<Capability> mCapabilities;
 
     std::mutex mClientMutex;
+    std::promise<void> mWaitForPresentDisplay;
     wp<ComposerClient> mClient;
 
     std::map<hwc2_display_t, HwcDisplay> mDisplays;
@@ -210,6 +217,8 @@ private:  // members
 
     hidl_handle mCameraHidlHandle;
     bool mIsHotplugInitialized;
+    bool mInitDisplays;
+    bool mStartHotPlug;
 
     uint32_t mDisplayHeight;
     uint32_t mDisplayWidth;

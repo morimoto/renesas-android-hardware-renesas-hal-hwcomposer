@@ -202,7 +202,7 @@ void ComposerClient::onHotplug(Display display,
         if (connected == IComposerCallback::Connection::CONNECTED) {
             mDisplayData.emplace(display, DisplayData(false));
         } else if (connected == IComposerCallback::Connection::DISCONNECTED) {
-            mDisplayData.erase(display);
+            mDisplayData.emplace(display, DisplayData(true));
         }
     }
 

@@ -27,6 +27,10 @@
 #include <config.h>
 #include <type_traits>
 
+#include <thread>
+#include <chrono>
+#include <fstream>
+
 namespace android {
 namespace hardware {
 namespace graphics {
@@ -37,7 +41,9 @@ namespace implementation {
 HwcHal::HwcHal()
     : mDrmFd(-1)
     , mCameraHidlHandle(nullptr)
-    , mIsHotplugInitialized(false) {
+    , mIsHotplugInitialized(false)
+    , mInitDisplays(false)
+    , mStartHotPlug(false) {
     mDrmFd = drmOpen("rcar-du", NULL);
 
     if (mDrmFd < 0) {
@@ -60,6 +66,7 @@ HwcHal::HwcHal()
 }
 
 HwcHal::~HwcHal() {
+    mStartHotPlug = false;
     drmClose(mDrmFd);
 }
 
@@ -67,24 +74,66 @@ void HwcHal::initCapabilities() {
     supported(__func__);
 }
 
+void HwcHal::hookEventHotPlug() {
+    using namespace std::chrono_literals;
+    if (mStartHotPlug) {
+        mWaitForPresentDisplay.get_future().wait();
+    }
+    enum Status {
+        CONNECTED_DISPLAY = 'c',
+        DISCONNECTED_DISPLAY = 'd'
+    };
+    char currentStatusDisplay = DISCONNECTED_DISPLAY;
+    while (true) {
+        for (int i = 0; i < NUM_DISPLAYS; ++i) {
+            std::ifstream inStatusDisplay(hwdisplays[i].status);
+            if (!inStatusDisplay.is_open()) {
+                mConnectDisplays[i].isConnected = false;
+                mConnectDisplays[i].displayType = i;
+                continue;
+            }
+            inStatusDisplay >> currentStatusDisplay;
+            inStatusDisplay.close();
+
+            if (currentStatusDisplay == DISCONNECTED_DISPLAY && mConnectDisplays[i].isConnected) {
+                if (mConnectDisplays[i].displayType == HWC_DISPLAY_PRIMARY) {
+                    continue;
+                }
+                hotplugHook(this, mConnectDisplays[i].displayType, static_cast<int32_t>(HWC2::Connection::Disconnected));
+                mConnectDisplays[i].isConnected = false;
+            } else if (currentStatusDisplay == CONNECTED_DISPLAY && !mConnectDisplays[i].isConnected) {
+                hwc2_display_t type = static_cast<hwc2_display_t>(mDisplays.size());
+                if (type < NUM_DISPLAYS) {
+                    mDisplays.emplace(
+                                std::piecewise_construct,
+                                std::forward_as_tuple(type),
+                                std::forward_as_tuple(mDrmFd, type, hwdisplays[i], HWC2::DisplayType::Physical,
+                                                      mImporter));
+                    mConnectDisplays[i].displayType = type;
+                }
+                hotplugHook(this, mConnectDisplays[i].displayType, static_cast<int32_t>(HWC2::Connection::Connected));
+                mConnectDisplays[i].isConnected = true;
+                mInitDisplays = true;
+            }
+        }
+
+        if (mInitDisplays && !mStartHotPlug) {
+            return;
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(1s));
+    }
+}
+
 void HwcHal::initDisplays() {
     mDisplays.clear();
     ALOGD("initDisplays. displays count: %d.", NUM_DISPLAYS);
 
-    for (int i = 0; i < NUM_DISPLAYS; ++i) {
-        hwc2_display_t type = static_cast<hwc2_display_t>(mDisplays.size());
-        mDisplays.emplace(
-            std::piecewise_construct,
-            std::forward_as_tuple(type),
-            std::forward_as_tuple(mDrmFd, type, hwdisplays[i], HWC2::DisplayType::Physical,
-                                  mImporter));
-
-        if (mDisplays.at(type).init() != Error::NONE) {
-            ALOGE("initDisplays. Init failed index: %d.", i);
-            mDisplays.erase(type);
-        }
-    }
+    hookEventHotPlug();
     mDisplays.at(HWC_DISPLAY_PRIMARY).getCurrentDisplaySize(mDisplayWidth, mDisplayHeight);
+
+    mStartHotPlug = true;
+    std::thread thread(&HwcHal::hookEventHotPlug, this);
+    thread.detach();
 }
 
 Return<uint32_t> HwcHal::getDisplayHeight()  {
@@ -484,6 +533,7 @@ Error HwcHal::presentDisplay(
         }
 
         mIsHotplugInitialized = true;
+        mWaitForPresentDisplay.set_value();
     }
 
     *outPresentFence = -1;
@@ -600,9 +650,12 @@ void HwcHal::RegisterCallback(
 
     switch (descriptor) {
     case HWC2::Callback::Hotplug: {
-        auto hotplug = reinterpret_cast<HWC2_PFN_HOTPLUG>(function);
-        hotplug(data, HWC_DISPLAY_PRIMARY,
+        hotplugHook(data, HWC_DISPLAY_PRIMARY,
                 static_cast<int32_t>(HWC2::Connection::Connected));
+        break;
+    }
+
+    case HWC2::Callback::Refresh: {
         break;
     }
 
