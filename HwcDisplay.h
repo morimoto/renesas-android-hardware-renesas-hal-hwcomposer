@@ -88,6 +88,7 @@ public:
     HwcLayer& getLayer(hwc2_layer_t layer);
 
     void updateConfig();
+    void loadNewConfig();
 
     void startEVSCameraLayer(buffer_handle_t layer);
     void stopEVSCameraLayer();

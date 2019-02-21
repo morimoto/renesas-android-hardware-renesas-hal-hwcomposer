@@ -114,7 +114,6 @@ HwcDisplay::HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
 
 {
     supported(__func__);
-    init();
 }
 
 Error HwcDisplay::init() {
@@ -302,7 +301,7 @@ Error HwcDisplay::getDisplayAttribute(hwc2_config_t config,
     supported(__func__);
 
     if (config >= mDrmModes.size()) {
-        ALOGE("Could not find active mode for %d", config);
+        ALOGE("Display %d : Could not find active mode for %d", (int)mHandle, config);
         return Error::BAD_CONFIG;
     }
 
@@ -888,6 +887,18 @@ HwcLayer& HwcDisplay::getLayer(hwc2_layer_t layer) {
 void HwcDisplay::updateConfig() {
     //mFirstDraw = true;
     setActiveConfig(mCurrConfig);
+}
+
+void HwcDisplay::loadNewConfig() {
+    std::deque<DRMPlane>().swap(mPlanes);
+    std::vector<DRMMode>().swap(mDrmModes);
+
+    loadDisplayModes();
+    selectConfig();
+    setActiveConfig(mCurrConfig);
+
+    mMaxDevicePlanes = calcMaxDevicePlanes();
+    invalidate();
 }
 
 int HwcDisplay::loadDisplayModes() {

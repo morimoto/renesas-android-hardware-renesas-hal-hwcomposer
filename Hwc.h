@@ -169,6 +169,7 @@ public:  // functions
     Error setLayerZOrder(Display display, Layer layer, uint32_t z) override;
 
 private:  // types
+    friend class HotPlug;
     struct HwcCallback {
         HwcCallback(hwc2_callback_data_t d, hwc2_function_pointer_t f)
             : data(d)
@@ -177,10 +178,6 @@ private:  // types
         hwc2_callback_data_t data;
         hwc2_function_pointer_t func;
     };
-    struct DisplayInfo {
-        bool isConnected;
-        hwc2_display_t displayType;
-    } mConnectDisplays[NUM_DISPLAYS];
 
 private:  // functions
     void RegisterCallback(
@@ -189,7 +186,6 @@ private:  // functions
 
     void initCapabilities();
     void initDisplays();
-    void hookEventHotPlug();
 
     sp<ComposerClient> getClient();
     static void hotplugHook(
@@ -218,7 +214,6 @@ private:  // members
     hidl_handle mCameraHidlHandle;
     bool mIsHotplugInitialized;
     bool mInitDisplays;
-    bool mStartHotPlug;
 
     uint32_t mDisplayHeight;
     uint32_t mDisplayWidth;

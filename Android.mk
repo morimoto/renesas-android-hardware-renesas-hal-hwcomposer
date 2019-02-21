@@ -52,6 +52,7 @@ LOCAL_SRC_FILES += DrmDisplayComposition.cpp
 LOCAL_SRC_FILES += Hwc.cpp
 LOCAL_SRC_FILES += HwcBuffer.cpp
 LOCAL_SRC_FILES += HwcDisplay.cpp
+LOCAL_SRC_FILES += HwcHotPlug.cpp
 LOCAL_SRC_FILES += HwcDump.cpp
 LOCAL_SRC_FILES += HwcLayer.cpp
 LOCAL_SRC_FILES += platformrcar.cpp
@@ -65,6 +66,8 @@ LOCAL_MODULE := android.hardware.graphics.composer@2.1-service.renesas
 LOCAL_CFLAGS += -DLOG_TAG=\"hwcomposer\"
 LOCAL_CFLAGS += -DHWC2_USE_CPP11
 LOCAL_CFLAGS += -DHWC2_INCLUDE_STRINGIFICATION
+LOCAL_CFLAGS += -DDEBUG_FRAMERATE=1
+LOCAL_CFLAGS += -DHWC_HOTPLUG_SUPPORT=1
 LOCAL_CFLAGS += -Wall -Werror
 LOCAL_INIT_RC := android.hardware.graphics.composer@2.1-service.renesas.rc
 LOCAL_VINTF_FRAGMENTS := android.hardware.graphics.composer@2.1-service.renesas.xml
