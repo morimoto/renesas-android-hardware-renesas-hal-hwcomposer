@@ -135,10 +135,10 @@ public:  // functions
         std::vector<uint32_t>* outRequestMasks) override;
     Error acceptDisplayChanges(Display display) override;
     Error presentDisplay(
-        Display display,
-        int32_t* outPresentFence,
-        std::vector<Layer>* outLayers,
-        std::vector<int32_t>* outReleaseFences) override;
+        Display display = HWC_DISPLAY_PRIMARY,
+        int32_t* outPresentFence = 0,
+        std::vector<Layer>* outLayers = {},
+        std::vector<int32_t>* outReleaseFences = {}) override;
 
     Error setLayerCursorPosition(Display display, Layer layer, int32_t x,
                                  int32_t y) override;
@@ -210,6 +210,8 @@ private:  // members
     std::map<HWC2::Callback, HwcCallback> mCallbacks;
 
     hidl_handle mCameraHidlHandle;
+    std::atomic<bool> mIsCameraEnabled = {false};
+    bool mSignalStopCamera;
     bool mIsHotplugInitialized;
     bool mInitDisplays;
 
