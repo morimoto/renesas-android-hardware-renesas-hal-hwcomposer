@@ -31,10 +31,10 @@
 #include <drm_fourcc.h>
 #include <cutils/properties.h>
 #include <inttypes.h>
-#include <sync/sync.h>
 #include <string.h>
 
-#define ALIGN_ROUND_UP(X, Y)  (((X)+(Y)-1) & ~((Y)-1))
+#define ATRACE_TAG ATRACE_TAG_GRAPHICS
+#include <utils/Trace.h>
 
 namespace android {
 using Error = android::hardware::graphics::composer::V2_1::Error;
@@ -63,36 +63,41 @@ static void page_flip_handler(int //fd
                               , uint32_t tv_usec
                               , void* user_data
                               ) {
+    static char value[PROPERTY_VALUE_MAX];
+    property_get("debug.hwc.showfps", value, "0");
+    bool show_fps = std::atoi(value);
+    if (!show_fps)
+        return;
 
-        HwcDisplay* disp = reinterpret_cast<HwcDisplay*>(user_data);
-        if (!disp)
-            return;
+    HwcDisplay* disp = reinterpret_cast<HwcDisplay*>(user_data);
+    if (!disp)
+        return;
 
-        int& fps_frame_count = disp->mFpsFrameCount;
-        uint32_t& start_sec = disp->mFpsStartSec;
-        uint32_t& start_usec = disp->mFpsStartUsec;
+    int& fps_frame_count = disp->mFpsFrameCount;
+    uint32_t& start_sec = disp->mFpsStartSec;
+    uint32_t& start_usec = disp->mFpsStartUsec;
 
-        if (fps_frame_count == 0) {
+    if (fps_frame_count == 0) {
+        start_sec = tv_sec;
+        start_usec = tv_usec;
+        fps_frame_count++;
+
+    } else {
+        int sec = tv_sec - start_sec;
+        int usec = tv_usec - start_usec;
+        int time = usec;
+        time += sec*1000000;
+
+        if (sec > 2 || time >= 1*1000000) {
+            float float_sec = (float)usec / (float)1000000;
+            float_sec += sec;
+            ALOGD("fps:%5.1f (%d frame per %f sec)", (float)fps_frame_count / float_sec, fps_frame_count, float_sec);
             start_sec = tv_sec;
             start_usec = tv_usec;
-            fps_frame_count++;
-
-        } else {
-            int sec = tv_sec - start_sec;
-            int usec = tv_usec - start_usec;
-            int time = usec;
-            time += sec*1000000;
-
-            if (sec > 2 || time >= 1*1000000) {
-                float float_sec = (float)usec / (float)1000000;
-                float_sec += sec;
-                ALOGD("%s fps:%5.1f (%d frame per %f sec)", disp->mDispName.c_str(), (float)fps_frame_count / float_sec, fps_frame_count, float_sec);
-                start_sec = tv_sec;
-                start_usec = tv_usec;
-                fps_frame_count = 0;
-            }
-            fps_frame_count++;
+            fps_frame_count = 0;
         }
+        fps_frame_count++;
+    }
 }
 #endif //DEBUG_FRAMERATE
 
@@ -129,10 +134,6 @@ Error HwcDisplay::init() {
     }
 
 #if DEBUG_FRAMERATE
-    std::ostringstream oss;
-    oss << "display-" << mHandle;
-    mDispName = oss.str();
-
     mEventContext.version = DRM_EVENT_CONTEXT_VERSION;
     mEventContext.page_flip_handler = page_flip_handler;
 #endif //DEBUG_FRAMERATE
@@ -429,29 +430,11 @@ Error HwcDisplay::getReleaseFences(uint32_t* num_elements,
         }
 
         layers[num_layers - 1] = l.first;
-        l.second.manageReleaseFence();
-        fences[num_layers - 1] = -1;
-        close(l.second.takeReleaseFence());
+        fences[num_layers - 1] = l.second.takeReleaseFence();
     }
 
     *num_elements = num_layers;
     return Error::NONE;
-}
-
-void HwcDisplay::addFenceToRetireFence(int fd) {
-    supported(__func__);
-
-    if (fd < 0)
-        return;
-
-    if (mNextRetireFence.get() >= 0) {
-        int old_fence = mNextRetireFence.get();
-        mNextRetireFence.set(sync_merge("dc_retire", old_fence, fd));
-    } else {
-        mNextRetireFence.set(dup(fd));
-    }
-
-    close(fd);
 }
 
 std::vector<HwcLayer*> HwcDisplay::getSortedLayersByZOrder() {
@@ -526,10 +509,12 @@ int HwcDisplay::applyComposition(std::unique_ptr<DrmDisplayComposition>
 }
 
 int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
+    ATRACE_CALL();
+
     int ret = 0;
     DrmDisplayComposition* display_comp = composition.get();
     std::vector<DrmHwcLayer>& layers = display_comp->getLayers();
-    uint64_t out_fence;
+    uint32_t out_fences[mCrtcCount];
     drmModeAtomicReqPtr pset = drmModeAtomicAlloc();
 
     if (!pset) {
@@ -540,7 +525,7 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
     if (mCrtcOutFenceProperty.getId()) {
         ret = drmModeAtomicAddProperty(pset, mCrtId,
                                        mCrtcOutFenceProperty.getId(),
-                                       (uint64_t)(&out_fence));
+                                       (uint64_t)(&out_fences[mCrtcPipe]));
 
         if (ret < 0) {
             ALOGE("PresentDisplay| Failed to add OUT_FENCE_PTR property to pset: %d", ret);
@@ -584,16 +569,13 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
         }
     }
 
-    uint32_t flags = 0;
+    uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK;
 
 #if DEBUG_FRAMERATE
-    static char value[PROPERTY_VALUE_MAX];
-    property_get("debug.hwc.showfps", value, "0");
-    bool show_fps = std::atoi(value);
     bool isConnectCamera = mUsingCameraLayer;
 
-    if (show_fps && !isConnectCamera) {
-    flags |= DRM_MODE_PAGE_FLIP_EVENT;
+    if (!mHandle && !isConnectCamera) {
+        flags |= DRM_MODE_PAGE_FLIP_EVENT;
     }
 #endif //DEBUG_FRAMERATE
 
@@ -608,8 +590,8 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
     CHECK_RES_WARN(ret);
 
 #if DEBUG_FRAMERATE
-    if (show_fps && !isConnectCamera) {
-    CHECK_RES_WARN(drmHandleEvent(mDrmFd, &mEventContext));
+    if (!mHandle && !isConnectCamera) {
+        CHECK_RES_WARN(drmHandleEvent(mDrmFd, &mEventContext));
     }
 #endif //DEBUG_FRAMERATE
 
@@ -623,16 +605,11 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
     if (pset)
         drmModeAtomicFree(pset);
 
-    if (mCrtcOutFenceProperty.getId()) {
-        int cur_out_fence = (int)out_fence;
-        display_comp->setOutFence(cur_out_fence);
-        close(cur_out_fence);
+    int32_t cur_out_fence = out_fences[mCrtcPipe];
+    if (mCrtcOutFenceProperty.getId() && cur_out_fence > 0) {
+        mReleaseFence = cur_out_fence;
     }
 
-    if (mActiveComposition)
-        mActiveComposition->signalCompositionDone();
-
-    std::lock_guard<std::mutex> guard(mLock);
     mActiveComposition.swap(composition);
     return 0;
 }
@@ -641,8 +618,9 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
     supported(__func__);
     int ret = 0;
 
+    *retire_fence = -1;
+
     if (mLayers.empty()) {
-        *retire_fence = -1;
         return Error::NONE;
     }
 
@@ -650,7 +628,6 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
     mValidated = false; // from here mLayersSortedByZ is not reliable
 
     if (sorted_layers.empty()) {
-        *retire_fence = -1;
         return Error::NOT_VALIDATED;
     }
 
@@ -684,7 +661,6 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
     }
 
     if (layers.empty()) {
-        *retire_fence = -1;
         return Error::NONE;
     }
 
@@ -697,13 +673,6 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
         return Error::BAD_LAYER;
     }
 
-    ret = composition->createAndAssignReleaseFences();
-
-    if (ret) {
-        ALOGE("Failed to plan the composition ret=%d", ret);
-        return Error::BAD_CONFIG;
-    }
-
     ret = applyComposition(std::move(composition));
 
     if (ret) {
@@ -711,17 +680,11 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
         return Error::BAD_PARAMETER;
     }
 
-    if (mActiveComposition) {
-        for (HwcLayer* layer : sorted_layers) {
-            layer->manageReleaseFence();
-            addFenceToRetireFence(layer->takeReleaseFence());
-        }
+    *retire_fence = mReleaseFence;
+    for (auto& l: mLayers) {
+        l.second.setReleaseFence(mReleaseFence);
     }
 
-    // The retire fence returned here is for the last frame, so return it and
-    // promote the next retire fence
-    *retire_fence = mRetireFence.release();
-    mRetireFence = std::move(mNextRetireFence);
     return Error::NONE;
 }
 
@@ -1097,7 +1060,7 @@ int HwcDisplay::loadDisplayModes() {
     }
 
     mCrtcCount = resources->count_crtcs;
-    mCrtcPipe = 0;
+    mCrtcPipe = cur_crts_index;
 
     for (uint32_t i = 0; i < pr->count_planes; ++i) {
         uint32_t plane_obj_id = pr->planes[i];

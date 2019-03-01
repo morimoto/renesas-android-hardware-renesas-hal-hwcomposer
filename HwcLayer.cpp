@@ -18,7 +18,6 @@
 #include "HwcLayer.h"
 #include "Hwc.h"
 #include "img_gralloc1_public.h"
-#define ALIGN_ROUND_UP(X, Y)  (((X)+(Y)-1) & ~((Y)-1))
 
 namespace android {
 using Error = android::hardware::graphics::composer::V2_1::Error;
@@ -129,11 +128,8 @@ Error HwcLayer::setLayerZOrder(uint32_t order) {
 
 void HwcLayer::populateDrmLayer(DrmHwcLayer* layer) {
     supported(__func__);
-    OutputFd release_fence = releaseFenceOutput();
-    //layer->fb_id = mFbId;
     layer->mBuffHandle = mHandle;
     layer->mAcquireFence = mAcquireFence.release();
-    layer->mReleaseFence = std::move(release_fence);
     layer->mDisplayFrame = mDisplayFrame;
     layer->mAlpha = static_cast<uint8_t>(255.0f * mAlpha + 0.5f);
     layer->mSourceCrop = mSourceCrop;

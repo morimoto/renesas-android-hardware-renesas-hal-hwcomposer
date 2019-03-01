@@ -98,11 +98,9 @@ public:
     int mFpsFrameCount = 0;
     uint32_t mFpsStartSec = 0;
     uint32_t mFpsStartUsec = 0;
-    std::string mDispName;
 #endif //DEBUG_FRAMERATE
 
 private:
-    void addFenceToRetireFence(int fd);
     int loadDisplayModes();
     int selectConfig();
     int selectConfig(uint32_t width, uint32_t height, uint32_t HZ = 60);
@@ -142,8 +140,7 @@ private:
     int mCrtcCount;
     int mCrtcPipe;
 
-    UniqueFd mRetireFence = -1;
-    UniqueFd mNextRetireFence = -1;
+    int32_t mReleaseFence = -1;
 
     std::unique_ptr<DrmDisplayComposition> mActiveComposition;
 
@@ -179,7 +176,6 @@ private:
         HAL_PIXEL_FORMAT_YV12
     };
 
-    std::mutex mLock;
     int32_t mColorTransform = 0;
     uint32_t mMaxDevicePlanes = 0;
     bool mIsVGAConnectorType = false;

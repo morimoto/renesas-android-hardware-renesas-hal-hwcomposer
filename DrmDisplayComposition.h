@@ -54,14 +54,6 @@ public:
     int setDisplayMode(const DRMMode& display_mode);
     const DRMMode& getDisplayMode() const;
 
-    int createNextTimelineFence();
-    int signalCompositionDone();
-    int increaseTimelineToPoint(int point);
-    int createAndAssignReleaseFences();
-
-    int takeOutFence();
-    void setOutFence(int out_fence);
-
 private:
     bool validateCompositionType(DrmCompositionType desired);
 
@@ -70,11 +62,6 @@ private:
 
     DrmCompositionType mType = DRM_COMPOSITION_TYPE_EMPTY;
     DRMMode mDisplayMode;
-
-    int mTimelineFd = -1;
-    int mTimeline = 0;
-    int mTtimelineCurrent = 0;
-    UniqueFd mOutFence = -1;
 
     std::vector<DrmHwcLayer> mLayers;
 };

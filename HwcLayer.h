@@ -41,11 +41,8 @@ public:
     int importBuffer(Importer* importer);
 
     buffer_handle_t mBuffHandle = NULL;
-    //uint32_t fb_id;
     DrmHwcBuffer mBuffer;
     UniqueFd mAcquireFence;
-    OutputFd mReleaseFence;
-
     uint32_t mTransform;
     uint8_t mAlpha = 0xff;
     hwc_frect_t mSourceCrop;
@@ -91,25 +88,15 @@ public:
         mHandle = buffer;
     }
 
-    int takeAcquireFence() {
-        return mAcquireFence.release();
-    }
     void setAcquireFence(int acquire_fence) {
         mAcquireFence.set(dup(acquire_fence));
     }
 
-    int getReleaseFence() const {
-        return mReleaseFence.get();
+    void setReleaseFence(int fence) {
+        mReleaseFence.set(dup(fence));
     }
     int takeReleaseFence() {
         return mReleaseFence.release();
-    }
-    void manageReleaseFence() {
-        mReleaseFence.set(mReleaseFenceFd);
-        mReleaseFenceFd = -1;
-    }
-    OutputFd releaseFenceOutput() {
-        return OutputFd(&mReleaseFenceFd);
     }
 
     bool checkLayer() const {
@@ -149,7 +136,6 @@ private:
     HWC2::BlendMode mBlending = HWC2::BlendMode::None;
     buffer_handle_t mHandle;
     UniqueFd mAcquireFence;
-    int mReleaseFenceFd = -1;
     UniqueFd mReleaseFence;
     hwc_rect_t mDisplayFrame;
     float mAlpha = 1.0f;
