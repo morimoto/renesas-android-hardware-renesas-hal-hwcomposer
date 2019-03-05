@@ -78,14 +78,6 @@ void HwcHal::initDisplays() {
     hotPlug.initDisplays(this);
 
     mDisplays.at(HWC_DISPLAY_PRIMARY).getCurrentDisplaySize(mDisplayWidth, mDisplayHeight);
-
-#if HWC_HOTPLUG_SUPPORT
-    ALOGD("HotPlug support");
-    std::thread thread([&] {
-        hotPlug.hookEventHotPlug(this, true);
-    });
-    thread.detach();
-#endif
 }
 
 Return<uint32_t> HwcHal::getDisplayHeight()  {
@@ -485,7 +477,10 @@ Error HwcHal::presentDisplay(
         }
 
         mIsHotplugInitialized = true;
-        mWaitForPresentDisplay.set_value();
+#if HWC_HOTPLUG_SUPPORT
+        ALOGD("HotPlug support");
+        HotPlug::getInstance().startHotPlugMonitor();
+#endif
     }
 
     *outPresentFence = -1;

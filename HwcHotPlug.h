@@ -2,6 +2,8 @@
 #define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_HWC_HOTPLUG_H
 
 #include "Hwc.h"
+#include "worker.h"
+#include "autofd.h"
 
 namespace android {
 namespace hardware {
@@ -10,13 +12,11 @@ namespace composer {
 namespace V2_1 {
 namespace implementation {
 
-class HotPlug {
+class HotPlug: public android::Worker {
 private:
     struct DisplayInfo {
         bool isConnected = false;
-        bool isProtected = true;
         bool isReInit = false;
-        bool isSupportedConfig = true;
         hwc2_display_t displayType;
     } mConnectDisplays[NUM_DISPLAYS];
 
@@ -26,17 +26,28 @@ private:
         UNDEFINED = 'u'
     };
 
-    HotPlug() = default;
+    HotPlug();
+    ~HotPlug() = default;
     HotPlug(const HotPlug&)  = delete;
     HotPlug(const HotPlug&&) = delete;
     HotPlug& operator=(const HotPlug&)  = delete;
     HotPlug&& operator=(HotPlug&&) = delete;
+
+    Status getStatusDisplay(size_t display);
+    Error loadDisplayConfiguration(size_t display);
+    void hookEventHotPlug();
+    void hotPlugEventHandler();
+
+    void routine() override;
+
 public:
     static HotPlug& getInstance();
-    Status getStatusDisplay(size_t display);
-    Error loadDisplayConfiguration(HwcHal* hwc, size_t display);
     void initDisplays(HwcHal* hwc);
-    void hookEventHotPlug(HwcHal* hwc, bool isRunHotPlug = false);
+    void startHotPlugMonitor();
+
+private:
+    android::UniqueFd mHotplugFd;
+    HwcHal* mHwc;
 };
 
 }  // namespace implementation

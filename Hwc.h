@@ -35,7 +35,6 @@
 #include <unordered_set>
 #include <map>
 #include <vector>
-#include <future>
 
 namespace android {
 class HWC2On1Adapter;
@@ -205,7 +204,6 @@ private:  // members
     std::unordered_set<Capability> mCapabilities;
 
     std::mutex mClientMutex;
-    std::promise<void> mWaitForPresentDisplay;
     wp<ComposerClient> mClient;
 
     std::map<hwc2_display_t, HwcDisplay> mDisplays;
