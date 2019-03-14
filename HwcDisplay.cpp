@@ -571,9 +571,7 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
     uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK;
 
 #if DEBUG_FRAMERATE
-    bool isConnectCamera = mUsingCameraLayer;
-
-    if (!mHandle && !isConnectCamera) {
+    if (!mHandle) {
         flags |= DRM_MODE_PAGE_FLIP_EVENT;
     }
 #endif //DEBUG_FRAMERATE
@@ -589,7 +587,7 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
     CHECK_RES_WARN(ret);
 
 #if DEBUG_FRAMERATE
-    if (!mHandle && !isConnectCamera) {
+    if (!mHandle) {
         CHECK_RES_WARN(drmHandleEvent(mDrmFd, &mEventContext));
     }
 #endif //DEBUG_FRAMERATE
@@ -642,7 +640,6 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
         } else {
             if (layer == &mCameraLayer) {
                 ret = drm_layer.importBuffer(mImporter.get());
-                drm_layer.isCameraLayer = true;
             } else {
                 ret = drm_layer.importBuffer(&mDummyImp);
             }
@@ -652,9 +649,6 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
             ALOGE("Failed to import layer, ret=%d", ret);
             continue;
         } else {
-            if (layer == &mClientLayer)
-                drm_layer.isClient = true;
-
             layers.emplace_back(std::move(drm_layer));
         }
     }
@@ -812,6 +806,12 @@ bool HwcDisplay::layerSupported(HwcLayer* layer, const uint32_t& num_device_plan
             && formatSupported);
 }
 
+void HwcDisplay::evsCameraChangeValidate() {
+    for (auto& l : mLayers) {
+        l.second.setValidatedType(HWC2::Composition::Device);
+    }
+}
+
 Error HwcDisplay::validateDisplay(uint32_t* num_types,
                                   uint32_t* num_requests) {
     supported(__func__);
@@ -823,13 +823,6 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
     for (auto& l : mLayers) {
         mLayersSortedByZ.emplace(std::make_pair(l.second.getZorder(), &l.second));
     }
-
-    if (mUsingCameraLayer) {
-        for (auto& l : mLayersSortedByZ) {
-            l.second->setValidatedType (HWC2::Composition::Device);
-            ++*num_types;
-        }
-    } else {
         bool lastDeviceLayer = true;
 
         for (auto& l : mLayersSortedByZ) {
@@ -874,7 +867,6 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
                 --*num_types;
             }
         }
-    }
 
     mValidated = true;
     return Error::NONE;

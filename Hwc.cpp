@@ -400,6 +400,10 @@ Error HwcHal::validateDisplay(
     uint32_t* outDisplayRequestMask,
     std::vector<Layer>* outRequestedLayers,
     std::vector<uint32_t>* outRequestMasks) {
+    if (mIsCameraEnabled && display == HWC_DISPLAY_PRIMARY) {
+       getDisplay(display).evsCameraChangeValidate();
+       return Error::NONE;
+    }
     uint32_t types_count = 0;
     uint32_t reqs_count = 0;
     auto err = getDisplay(display).validateDisplay(&types_count, &reqs_count);
@@ -485,7 +489,7 @@ Error HwcHal::presentDisplay(
     }
 
     Error err = Error::NONE;
-    if (display == HWC_DISPLAY_PRIMARY && mIsCameraEnabled) {
+    if (mIsCameraEnabled && display == HWC_CAMERA_DISPLAY) {
         if (!mSignalStopCamera) {
             mDisplays.at(HWC_DISPLAY_PRIMARY).startEVSCameraLayer(static_cast<buffer_handle_t>
                                                                   (mCameraHidlHandle.getNativeHandle()));
@@ -498,33 +502,37 @@ Error HwcHal::presentDisplay(
             mIsCameraEnabled = false;
             mSignalStopCamera = false;
         }
-    } else {
-        *outPresentFence = -1;
-        err = getDisplay(display).presentDisplay(outPresentFence);
+        return Error::NONE;
+    }
+    *outPresentFence = -1;
+    if (mIsCameraEnabled && display == HWC_DISPLAY_PRIMARY) {
+        return Error::NONE;
+    }
 
-        if (err != Error::NONE) {
-            return err;
-        }
+    err = getDisplay(display).presentDisplay(outPresentFence);
 
-        uint32_t count = 0;
-        err = getDisplay(display).getReleaseFences(&count, nullptr, nullptr);
+    if (err != Error::NONE) {
+        return err;
+    }
 
-        if (err != Error::NONE) {
-            ALOGW("failed to get release fences");
-            return Error::NONE;
-        }
+    uint32_t count = 0;
+    err = getDisplay(display).getReleaseFences(&count, nullptr, nullptr);
 
-        outLayers->resize(count);
-        outReleaseFences->resize(count);
-        err = getDisplay(display).getReleaseFences(&count, outLayers->data(),
-                                                   outReleaseFences->data());
+    if (err != Error::NONE) {
+        ALOGW("failed to get release fences");
+        return Error::NONE;
+    }
 
-        if (err != Error::NONE) {
-            ALOGW("failed to get release fences");
-            outLayers->clear();
-            outReleaseFences->clear();
-            return Error::NONE;
-        }
+    outLayers->resize(count);
+    outReleaseFences->resize(count);
+    err = getDisplay(display).getReleaseFences(&count, outLayers->data(),
+                                               outReleaseFences->data());
+
+    if (err != Error::NONE) {
+        ALOGW("failed to get release fences");
+        outLayers->clear();
+        outReleaseFences->clear();
+        return Error::NONE;
     }
 
     return err;
@@ -640,24 +648,16 @@ Return<::android::hardware::graphics::composer::V2_1::Error>
 HwcHal::setEVSCameraData(const hidl_handle& buffer, int8_t /*currDisplay*/) {
     const IMG_native_handle_t* IMGHandle =
         reinterpret_cast<const IMG_native_handle_t*>(buffer.getNativeHandle());
-
+    Error err = Error::NONE;
     if (IMGHandle == nullptr) {
         mSignalStopCamera = true;
-        presentDisplay();
-        //camera streaming for all displays
-        //for (auto& it : mDisplays)
-        //  it.second.stopEVSCameraLayer();
-        return Error::BAD_LAYER;
+        err = Error::BAD_LAYER;
     } else {
         mCameraHidlHandle = buffer;
         mIsCameraEnabled = true;
-        presentDisplay();
     }
-
-    //camera streaming for all displays
-    //for (auto& it : mDisplays)
-    //  it.second.startEVSCameraLayer(static_cast<buffer_handle_t>(mCameraHidlHandle.getNativeHandle()));
-    return ::android::hardware::graphics::composer::V2_1::Error::NONE;
+    presentDisplay(HWC_CAMERA_DISPLAY);
+    return err;
 }
 
 }  // namespace implementation

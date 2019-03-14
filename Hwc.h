@@ -211,6 +211,7 @@ private:  // members
 
     hidl_handle mCameraHidlHandle;
     std::atomic<bool> mIsCameraEnabled = {false};
+    const Display HWC_CAMERA_DISPLAY = 4;
     bool mSignalStopCamera;
     bool mIsHotplugInitialized;
     bool mInitDisplays;

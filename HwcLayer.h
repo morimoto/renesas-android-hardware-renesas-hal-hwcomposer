@@ -47,8 +47,6 @@ public:
     uint8_t mAlpha = 0xff;
     hwc_frect_t mSourceCrop;
     hwc_rect_t mDisplayFrame;
-    bool isCameraLayer = false;
-    bool isClient = false;
 };
 
 class HwcLayer {

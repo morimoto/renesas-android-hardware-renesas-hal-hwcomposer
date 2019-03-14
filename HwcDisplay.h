@@ -93,6 +93,7 @@ public:
     void startEVSCameraLayer(buffer_handle_t layer);
     void stopEVSCameraLayer();
     void invalidate();
+    void evsCameraChangeValidate();
     void getCurrentDisplaySize(uint32_t & inWidth, uint32_t & inHeight);
 
 #if DEBUG_FRAMERATE
