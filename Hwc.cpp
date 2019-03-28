@@ -649,14 +649,19 @@ HwcHal::setEVSCameraData(const hidl_handle& buffer, int8_t /*currDisplay*/) {
     const IMG_native_handle_t* IMGHandle =
         reinterpret_cast<const IMG_native_handle_t*>(buffer.getNativeHandle());
     Error err = Error::NONE;
+
     if (IMGHandle == nullptr) {
-        mSignalStopCamera = true;
+        if (mIsCameraEnabled) {
+            mSignalStopCamera = true;
+            presentDisplay(HWC_CAMERA_DISPLAY);
+        }
         err = Error::BAD_LAYER;
     } else {
         mCameraHidlHandle = buffer;
         mIsCameraEnabled = true;
+        err = presentDisplay(HWC_CAMERA_DISPLAY);
     }
-    presentDisplay(HWC_CAMERA_DISPLAY);
+
     return err;
 }
 
