@@ -67,10 +67,13 @@ LOCAL_CFLAGS += -DLOG_TAG=\"hwcomposer\"
 LOCAL_CFLAGS += -DHWC2_USE_CPP11
 LOCAL_CFLAGS += -DHWC2_INCLUDE_STRINGIFICATION
 LOCAL_CFLAGS += -DDEBUG_FRAMERATE=1
-LOCAL_CFLAGS += -DHWC_HOTPLUG_SUPPORT=1
 LOCAL_CFLAGS += -Wall -Werror
 LOCAL_INIT_RC := android.hardware.graphics.composer@2.1-service.renesas.rc
 LOCAL_VINTF_FRAGMENTS := android.hardware.graphics.composer@2.1-service.renesas.xml
+
+ifeq ($(TARGET_ENABLE_HOTPLUG_SUPPORT),true)
+    LOCAL_CFLAGS += -DHWC_HOTPLUG_SUPPORT=1
+endif
 
 ifeq ($(TARGET_DEVICE),salvator)
 LOCAL_CFLAGS += -DTARGET_BOARD_SALVATOR
