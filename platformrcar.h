@@ -19,6 +19,7 @@
 #define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_PLATFORM_RCAR_H
 
 #include "platform.h"
+#include "PrimeCache.h"
 #include <mutex>
 
 namespace android {
@@ -33,6 +34,12 @@ public:
     int importBuffer(buffer_handle_t handle, DrmHwcBo* bo) override;
     int releaseBuffer(DrmHwcBo* bo) override;
     int createFrameBuffer(DrmHwcBo* bo) override;
+#if HWC_PRIME_CACHE
+    void setPrimeCache(PrimeCache* primeCache) override {
+        mPrimeCache = primeCache;
+    };
+    PrimeCache* getPrimeCache() const { return mPrimeCache; }
+#endif
 
 private:
     int getIonBufferFd(int bufferFd, int format
@@ -40,8 +47,10 @@ private:
                        , DrmHwcBo* bo);
 
     int mDrmFd;
-    std::map<uint64_t, int> mIonBuffers;
     std::mutex mLock;
+#if HWC_PRIME_CACHE
+    PrimeCache* mPrimeCache = nullptr;
+#endif
 };
 
 } // namespace android

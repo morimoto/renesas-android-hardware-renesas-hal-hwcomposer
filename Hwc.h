@@ -23,6 +23,7 @@
 #include "HwcLayer.h"
 #include "vsyncworker.h"
 #include "drm/DRMMode.h"
+#include "PrimeCache.h"
 
 #include <vendor/renesas/graphics/composer/1.0/IComposer.h>
 #include <hardware/hwcomposer2.h>
@@ -215,6 +216,10 @@ private:  // members
     bool mSignalStopCamera;
     bool mIsHotplugInitialized;
     bool mInitDisplays;
+
+#if HWC_PRIME_CACHE
+    PrimeCache  mPrimeCache;
+#endif
 
     uint32_t mDisplayHeight;
     uint32_t mDisplayWidth;

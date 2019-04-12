@@ -66,16 +66,27 @@ private:
     hwc2_function_pointer_t hook_;
 };
 
+#if HWC_PRIME_CACHE
+HwcDisplay::HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
+                       HWC2::DisplayType type, std::shared_ptr<Importer> importer,
+                       PrimeCache* primeCache)
+#else
 HwcDisplay::HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
                        HWC2::DisplayType type, std::shared_ptr<Importer> importer)
+#endif
     : mDrmFd(drmFd)
     , mCurrConfig(-1)
     , mConnectorId(0)
     , mHandle(handle)
     , mType(type)
+    , mClientLayer(0)
+    , mCameraLayer(1)
     , mCrtId(-1)
     , mDisplayParams(params)
     , mImporter(importer)
+#if HWC_PRIME_CACHE
+    , mPrimeCache(primeCache)
+#endif
 
 {
     supported(__func__);
@@ -122,15 +133,16 @@ Error HwcDisplay::registerVsyncCallback(hwc2_callback_data_t data,
 Error HwcDisplay::acceptDisplayChanges() {
     supported(__func__);
 
-    for (std::pair<const hwc2_layer_t, HwcLayer>& l : mLayers)
-        l.second.acceptTypeChange();
+    for (auto& l : mLayers)
+        l.second->acceptTypeChange();
 
     return Error::NONE;
 }
 
 Error HwcDisplay::createLayer(hwc2_layer_t* layer) {
     supported(__func__);
-    mLayers.emplace(static_cast<hwc2_layer_t>(mLayerIndex), HwcLayer());
+
+    mLayers.emplace(static_cast<hwc2_layer_t>(mLayerIndex), new HwcLayer(mLayerIndex));
     *layer = static_cast<hwc2_layer_t>(mLayerIndex);
     ++mLayerIndex;
     return Error::NONE;
@@ -138,7 +150,20 @@ Error HwcDisplay::createLayer(hwc2_layer_t* layer) {
 
 Error HwcDisplay::destroyLayer(hwc2_layer_t layer) {
     supported(__func__);
-    mLayers.erase(layer);
+
+    auto it = mLayers.find(layer);
+    if (it != mLayers.end()) {
+#if HWC_PRIME_CACHE
+        if (mPrimeCache) {
+            mPrimeCache->eraseLayerCache(it->second->getIndex());
+        }
+#endif
+        delete it->second;
+        mLayers.erase(it);
+    } else {
+        ALOGE("remove nonexisting layer: %d", static_cast<int>(layer));
+    }
+
     return Error::NONE;
 }
 
@@ -217,14 +242,14 @@ Error HwcDisplay::getChangedCompositionTypes(uint32_t* num_elements,
     supported(__func__);
     uint32_t num_changes = 0;
 
-    for (std::pair<const hwc2_layer_t, HwcLayer>& l : mLayers) {
-        if (l.second.typeChanged()) {
+    for (auto& l : mLayers) {
+        if (l.second->typeChanged()) {
             if (layers && num_changes < *num_elements)
                 layers[num_changes] = l.first;
 
             if (types && num_changes < *num_elements)
                 types[num_changes] =
-                    static_cast<int32_t>(l.second.getValidatedType());
+                    static_cast<int32_t>(l.second->getValidatedType());
 
             ++num_changes;
         }
@@ -384,7 +409,7 @@ Error HwcDisplay::getReleaseFences(uint32_t* num_elements,
 
     uint32_t num_layers = 0;
 
-    for (std::pair<const hwc2_layer_t, HwcLayer>& l : mLayers) {
+    for (auto& l : mLayers) {
         ++num_layers;
 
         if (num_layers > *num_elements) {
@@ -393,7 +418,7 @@ Error HwcDisplay::getReleaseFences(uint32_t* num_elements,
         }
 
         layers[num_layers - 1] = l.first;
-        fences[num_layers - 1] = l.second.takeReleaseFence();
+        fences[num_layers - 1] = l.second->takeReleaseFence();
     }
 
     *num_elements = num_layers;
@@ -408,7 +433,7 @@ std::vector<HwcLayer*> HwcDisplay::getSortedLayersByZOrder() {
     if (!mValidated) {
         mLayersSortedByZ.clear();
         for (auto& l : mLayers) {
-            mLayersSortedByZ.emplace(std::make_pair(l.second.getZorder(), &l.second));
+            mLayersSortedByZ.emplace(std::make_pair(l.second->getZorder(), l.second));
         }
     }
 
@@ -546,7 +571,7 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
                 ALOGE("ApplyComposition| layer error fb_id <= 0");
         } else {
             DRMPlane& plane = mPlanes[j];
-            plane.updateProperties(pset, mCrtId, layer, j);
+            CHECK_RES_WARN(plane.updateProperties(pset, mCrtId, layer, j));
             ++j;
         }
     }
@@ -601,6 +626,14 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
 
     std::vector<DrmHwcLayer> layers;
 
+#if HWC_PRIME_CACHE
+    if (mPrimeCache) {
+        mImporter.get()->setPrimeCache(mPrimeCache);
+    } else if (mImporter.get()->getPrimeCache()) {
+        mImporter.get()->setPrimeCache(nullptr);
+    }
+#endif
+
     for (HwcLayer* layer : sorted_layers) {
         DrmHwcLayer drm_layer;
         layer->populateDrmLayer(&drm_layer);
@@ -645,7 +678,7 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
 
     *retire_fence = mReleaseFence;
     for (auto& l: mLayers) {
-        l.second.setReleaseFence(mReleaseFence);
+        l.second->setReleaseFence(mReleaseFence);
         if (!mHandle) {
             hwcDisplayPoll(mReleaseFence);
         }
@@ -781,7 +814,7 @@ bool HwcDisplay::layerSupported(HwcLayer* layer, const uint32_t& num_device_plan
 
 void HwcDisplay::evsCameraChangeValidate() {
     for (auto& l : mLayers) {
-        l.second.setValidatedType(HWC2::Composition::Device);
+        l.second->setValidatedType(HWC2::Composition::Device);
     }
 }
 
@@ -794,7 +827,7 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
     mLayersSortedByZ.clear();
 
     for (auto& l : mLayers) {
-        mLayersSortedByZ.emplace(std::make_pair(l.second.getZorder(), &l.second));
+        mLayersSortedByZ.emplace(l.second->getZorder(), l.second);
     }
         bool lastDeviceLayer = true;
 
@@ -846,7 +879,7 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
 }
 
 HwcLayer& HwcDisplay::getLayer(hwc2_layer_t layer) {
-    return mLayers.at(layer);
+    return *mLayers.at(layer);
 }
 
 void HwcDisplay::updateConfig() {
@@ -1290,5 +1323,11 @@ int HwcDisplay::destroyPropertyBlob(uint32_t blob_id) {
 
     return 0;
 }
+
+#if HWC_PRIME_CACHE
+void HwcDisplay::setPrimeCache(PrimeCache* primeCache) {
+    mPrimeCache = primeCache;
+}
+#endif
 
 } // namespace android

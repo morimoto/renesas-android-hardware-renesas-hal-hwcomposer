@@ -133,6 +133,7 @@ void HwcLayer::populateDrmLayer(DrmHwcLayer* layer) {
     layer->mDisplayFrame = mDisplayFrame;
     layer->mAlpha = static_cast<uint8_t>(255.0f * mAlpha + 0.5f);
     layer->mSourceCrop = mSourceCrop;
+    layer->index = mIndex;
 }
 
 } // namespace android

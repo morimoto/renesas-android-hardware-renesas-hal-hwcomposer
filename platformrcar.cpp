@@ -73,14 +73,23 @@ int RCarImporter::getIonBufferFd(int bufferFd, int format
         stride_width = ALIGN_ROUND_UP(width, HW_ALIGN);
     }
 
-    /* register ion memory to drm driver */
-    if (drmPrimeFDToHandle(mDrmFd, bufferFd, &handle)) {
-        ALOGE("mIonBuffers: drmPrimeFDToHandle error fd: %d", bufferFd);
+    int ret = 0;
+#if HWC_PRIME_CACHE
+    if (mPrimeCache) {
+        handle = mPrimeCache->findEntry(bo->mStamp, bufferFd, bo->index);
     } else {
+#endif
+        /* register ion memory to drm driver */
+        if ((ret = drmPrimeFDToHandle(mDrmFd, bufferFd, &handle))) {
+            ALOGE("mIonBuffers: drmPrimeFDToHandle error");
+        }
+#if HWC_PRIME_CACHE
+    }
+#endif
+    if (!ret) {
         uint32_t bo_handles[4] = { 0 };
         uint32_t pitches[4] = { 0 };
         uint32_t offsets[4] = { 0 };
-        drm_gem_close arg = { handle, 0, };
 
         /* configure format and pitch */
         switch (format) {
@@ -174,12 +183,16 @@ int RCarImporter::getIonBufferFd(int bufferFd, int format
 
         CHECK_RES_WARN(drmModeAddFB2(mDrmFd, width, height, format, bo_handles, pitches,
                                      offsets, (uint32_t*) &fd, 0));
-
-        // close import reference
-        if (drmIoctl(mDrmFd, DRM_IOCTL_GEM_CLOSE, &arg)) {
-            ALOGE("mIonBuffers: free handle from drmPrimeFDToHandle");
+#if HWC_PRIME_CACHE
+        if (!mPrimeCache) {
+#endif
+            drm_gem_close arg = { handle, 0, };
+            if (drmIoctl(mDrmFd, DRM_IOCTL_GEM_CLOSE, &arg)) {
+                ALOGE("mIonBuffers: free handle from drmPrimeFDToHandle");
+            }
+#if HWC_PRIME_CACHE
         }
-
+#endif
         handle = 0;
     }
 
@@ -191,16 +204,19 @@ int RCarImporter::importBuffer(buffer_handle_t handle, DrmHwcBo* bo) {
     const IMG_native_handle_t* imgHnd2 =
         reinterpret_cast<const IMG_native_handle_t*>(handle);
 
+    bo->mStamp = imgHnd2->ui64Stamp;
+
     if (!imgHnd2) {
         ALOGE("mIonBuffers: ImportBuffer fail");
         return -1;
     }
 
     int fb_id = getIonBufferFd(imgHnd2->fd[0], imgHnd2->iFormat,
-                               imgHnd2->iWidth, imgHnd2->iHeight, bo);
+            imgHnd2->iWidth, imgHnd2->iHeight, bo);
 
-    if (fb_id > 0)
+    if (fb_id > 0) {
         bo->mFbId = (uint32_t)fb_id;
+    }
 
     return (int)(fb_id <= 0);
 }
@@ -212,11 +228,8 @@ int RCarImporter::createFrameBuffer(DrmHwcBo*) {
 
 int RCarImporter::releaseBuffer(DrmHwcBo* bo) {
     if (bo->mFbId) {
-        if (drmModeRmFB(mDrmFd, bo->mFbId)) {
-            ALOGE("mIonBuffers: Failed to rm fb");
-        }
+        CHECK_RES_WARN(drmModeRmFB(mDrmFd, bo->mFbId));
     }
-
     return 0;
 }
 

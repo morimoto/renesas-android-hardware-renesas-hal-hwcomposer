@@ -24,10 +24,11 @@
 #include <hardware/hardware.h>
 #include <hardware/hwcomposer.h>
 
-#include <map>
-#include <vector>
-
 namespace android {
+
+#if HWC_PRIME_CACHE
+class PrimeCache;
+#endif
 
 class Importer {
 public:
@@ -53,6 +54,10 @@ public:
     // Note: This can be called from a different thread than ImportBuffer. The
     //       implementation is responsible for ensuring thread safety.
     virtual int createFrameBuffer(DrmHwcBo* bo) = 0;
+#if HWC_PRIME_CACHE
+    virtual void setPrimeCache(PrimeCache* primeCache) = 0;
+    virtual PrimeCache* getPrimeCache() const = 0;
+#endif
 };
 
 class DummyImporter: public Importer {
@@ -60,6 +65,10 @@ public:
     int importBuffer(buffer_handle_t, DrmHwcBo* bo) { bo->mFbId = 0; return 0; }
     int releaseBuffer(DrmHwcBo*) { return 0; }
     int createFrameBuffer(DrmHwcBo*) { return 0; }
+#if HWC_PRIME_CACHE
+    void setPrimeCache(PrimeCache* primeCache) { (void)primeCache; }
+    virtual PrimeCache* getPrimeCache() const { return nullptr; }
+#endif
 };
 
 } // namespace android

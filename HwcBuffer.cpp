@@ -16,47 +16,46 @@
  */
 
 #include "HwcBuffer.h"
+#include "HwcDump.h"
 #include "HwcLayer.h"
 #include "platform.h"
+
+#include "img_gralloc1_public.h"
 
 #include <log/log.h>
 
 namespace android {
 
 const DrmHwcBo* DrmHwcBuffer::operator->() const {
-    if (mImporter == NULL) {
+    if (mImporter == nullptr) {
         ALOGE("Access of non-existent BO");
-        return NULL;
+        return nullptr;
     }
 
     return &mBo;
 }
 
 void DrmHwcBuffer::clear() {
-    if (mImporter != NULL) {
+    if (mImporter != nullptr) {
         mImporter->releaseBuffer(&mBo);
-        mImporter = NULL;
+        mImporter = nullptr;
     }
 }
 
-int DrmHwcBuffer::importBuffer(buffer_handle_t handle, Importer* importer) {
+int DrmHwcBuffer::importBuffer(buffer_handle_t handle, Importer* importer, int index) {
     DrmHwcBo tmp_bo;
-    int ret = importer->importBuffer(handle, &tmp_bo);
+    tmp_bo.index = index;
 
-    if (ret)
-        return ret;
-
-    if (mImporter != NULL) {
-        mImporter->releaseBuffer(&mBo);
-    }
+    CHECK_RES_FATAL(importer->importBuffer(handle, &tmp_bo));
+    clear();
 
     mImporter = importer;
-    mBo = tmp_bo;
+    mBo = std::move(tmp_bo);
     return 0;
 }
 
 int DrmHwcBuffer::createFrameBuffer() {
-    if (mImporter == NULL) {
+    if (mImporter == nullptr) {
         ALOGE("Access of non-existent BO");
         return -1;
     }
@@ -65,7 +64,8 @@ int DrmHwcBuffer::createFrameBuffer() {
 }
 
 int DrmHwcLayer::importBuffer(Importer* importer) {
-    return mBuffer.importBuffer(mBuffHandle, importer);
+    CHECK_RES_FATAL(mBuffer.importBuffer(mBuffHandle, importer, index));
+    return 0;
 }
 
 } // namespace android

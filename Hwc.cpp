@@ -48,6 +48,11 @@ HwcHal::HwcHal()
         ALOGE("drmOpen error");
     }
 
+#if HWC_PRIME_CACHE
+    mPrimeCache.setDrmFd(mDrmFd);
+    ALOGD("PRIME_CACHE enabled");
+#endif
+
     drmSetMaster(mDrmFd);
     CHECK_RES_WARN(drmSetClientCap(mDrmFd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1));
     CHECK_RES_WARN(drmSetClientCap(mDrmFd, DRM_CLIENT_CAP_ATOMIC, 1));
@@ -501,6 +506,15 @@ Error HwcHal::presentDisplay(
                 cc->onRefresh(HWC_DISPLAY_PRIMARY);
             mIsCameraEnabled = false;
             mSignalStopCamera = false;
+#if HWC_PRIME_CACHE
+            if (!mPrimeCache.getIsPrimeCacheEnabled()) {
+                ALOGD("Turning on prime cache");
+                for (auto &cur : mDisplays) {
+                    cur.second.setPrimeCache(&mPrimeCache);
+                }
+                mPrimeCache.setIsPrimeCacheEnabled(true);
+            }
+#endif
         }
         return Error::NONE;
     }
@@ -657,6 +671,16 @@ HwcHal::setEVSCameraData(const hidl_handle& buffer, int8_t /*currDisplay*/) {
         }
         err = Error::BAD_LAYER;
     } else {
+#if HWC_PRIME_CACHE
+        if (mPrimeCache.getIsPrimeCacheEnabled()) {
+            ALOGD("Turning off prime cache");
+            for (auto &cur : mDisplays) {
+                cur.second.setPrimeCache(nullptr);
+            }
+            mPrimeCache.clear();
+            mPrimeCache.setIsPrimeCacheEnabled(false);
+        }
+#endif
         mCameraHidlHandle = buffer;
         mIsCameraEnabled = true;
         err = presentDisplay(HWC_CAMERA_DISPLAY);

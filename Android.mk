@@ -59,6 +59,7 @@ LOCAL_SRC_FILES += platformrcar.cpp
 LOCAL_SRC_FILES += service.cpp
 LOCAL_SRC_FILES += vsyncworker.cpp
 LOCAL_SRC_FILES += worker.cpp
+LOCAL_SRC_FILES += PrimeCache.cpp
 
 # target
 #
@@ -73,6 +74,10 @@ LOCAL_VINTF_FRAGMENTS := android.hardware.graphics.composer@2.1-service.renesas.
 
 ifeq ($(TARGET_ENABLE_HOTPLUG_SUPPORT),true)
     LOCAL_CFLAGS += -DHWC_HOTPLUG_SUPPORT=1
+endif
+
+ifeq ($(TARGET_ENABLE_PRIME_CACHE),true)
+    LOCAL_CFLAGS += -DHWC_PRIME_CACHE=1
 endif
 
 ifeq ($(TARGET_DEVICE),salvator)

@@ -47,11 +47,15 @@ public:
     uint8_t mAlpha = 0xff;
     hwc_frect_t mSourceCrop;
     hwc_rect_t mDisplayFrame;
+    int index = -1;
 };
 
 class HwcLayer {
     using Error = android::hardware::graphics::composer::V2_1::Error;
 public:
+
+    HwcLayer(int index): mIndex(index) {}
+    HwcLayer() = default;
 
     HWC2::Composition getSfType() const {
         return mSfType;
@@ -108,6 +112,10 @@ public:
         return res;
     }
 
+    int getIndex() const {
+        return mIndex;
+    }
+
     void populateDrmLayer(DrmHwcLayer* layer);
 
     // Layer hooks
@@ -142,6 +150,7 @@ private:
     uint32_t mZorder = 0;
     android_dataspace_t mDataspace = HAL_DATASPACE_UNKNOWN;
     bool mIsCursorLayer = false;
+    int mIndex = -1;
 };
 
 } // namespace android

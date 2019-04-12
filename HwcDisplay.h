@@ -42,8 +42,16 @@ namespace android {
 class HwcDisplay {
     using Error = android::hardware::graphics::composer::V2_1::Error;
 public:
+
+#if HWC_PRIME_CACHE
+    HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
+               HWC2::DisplayType type, std::shared_ptr<Importer> importer,
+               PrimeCache* primeCache);
+#else
     HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
                HWC2::DisplayType type, std::shared_ptr<Importer> importer);
+#endif
+
     HwcDisplay(const HwcDisplay&) = delete;
     Error init();
 
@@ -97,6 +105,10 @@ public:
     void getCurrentDisplaySize(uint32_t & inWidth, uint32_t & inHeight);
     void hwcDisplayPoll(int32_t fd, int32_t timeout = -1) const;
 
+#if HWC_PRIME_CACHE
+    void setPrimeCache(PrimeCache* primeCache);
+#endif
+
 private:
     int loadDisplayModes();
     int selectConfig();
@@ -144,8 +156,8 @@ private:
     VSyncWorker mVsyncWorker;
     hwc2_display_t mHandle;
     HWC2::DisplayType mType;
-    uint32_t mLayerIndex = 0;
-    std::map<hwc2_layer_t, HwcLayer> mLayers;
+    uint32_t mLayerIndex = 2;
+    std::map<hwc2_layer_t, HwcLayer*> mLayers;
     std::map<int, HwcLayer*> mLayersSortedByZ;
     HwcLayer mClientLayer;
     HwcLayer mCameraLayer;
@@ -156,6 +168,10 @@ private:
     std::shared_ptr<Importer> mImporter;
     DummyImporter mDummyImp;
     std::deque<DRMPlane> mPlanes;
+
+#if HWC_PRIME_CACHE
+    PrimeCache* mPrimeCache = nullptr;
+#endif
 
     const std::unordered_set<int> mSupportedFormats = {
         HAL_PIXEL_FORMAT_BGRX_8888,
