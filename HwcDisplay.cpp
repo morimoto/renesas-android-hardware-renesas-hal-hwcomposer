@@ -27,6 +27,7 @@
 #include <fstream>
 #include <streambuf>
 #include <sstream>
+#include <ctime>
 
 #include <drm_fourcc.h>
 #include <cutils/properties.h>
@@ -40,6 +41,12 @@
 namespace android {
 using Error = android::hardware::graphics::composer::V2_1::Error;
 using android::hardware::graphics::composer::V2_1::implementation::HwcHal;
+
+static double now_ms() {
+    timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (ts.tv_sec*1000.0) + (ts.tv_nsec/1000000.0);
+}
 
 class DrmVsyncCallback: public VsyncCallback {
 public:
@@ -56,51 +63,6 @@ private:
     hwc2_callback_data_t data_;
     hwc2_function_pointer_t hook_;
 };
-
-#if DEBUG_FRAMERATE
-static void page_flip_handler(int //fd
-                              , uint32_t //sequence
-                              , uint32_t tv_sec
-                              , uint32_t tv_usec
-                              , void* user_data
-                              ) {
-    static char value[PROPERTY_VALUE_MAX];
-    property_get("debug.hwc.showfps", value, "0");
-    bool show_fps = std::atoi(value);
-    if (!show_fps)
-        return;
-
-    HwcDisplay* disp = reinterpret_cast<HwcDisplay*>(user_data);
-    if (!disp)
-        return;
-
-    int& fps_frame_count = disp->mFpsFrameCount;
-    uint32_t& start_sec = disp->mFpsStartSec;
-    uint32_t& start_usec = disp->mFpsStartUsec;
-
-    if (fps_frame_count == 0) {
-        start_sec = tv_sec;
-        start_usec = tv_usec;
-        fps_frame_count++;
-
-    } else {
-        int sec = tv_sec - start_sec;
-        int usec = tv_usec - start_usec;
-        int time = usec;
-        time += sec*1000000;
-
-        if (sec > 2 || time >= 1*1000000) {
-            float float_sec = (float)usec / (float)1000000;
-            float_sec += sec;
-            ALOGD("fps:%5.1f (%d frame per %f sec)", (float)fps_frame_count / float_sec, fps_frame_count, float_sec);
-            start_sec = tv_sec;
-            start_usec = tv_usec;
-            fps_frame_count = 0;
-        }
-        fps_frame_count++;
-    }
-}
-#endif //DEBUG_FRAMERATE
 
 HwcDisplay::HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
                        HWC2::DisplayType type, std::shared_ptr<Importer> importer)
@@ -132,11 +94,6 @@ Error HwcDisplay::init() {
     if (err != 0) {
         return Error::NO_RESOURCES;
     }
-
-#if DEBUG_FRAMERATE
-    mEventContext.version = DRM_EVENT_CONTEXT_VERSION;
-    mEventContext.page_flip_handler = page_flip_handler;
-#endif //DEBUG_FRAMERATE
 
     setActiveConfig(mCurrConfig);
 
@@ -515,6 +472,25 @@ int HwcDisplay::applyComposition(std::unique_ptr<DrmDisplayComposition>
 int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
     ATRACE_CALL();
 
+#if DEBUG_FRAMERATE
+    if (mHandle == HWC_DISPLAY_PRIMARY) {
+        static char value[PROPERTY_VALUE_MAX];
+        property_get("debug.hwc.showfps", value, "0");
+        bool show_fps = std::stoi(value);
+        if (show_fps) {
+            static double start_ms = now_ms();
+            static int cur_frame = 0;
+            const int max_frames = 60;
+            if (++cur_frame >= max_frames) {
+                double cur_ms = now_ms();
+                ALOGD("fps: %f", 1e3*cur_frame/(cur_ms - start_ms));
+                start_ms = cur_ms;
+                cur_frame = 0;
+            }
+        }
+    }
+#endif // DEBUG_FRAMERATE
+
     int ret = 0;
     DrmDisplayComposition* display_comp = composition.get();
     std::vector<DrmHwcLayer>& layers = display_comp->getLayers();
@@ -575,12 +551,6 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
 
     uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK;
 
-#if DEBUG_FRAMERATE
-    if (!mHandle) {
-        flags |= DRM_MODE_PAGE_FLIP_EVENT;
-    }
-#endif //DEBUG_FRAMERATE
-
     if (mFirstDraw)
         flags |= DRM_MODE_ATOMIC_ALLOW_MODESET;
 
@@ -590,12 +560,6 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
         ret = drmModeAtomicCommit(mDrmFd, pset, flags, this);
 
     CHECK_RES_WARN(ret);
-
-#if DEBUG_FRAMERATE
-    if (!mHandle) {
-        CHECK_RES_WARN(drmHandleEvent(mDrmFd, &mEventContext));
-    }
-#endif //DEBUG_FRAMERATE
 
     if (mFirstDraw) {
         ret = destroyPropertyBlob(mMode.mOldBlobId);

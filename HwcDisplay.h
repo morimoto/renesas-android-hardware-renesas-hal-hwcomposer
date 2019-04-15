@@ -97,12 +97,6 @@ public:
     void getCurrentDisplaySize(uint32_t & inWidth, uint32_t & inHeight);
     void hwcDisplayPoll(int32_t fd, int32_t timeout = -1) const;
 
-#if DEBUG_FRAMERATE
-    int mFpsFrameCount = 0;
-    uint32_t mFpsStartSec = 0;
-    uint32_t mFpsStartUsec = 0;
-#endif //DEBUG_FRAMERATE
-
 private:
     int loadDisplayModes();
     int selectConfig();
@@ -147,9 +141,6 @@ private:
 
     std::unique_ptr<DrmDisplayComposition> mActiveComposition;
 
-#if DEBUG_FRAMERATE
-    drmEventContext mEventContext;
-#endif //DEBUG_FRAMERATE
     VSyncWorker mVsyncWorker;
     hwc2_display_t mHandle;
     HWC2::DisplayType mType;
