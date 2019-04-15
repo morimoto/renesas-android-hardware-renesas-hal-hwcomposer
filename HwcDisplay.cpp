@@ -32,6 +32,7 @@
 #include <cutils/properties.h>
 #include <inttypes.h>
 #include <string.h>
+#include <poll.h>
 
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 #include <utils/Trace.h>
@@ -236,6 +237,15 @@ void HwcDisplay::invalidate() {
 void HwcDisplay::getCurrentDisplaySize(uint32_t & inWidth, uint32_t & inHeight) {
     inWidth  = mCurrentDisplayWidth;
     inHeight = mCurrentDisplayHeight;
+}
+
+void HwcDisplay::hwcDisplayPoll(int32_t fd, int32_t timeout) const {
+    pollfd request[1] = { { fd, POLLIN, 0 } };
+    int32_t ret = poll(request, 1, timeout);
+
+    if (ret < 0) {
+        ALOGE("Poll Failed in hwcDisplayPoll");
+    }
 }
 
 Error HwcDisplay::getActiveConfig(hwc2_config_t* config) {
@@ -676,6 +686,9 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
     *retire_fence = mReleaseFence;
     for (auto& l: mLayers) {
         l.second.setReleaseFence(mReleaseFence);
+        if (!mHandle) {
+            hwcDisplayPoll(mReleaseFence);
+        }
     }
 
     return Error::NONE;

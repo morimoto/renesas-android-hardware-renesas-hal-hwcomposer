@@ -95,6 +95,7 @@ public:
     void invalidate();
     void evsCameraChangeValidate();
     void getCurrentDisplaySize(uint32_t & inWidth, uint32_t & inHeight);
+    void hwcDisplayPoll(int32_t fd, int32_t timeout = -1) const;
 
 #if DEBUG_FRAMERATE
     int mFpsFrameCount = 0;
