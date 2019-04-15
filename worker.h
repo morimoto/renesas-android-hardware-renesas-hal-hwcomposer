@@ -17,31 +17,39 @@
 #ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_WORKER_H
 #define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_WORKER_H
 
+#include <cstdint>
+#include <cstdlib>
 #include <string>
-#include <pthread.h>
-#include <stdint.h>
+
+#include <condition_variable>
+#include <mutex>
+#include <thread>
 
 namespace android {
 
 class Worker {
 public:
-    int lock();
-    int unlock();
+    void lock() {
+        mMutex.lock();
+    }
+    void unlock() {
+        mMutex.unlock();
+    }
 
-    // Must be called with the lock acquired
-    int signalLocked();
-    int exitLocked();
+    void signal() {
+        mCond.notify_all();
+    }
+    void exitWorker();
 
-    // Convenience versions of above, acquires the lock
-    int signal();
-    int exit();
+    bool initialized() const {
+        return mInitialized;
+    }
 
 protected:
     Worker(const char* name, int priority);
     virtual ~Worker();
 
     int initWorker();
-    bool initialized() const;
     virtual void routine() = 0;
 
     /*
@@ -52,18 +60,20 @@ protected:
     */
     int waitForSignalOrExitLocked(int64_t max_nanoseconds = -1);
 
-private:
-    static void* internalRoutine(void* worker);
+    bool shouldExit() const {
+        return mExit;
+    }
 
-    // Must be called with the lock acquired
-    int signalThreadLocked(bool exit);
+    std::mutex mMutex;
+    std::condition_variable mCond;
+
+private:
+    void internalRoutine();
 
     std::string mName;
     int mPriority;
 
-    pthread_t mThread;
-    pthread_mutex_t mLock;
-    pthread_cond_t mCond;
+    std::unique_ptr<std::thread> mThread;
 
     bool mExit;
     bool mInitialized;

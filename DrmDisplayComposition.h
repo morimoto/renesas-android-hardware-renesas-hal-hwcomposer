@@ -48,7 +48,7 @@ public:
     int init(int drm, uint32_t crtc);
     DrmCompositionType getType() const;
 
-    int setLayers(DrmHwcLayer* layers, size_t num_layers);
+    int setLayers(std::vector<DrmHwcLayer>&& layers);
     std::vector<DrmHwcLayer>& getLayers();
 
     int setDisplayMode(const DRMMode& display_mode);

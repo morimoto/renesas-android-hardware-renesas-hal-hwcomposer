@@ -40,9 +40,9 @@ public:
     ~VSyncWorker() override;
 
     int init(int drmFd, int display, int refresh);
-    int registerCallback(std::shared_ptr<VsyncCallback> callback);
+    void registerCallback(std::shared_ptr<VsyncCallback> callback);
 
-    int controlVSync(bool enabled);
+    void controlVSync(bool enabled);
 
 protected:
     void routine() override;

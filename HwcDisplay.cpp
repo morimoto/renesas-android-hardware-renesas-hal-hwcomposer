@@ -155,12 +155,7 @@ Error HwcDisplay::registerVsyncCallback(hwc2_callback_data_t data,
                                         hwc2_function_pointer_t func) {
     supported(__func__);
     auto callback = std::make_shared<DrmVsyncCallback>(data, func);
-    int ret = mVsyncWorker.registerCallback(std::move(callback));
-
-    if (ret) {
-        ALOGE("Failed to register callback for display=%d ret=%d", (int)mHandle, ret);
-        return Error::BAD_DISPLAY;
-    }
+    mVsyncWorker.registerCallback(std::move(callback));
 
     return Error::NONE;
 }
@@ -643,7 +638,6 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
     for (HwcLayer* layer : sorted_layers) {
         DrmHwcLayer drm_layer;
         layer->populateDrmLayer(&drm_layer);
-        int ret  = 0;
 
         if (!mUsingCameraLayer) {
             ret = drm_layer.importBuffer(mImporter.get());
@@ -669,7 +663,7 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
 
     std::unique_ptr<DrmDisplayComposition> composition(new DrmDisplayComposition());
     composition->init(mDrmFd, mCrtId);
-    ret = composition->setLayers(layers.data(), layers.size());
+    ret = composition->setLayers(std::move(layers));
 
     if (ret) {
         ALOGE("Failed to set layers in the composition ret=%d", ret);

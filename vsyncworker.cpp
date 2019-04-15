@@ -47,44 +47,18 @@ int VSyncWorker::init(int drmFd , int display, int refresh) {
     return initWorker();
 }
 
-int VSyncWorker::registerCallback(std::shared_ptr<VsyncCallback> callback) {
-    int ret = lock();
-
-    if (ret) {
-        ALOGE("Failed to lock vsync worker lock %d\n", ret);
-        return ret;
-    }
-
+void VSyncWorker::registerCallback(std::shared_ptr<VsyncCallback> callback) {
+    std::lock_guard<std::mutex> lock(mMutex);
     mCallback = callback;
-    ret = unlock();
-
-    if (ret) {
-        ALOGE("Failed to unlock vsync worker lock %d\n", ret);
-        return ret;
-    }
-
-    return 0;
 }
 
-int VSyncWorker::controlVSync(bool enabled) {
-    int ret = lock();
-
-    if (ret) {
-        ALOGE("Failed to lock vsync worker lock %d\n", ret);
-        return ret;
-    }
+void VSyncWorker::controlVSync(bool enabled) {
+    std::lock_guard<std::mutex> lock(mMutex);
 
     mEnabled = enabled;
     mLastTimestamp = -1;
-    int signal_ret = signalLocked();
-    ret = unlock();
 
-    if (ret) {
-        ALOGE("Failed to unlock vsync worker lock %d\n", ret);
-        return ret;
-    }
-
-    return signal_ret;
+    signal();
 }
 
 /*
@@ -131,12 +105,8 @@ int VSyncWorker::syntheticWaitVBlank(int64_t* timestamp) {
 }
 
 void VSyncWorker::routine() {
-    int ret = lock();
-
-    if (ret) {
-        ALOGE("Failed to lock worker %d", ret);
-        return;
-    }
+    int ret = 0;
+    std::unique_lock<std::mutex> lock(mMutex);
 
     if (!mEnabled) {
         ret = waitForSignalOrExitLocked();
@@ -149,11 +119,7 @@ void VSyncWorker::routine() {
     bool enabled = mEnabled;
     int display = mDisplay;
     std::shared_ptr<VsyncCallback> callback(mCallback);
-    ret = unlock();
-
-    if (ret) {
-        ALOGE("Failed to unlock worker %d", ret);
-    }
+    lock.unlock();
 
     if (!enabled)
         return;

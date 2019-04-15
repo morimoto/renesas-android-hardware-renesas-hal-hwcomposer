@@ -39,16 +39,13 @@ bool DrmDisplayComposition::validateCompositionType(DrmCompositionType des) {
     return mType == DRM_COMPOSITION_TYPE_EMPTY || mType == des;
 }
 
-int DrmDisplayComposition::setLayers(DrmHwcLayer* layers, size_t num_layers) {
+int DrmDisplayComposition::setLayers(std::vector<DrmHwcLayer>&& layers) {
     if (!validateCompositionType(DRM_COMPOSITION_TYPE_FRAME)) {
         ALOGE("DrmDisplayComposition::SetLayers !validate_composition_type");
         return -EINVAL;
     }
 
-    for (size_t layer_index = 0; layer_index < num_layers; layer_index++) {
-        mLayers.emplace_back(std::move(layers[layer_index]));
-    }
-
+    mLayers = std::move(layers);
     mType = DRM_COMPOSITION_TYPE_FRAME;
     return 0;
 }
