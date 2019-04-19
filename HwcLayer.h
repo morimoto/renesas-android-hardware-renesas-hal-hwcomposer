@@ -78,6 +78,9 @@ public:
     bool isCursorLayer() const {
         return mIsCursorLayer;
     }
+    bool isSkipComposition() const {
+        return mIsSkipComposition;
+    }
 
     uint32_t getZorder() const {
         return mZorder;
@@ -151,6 +154,7 @@ private:
     android_dataspace_t mDataspace = HAL_DATASPACE_UNKNOWN;
     bool mIsCursorLayer = false;
     int mIndex = -1;
+    bool mIsSkipComposition = false;
 };
 
 } // namespace android

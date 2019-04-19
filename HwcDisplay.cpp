@@ -840,10 +840,9 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
                     layer->setValidatedType (HWC2::Composition::Device);
                     ++num_device_planes;
                     break;
-                }
+                } // else drop down to Client composition
 
-            [[fallthrough]];
-            case HWC2::Composition::SolidColor:
+                [[fallthrough]];
             case HWC2::Composition::Sideband:
                 [[fallthrough]];
             case HWC2::Composition::Cursor:
@@ -852,6 +851,15 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
                 ++*num_types;
                 break;
 
+            case HWC2::Composition::SolidColor:
+                if (layer->isSkipComposition() && lastDeviceLayer) {
+                    layer->setValidatedType(HWC2::Composition::SolidColor);
+                    break;
+                } else {
+                    ++*num_types;
+                } // else drop down to Client composition
+
+                [[fallthrough]];
             case HWC2::Composition::Client:
                 layer->setValidatedType(HWC2::Composition::Client);
                 lastDeviceLayer = false;

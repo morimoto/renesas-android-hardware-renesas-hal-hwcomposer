@@ -55,7 +55,17 @@ Error HwcLayer::setLayerColor(hwc_color_t color) {
     // Probably we should query for the plane capabilities here, before
     // always falling back for client composition ?
     // TODO: Punt to client composition here?
-    mSfType = HWC2::Composition::Client;
+    if (mSfType == HWC2::Composition::SolidColor) {
+        bool isSolidColorBlack = (color.r + color.g + color.b == 0);
+        bool isTransparent = (color.a == 0);
+
+        if (isSolidColorBlack || isTransparent) {
+            mIsSkipComposition = true;
+        }
+    } else {
+        mSfType = HWC2::Composition::Client;
+    }
+
     return Error::NONE;
 }
 
