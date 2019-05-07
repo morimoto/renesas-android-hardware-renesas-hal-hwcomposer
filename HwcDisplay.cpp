@@ -880,8 +880,10 @@ Error HwcDisplay::validateDisplay(uint32_t* num_types,
                     break;
                 }
 
+            [[fallthrough]];
             case HWC2::Composition::SolidColor:
             case HWC2::Composition::Sideband:
+                [[fallthrough]];
             case HWC2::Composition::Cursor:
                 layer->setValidatedType(HWC2::Composition::Client);
                 lastDeviceLayer = false;

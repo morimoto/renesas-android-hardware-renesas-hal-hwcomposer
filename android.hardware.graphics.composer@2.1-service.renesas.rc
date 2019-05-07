@@ -1,4 +1,4 @@
-service vendor.hwcomposer-2-1  /vendor/bin/hw/android.hardware.graphics.composer@2.1-service.renesas
+service vendor.hwcomposer-hal-2-1  /vendor/bin/hw/android.hardware.graphics.composer@2.1-service.renesas
     class hal animation
     user system
     group graphics drmrpc
