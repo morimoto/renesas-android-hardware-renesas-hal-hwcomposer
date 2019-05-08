@@ -52,6 +52,7 @@ LOCAL_SRC_FILES += ComposerClient.cpp
 LOCAL_SRC_FILES += DrmDisplayComposition.cpp
 LOCAL_SRC_FILES += Hwc.cpp
 LOCAL_SRC_FILES += HwcBuffer.cpp
+LOCAL_SRC_FILES += HwcCms.cpp
 LOCAL_SRC_FILES += HwcDisplay.cpp
 LOCAL_SRC_FILES += HwcHotPlug.cpp
 LOCAL_SRC_FILES += HwcDump.cpp
@@ -83,6 +84,10 @@ ifeq ($(TARGET_DISABLE_PRIME_CACHE),true)
     LOCAL_CFLAGS += -DHWC_PRIME_CACHE=0
 else
     LOCAL_CFLAGS += -DHWC_PRIME_CACHE=1
+endif
+
+ifeq ($(ENABLE_CMS),true)
+    LOCAL_CFLAGS += -DHWC_ENABLE_CMS=1
 endif
 
 ifeq ($(TARGET_DEVICE),salvator)

@@ -60,6 +60,15 @@ public:  // functions
     Return<uint32_t> getDisplayHeight() override;
     Return<uint32_t> getDisplayWidth()  override;
 
+    // CMS API
+    Return<::android::hardware::graphics::composer::V2_1::Error> cmsReset(
+            int8_t currDisplay) override;
+    Return<::android::hardware::graphics::composer::V2_1::Error> cmsSetLut(
+            const hidl_vec<uint32_t>& buff, int8_t currDisplay) override;
+    Return<::android::hardware::graphics::composer::V2_1::Error> cmsSetClu(
+            const hidl_vec<uint32_t>& buff, int8_t currDisplay) override;
+    Return<void> cmsGetHgo(int8_t currDisplay, cmsGetHgo_cb _hidl_cb) override;
+
     // ComposerBase interface
     bool isReadbackBufferSet() const override;
     bool isDisplayValid(hwc2_display_t display) const override;

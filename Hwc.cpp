@@ -18,6 +18,7 @@
 #include "Hwc.h"
 #include "ComposerClient.h"
 #include "HwcHotPlug.h"
+#include "HwcCms.h"
 
 namespace android {
 namespace hardware {
@@ -828,6 +829,63 @@ Error HwcHal::setReadbackBuffer(hwc2_display_t display,
     }
 
     return Error::NONE;
+}
+
+Return<::android::hardware::graphics::composer::V2_1::Error>
+HwcHal::cmsReset(int8_t /*currDisplay*/) {
+#if HWC_ENABLE_CMS
+    auto it = mDisplays.find(HWC_DISPLAY_PRIMARY);
+
+    if (it != mDisplays.end()) {
+        it->second.cmsReset();
+    }
+#endif
+    return ::android::hardware::graphics::composer::V2_1::Error::NONE;
+}
+
+Return<::android::hardware::graphics::composer::V2_1::Error>
+HwcHal::cmsSetLut(const hidl_vec<uint32_t>& buff, int8_t /*currDisplay*/) {
+#if HWC_ENABLE_CMS
+    auto it = mDisplays.find(HWC_DISPLAY_PRIMARY);
+
+    if (it != mDisplays.end()) {
+        it->second.cmsSetLut(buff);
+    }
+#else
+    (void)buff;
+#endif
+    return ::android::hardware::graphics::composer::V2_1::Error::NONE;
+}
+
+Return<::android::hardware::graphics::composer::V2_1::Error>
+HwcHal::cmsSetClu(const hidl_vec<uint32_t>& buff, int8_t /*currDisplay*/) {
+#if HWC_ENABLE_CMS
+    auto it = mDisplays.find(HWC_DISPLAY_PRIMARY);
+
+    if (it != mDisplays.end()) {
+        it->second.cmsSetClu(buff);
+    }
+#else
+    (void)buff;
+#endif
+    return ::android::hardware::graphics::composer::V2_1::Error::NONE;
+}
+
+Return<void> HwcHal::cmsGetHgo(int8_t /*currDisplay*/, cmsGetHgo_cb _hidl_cb) {
+#if HWC_ENABLE_CMS
+    auto it = mDisplays.find(HWC_DISPLAY_PRIMARY);
+
+    if (it != mDisplays.end()) {
+        uint32_t table_hgo[CMM_HGO_NUM];
+        hidl_vec<uint32_t> buff;
+        buff.setToExternal(table_hgo, CMM_HGO_NUM);
+        it->second.cmsGetHgo(table_hgo, CMM_HGO_NUM);
+        _hidl_cb(buff);
+    }
+#else
+    (void)_hidl_cb;
+#endif
+    return Void();
 }
 
 }  // namespace implementation
