@@ -18,6 +18,8 @@
 #include "HwcDisplay.h"
 #include "Hwc.h"
 
+#include "HwcCms.h"
+
 #include <cutils/properties.h>
 #include <poll.h>
 
@@ -261,6 +263,22 @@ void HwcDisplay::hwcDisplayPoll(int32_t fd, int32_t timeout) const {
     if (ret < 0) {
         ALOGE("Poll Failed in hwcDisplayPoll");
     }
+}
+
+void HwcDisplay::cmsReset() {
+    cms_reset(mDrmFd, mCrtId);
+}
+
+void HwcDisplay::cmsSetLut(const hardware::hidl_vec<uint32_t>& buff) {
+    cms_set_lut(mDrmFd, mCrtId, &buff[0], buff.size());
+}
+
+void HwcDisplay::cmsSetClu(const hardware::hidl_vec<uint32_t>& buff) {
+    cms_set_clu(mDrmFd, mCrtId, &buff[0], buff.size());
+}
+
+void HwcDisplay::cmsGetHgo(uint32_t* buff, uint32_t size) {
+    cms_get_hgo(mDrmFd, mCrtId, buff, size);
 }
 
 Error HwcDisplay::getActiveConfig(hwc2_config_t* config) {

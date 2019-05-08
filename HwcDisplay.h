@@ -94,6 +94,11 @@ public:
     std::string getDisplayInfo() const;
     std::string getHardwareDisplayType() const;
 
+    void cmsReset();
+    void cmsSetLut(const hardware::hidl_vec<uint32_t>& buff);
+    void cmsSetClu(const hardware::hidl_vec<uint32_t>& buff);
+    void cmsGetHgo(uint32_t* buff, uint32_t size);
+
 private:
     int loadDisplayModes();
     int selectConfig();
