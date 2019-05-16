@@ -42,11 +42,13 @@ namespace android {
 using Error = android::hardware::graphics::composer::V2_1::Error;
 using android::hardware::graphics::composer::V2_1::implementation::HwcHal;
 
+#if DEBUG_FRAMERATE
 static double now_ms() {
     timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (ts.tv_sec*1000.0) + (ts.tv_nsec/1000000.0);
 }
+#endif // DEBUG_FRAMERATE
 
 class DrmVsyncCallback: public VsyncCallback {
 public:
