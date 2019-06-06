@@ -42,23 +42,23 @@
  * is used instead. Reserve 0 for this purpose.
  */
 
-#define HAL_PIXEL_FORMAT_VENDOR_EXT(fmt) (0x100 | (fmt & 0xF))
+#define HAL_PIXEL_FORMAT_VENDOR_EXT(fmt) (0x100 | (fmt & 0xFF))
 
 /*      Reserved ** DO NOT USE **    HAL_PIXEL_FORMAT_VENDOR_EXT(0) */
-#define HAL_PIXEL_FORMAT_BGRX_8888   HAL_PIXEL_FORMAT_VENDOR_EXT(1)
-#define HAL_PIXEL_FORMAT_sBGR_A_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(2)
-#define HAL_PIXEL_FORMAT_sBGR_X_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(3)
+/*      HAL_PIXEL_FORMAT_RGBA_8888   HAL_PIXEL_FORMAT_VENDOR_EXT(1) */
+/*      HAL_PIXEL_FORMAT_RGBX_8888   HAL_PIXEL_FORMAT_VENDOR_EXT(2) */
+/*      HAL_PIXEL_FORMAT_RGB_888     HAL_PIXEL_FORMAT_VENDOR_EXT(3) */
 /*      HAL_PIXEL_FORMAT_RGB_565     HAL_PIXEL_FORMAT_VENDOR_EXT(4) */
 /*      HAL_PIXEL_FORMAT_BGRA_8888   HAL_PIXEL_FORMAT_VENDOR_EXT(5) */
 #define HAL_PIXEL_FORMAT_NV12        HAL_PIXEL_FORMAT_VENDOR_EXT(6)
-#define HAL_PIXEL_FORMAT_sRGB_A_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(7)
-#define HAL_PIXEL_FORMAT_sRGB_X_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(8)
-#define HAL_PIXEL_FORMAT_NV12_CUSTOM HAL_PIXEL_FORMAT_VENDOR_EXT(9)
-#define HAL_PIXEL_FORMAT_NV21_CUSTOM HAL_PIXEL_FORMAT_VENDOR_EXT(10)
-#define HAL_PIXEL_FORMAT_UYVY        HAL_PIXEL_FORMAT_VENDOR_EXT(11)
-/*      Free for customer use        HAL_PIXEL_FORMAT_VENDOR_EXT(12) */
-/*      Free for customer use        HAL_PIXEL_FORMAT_VENDOR_EXT(13) */
-/*      Free for customer use        HAL_PIXEL_FORMAT_VENDOR_EXT(14) */
+#define HAL_PIXEL_FORMAT_BGRX_8888   HAL_PIXEL_FORMAT_VENDOR_EXT(7)
+#define HAL_PIXEL_FORMAT_sRGB_A_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(8)
+#define HAL_PIXEL_FORMAT_sRGB_X_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(9)
+#define HAL_PIXEL_FORMAT_sBGR_A_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(10)
+#define HAL_PIXEL_FORMAT_sBGR_X_8888 HAL_PIXEL_FORMAT_VENDOR_EXT(11)
+#define HAL_PIXEL_FORMAT_NV12_CUSTOM HAL_PIXEL_FORMAT_VENDOR_EXT(12)
+#define HAL_PIXEL_FORMAT_NV21_CUSTOM HAL_PIXEL_FORMAT_VENDOR_EXT(13)
+#define HAL_PIXEL_FORMAT_UYVY        HAL_PIXEL_FORMAT_VENDOR_EXT(14)
 /*      Free for customer use        HAL_PIXEL_FORMAT_VENDOR_EXT(15) */
 
 #define HAL_PIXEL_FORMAT_NV21        (HAL_PIXEL_FORMAT_YCrCb_420_SP)
@@ -77,7 +77,6 @@
 #define HAL_FB_COMPRESSION_INDIRECT_8x8        4
 #define HAL_FB_COMPRESSION_INDIRECT_16x4       5
 #define HAL_FB_COMPRESSION_INDIRECT_4TILE_8x8  6
-#define HAL_FB_COMPRESSION_INDIRECT_4TILE_16x4 7
 
 /* The memory layout is OR'ed into bit 7 (top bit) of the 8 bit "vendor
  * format" field. Only STRIDED and TWIDDLED are supported; there is no space
@@ -109,7 +108,7 @@ typedef struct
 	 */
 
 #define IMG_NATIVE_HANDLE_NUMFDS (MAX_SUB_ALLOCS)
-	/* The `fd' field is used to "export" a meminfo to another process. */
+	/* The 'fd' field is used to "export" a meminfo to another process. */
 	int fd[IMG_NATIVE_HANDLE_NUMFDS];
 
 	/* This define should represent the number of packed 'int's required to
@@ -145,7 +144,7 @@ typedef struct
 	int iFormat;
 	unsigned int uiBpp;
 
-	/* Planes are not the same as the `fd' suballocs. A multi-planar YUV
+	/* Planes are not the same as the 'fd' suballocs. A multi-planar YUV
 	 * allocation has different planes (interleaved = 1, semi-planar = 2,
 	 * fully-planar = 3) but might be spread across 1, 2 or 3 independent
 	 * memory allocations (or not).
@@ -170,8 +169,8 @@ typedef struct
 	/* This records the number of MAX_SUB_ALLOCS fds actually used by the
 	 * buffer allocation. File descriptors up to fd[iNumSubAllocs - 1] are
 	 * guaranteed to be valid. (This does not have any bearing on the aiStride,
-	 * aiVStride or aulPlaneOffset fields, as `iPlanes' of those arrays should
-	 * be initialized, not `iNumSubAllocs'.)
+	 * aiVStride or aulPlaneOffset fields, as 'iPlanes' of those arrays should
+	 * be initialized, not 'iNumSubAllocs'.)
 	 */
 	int iNumSubAllocs;
 
