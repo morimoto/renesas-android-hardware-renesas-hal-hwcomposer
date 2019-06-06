@@ -21,10 +21,7 @@
 #include "img_gralloc1_public.h"
 
 #include <drm/drm_fourcc.h>
-#include <xf86drm.h>
-#include <xf86drmMode.h>
 
-#include <log/log.h>
 
 #define ALIGN_ROUND_UP(X, Y)  (((X)+(Y)-1) & ~((Y)-1))
 
@@ -33,28 +30,15 @@ namespace android {
 Importer* Importer::createInstance(int drm_id) {
     RCarImporter* importer = new RCarImporter(drm_id);
 
-    if (!importer)
-        return NULL;
-
-    int ret = importer->init();
-
-    if (ret) {
-        ALOGE("Failed to initialize the rcar importer %d", ret);
-        delete importer;
-        return NULL;
+    if (!importer) {
+        ALOGE("Failed to create the rcar importer instance");
+        return nullptr;
     }
 
     return importer;
 }
 
 RCarImporter::RCarImporter(int drm_id) : mDrmFd(drm_id) {
-}
-
-RCarImporter::~RCarImporter() {
-}
-
-int RCarImporter::init() {
-    return 0;
 }
 
 int RCarImporter::getIonBufferFd(int bufferFd, int format

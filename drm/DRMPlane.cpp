@@ -19,9 +19,7 @@
 #include "DRMProperty.h"
 #include "HwcLayer.h"
 
-#include <log/log.h>
 #include <cinttypes>
-#include <errno.h>
 
 namespace android {
 

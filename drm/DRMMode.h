@@ -19,7 +19,6 @@
 #define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_DRM_MODE_H
 
 #include <string>
-#include <stdint.h>
 #include <xf86drmMode.h>
 
 namespace android {
@@ -37,17 +36,17 @@ public:
 
     uint32_t getClock() const;
 
-    uint32_t getHDisplay() const;
-    uint32_t getHSyncStart() const;
-    uint32_t getHSyncEnd() const;
-    uint32_t getHTotal() const;
-    uint32_t getHSkew() const;
+    uint16_t getHDisplay() const;
+    uint16_t getHSyncStart() const;
+    uint16_t getHSyncEnd() const;
+    uint16_t getHTotal() const;
+    uint16_t getHSkew() const;
 
-    uint32_t getVDisplay() const;
-    uint32_t getVSyncStart() const;
-    uint32_t getVSyncEnd() const;
-    uint32_t getVTotal() const;
-    uint32_t getVScan() const;
+    uint16_t getVDisplay() const;
+    uint16_t getVSyncStart() const;
+    uint16_t getVSyncEnd() const;
+    uint16_t getVTotal() const;
+    uint16_t getVScan() const;
     float getVRefresh() const;
 
     uint32_t getFlags() const;
@@ -60,17 +59,17 @@ private:
 
     uint32_t mClock = 0;
 
-    uint32_t mHDisplay = 0;
-    uint32_t mHSyncStart = 0;
-    uint32_t mHSyncEnd = 0;
-    uint32_t mHTotal = 0;
-    uint32_t mHSkew = 0;
+    uint16_t mHDisplay = 0;
+    uint16_t mHSyncStart = 0;
+    uint16_t mHSyncEnd = 0;
+    uint16_t mHTotal = 0;
+    uint16_t mHSkew = 0;
 
-    uint32_t mVDisplay = 0;
-    uint32_t mVSyncStart = 0;
-    uint32_t mVSyncEnd = 0;
-    uint32_t mVTotal = 0;
-    uint32_t mVScan = 0;
+    uint16_t mVDisplay = 0;
+    uint16_t mVSyncStart = 0;
+    uint16_t mVSyncEnd = 0;
+    uint16_t mVTotal = 0;
+    uint16_t mVScan = 0;
     uint32_t mVRefresh = 0;
 
     uint32_t mFlags = 0;

@@ -20,10 +20,6 @@
 
 #include "DRMProperty.h"
 
-#include <vector>
-#include <stdint.h>
-#include <xf86drmMode.h>
-
 namespace android {
 
 class DrmHwcLayer;

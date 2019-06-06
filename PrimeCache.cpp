@@ -3,9 +3,6 @@
 
 #include <vector>
 
-#include <log/log.h>
-#include <xf86drm.h>
-
 namespace android {
 
 PrimeCache::PrimeCache() {
@@ -48,7 +45,7 @@ int PrimeCache::destroyHandle(uint32_t handle) const {
     drm_gem_close arg = { handle, 0, };
     int ret = -1;
     if ((ret = drmIoctl(mDrmFd, DRM_IOCTL_GEM_CLOSE, &arg))) {
-        ALOGE("mIonBuffers: free handle=%d "
+        ALOGE("mIonBuffers: free handle=%u "
                 "from drmPrimeFDToHandle", handle);
     }
     return ret;
@@ -73,14 +70,13 @@ void PrimeCache::addEntry(uint64_t stamp, CacheInfo info) {
 }
 
 uint32_t PrimeCache::findEntry(uint64_t stamp, int bufferFd, int index) {
-    int ret = -1;
     uint32_t handle = 0;
     auto cc = mCache.find(stamp);
     if (cc != mCache.end()) {
         handle = cc->second.handle;
     } else {
-        if ((ret = drmPrimeFDToHandle(mDrmFd, bufferFd, &handle))) {
-            ALOGE("mIonBuffers: drmPrimeFDToHandle");
+        if (int32_t ret = drmPrimeFDToHandle(mDrmFd, bufferFd, &handle)) {
+            ALOGE("mIonBuffers: drmPrimeFDToHandle %d", ret);
         } else {
             addEntry(stamp, {index, handle});
         }

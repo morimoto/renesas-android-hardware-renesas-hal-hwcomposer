@@ -19,12 +19,8 @@
 #define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_HWC_LAYER_H
 
 #include "HwcBuffer.h"
-#include "autofd.h"
 
 #include <android/hardware/graphics/composer/2.1/types.h>
-#include <hardware/hardware.h>
-#include <hardware/hwcomposer2.h>
-#include <log/log.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 

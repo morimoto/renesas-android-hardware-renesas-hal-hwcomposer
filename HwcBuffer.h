@@ -21,9 +21,6 @@
 #include "autofd.h"
 #include "HwcDump.h"
 
-#include <stdbool.h>
-#include <stdint.h>
-
 #include <hardware/hardware.h>
 #include <hardware/hwcomposer.h>
 #include <hardware/hwcomposer2.h>

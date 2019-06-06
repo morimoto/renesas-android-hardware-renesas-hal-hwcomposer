@@ -2,7 +2,6 @@
 #define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_HWC_HOTPLUG_H
 
 #include "Hwc.h"
-#include "worker.h"
 #include "autofd.h"
 
 namespace android {
@@ -31,7 +30,7 @@ private:
     HotPlug(const HotPlug&)  = delete;
     HotPlug(const HotPlug&&) = delete;
     HotPlug& operator=(const HotPlug&)  = delete;
-    HotPlug&& operator=(HotPlug&&) = delete;
+    HotPlug& operator=(HotPlug&&) = delete;
 
     Status getStatusDisplay(size_t display);
     Error loadDisplayConfiguration(size_t display);

@@ -25,9 +25,6 @@ DRMProperty::DRMPropertyEnum::DRMPropertyEnum(drm_mode_property_enum* e) :
     mValue(e->value), mName(e->name) {
 }
 
-DRMProperty::DRMPropertyEnum::~DRMPropertyEnum() {
-}
-
 DRMProperty::DRMProperty(drmModePropertyPtr p, uint64_t value) :
     mId(0), mType(DRM_PROPERTY_TYPE_INVALID), mFlags(0), mName("") {
     init(p, value);

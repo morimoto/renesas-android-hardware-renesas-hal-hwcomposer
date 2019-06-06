@@ -19,10 +19,6 @@
 #define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_PLATFORM_H
 
 #include "DrmDisplayComposition.h"
-#include "HwcBuffer.h"
-
-#include <hardware/hardware.h>
-#include <hardware/hwcomposer.h>
 
 namespace android {
 
@@ -62,12 +58,12 @@ public:
 
 class DummyImporter: public Importer {
 public:
-    int importBuffer(buffer_handle_t, DrmHwcBo* bo) { bo->mFbId = 0; return 0; }
-    int releaseBuffer(DrmHwcBo*) { return 0; }
-    int createFrameBuffer(DrmHwcBo*) { return 0; }
+    int importBuffer(buffer_handle_t, DrmHwcBo* bo) override { bo->mFbId = 0; return 0; }
+    int releaseBuffer(DrmHwcBo*) override { return 0; }
+    int createFrameBuffer(DrmHwcBo*) override { return 0; }
 #if HWC_PRIME_CACHE
-    void setPrimeCache(PrimeCache* primeCache) { (void)primeCache; }
-    virtual PrimeCache* getPrimeCache() const { return nullptr; }
+    void setPrimeCache(PrimeCache*) override { }
+    virtual PrimeCache* getPrimeCache() const override { return nullptr; }
 #endif
 };
 

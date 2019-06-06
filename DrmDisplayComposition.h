@@ -23,11 +23,6 @@
 #include "drm/DRMPlane.h"
 
 #include <hardware/gralloc.h>
-#include <hardware/hardware.h>
-#include <hardware/hwcomposer.h>
-
-#include <sstream>
-#include <vector>
 
 namespace android {
 
@@ -43,7 +38,7 @@ class DrmDisplayComposition {
 public:
     DrmDisplayComposition() = default;
     DrmDisplayComposition(const DrmDisplayComposition&) = delete;
-    ~DrmDisplayComposition();
+    ~DrmDisplayComposition() = default;
 
     int init(int drm, uint32_t crtc);
     DrmCompositionType getType() const;

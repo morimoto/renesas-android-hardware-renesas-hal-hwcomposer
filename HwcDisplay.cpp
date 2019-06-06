@@ -17,22 +17,8 @@
 
 #include "HwcDisplay.h"
 #include "Hwc.h"
-#include "HwcDump.h"
-#include "DrmDisplayComposition.h"
-#include "drm/DRMProperty.h"
 
-#include <algorithm>
-#include <cmath>
-#include <string>
-#include <fstream>
-#include <streambuf>
-#include <sstream>
-#include <ctime>
-
-#include <drm_fourcc.h>
 #include <cutils/properties.h>
-#include <inttypes.h>
-#include <string.h>
 #include <poll.h>
 
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
@@ -77,11 +63,13 @@ HwcDisplay::HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
     : mDrmFd(drmFd)
     , mCurrConfig(-1)
     , mConnectorId(0)
+    , mCrtcCount(0)
+    , mCrtcPipe(0)
     , mHandle(handle)
     , mType(type)
     , mClientLayer(0)
     , mCameraLayer(1)
-    , mCrtId(-1)
+    , mCrtId(0)
     , mDisplayParams(params)
     , mImporter(importer)
 #if HWC_PRIME_CACHE

@@ -20,7 +20,6 @@
 
 #include <string>
 #include <vector>
-#include <stdint.h>
 #include <xf86drmMode.h>
 #include <cerrno>
 
@@ -59,7 +58,7 @@ private:
     class DRMPropertyEnum {
     public:
         DRMPropertyEnum(drm_mode_property_enum* e);
-        ~DRMPropertyEnum();
+        ~DRMPropertyEnum() = default;
 
         uint64_t mValue;
         std::string mName;

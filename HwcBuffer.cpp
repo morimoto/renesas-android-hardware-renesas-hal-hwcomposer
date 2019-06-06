@@ -16,13 +16,8 @@
  */
 
 #include "HwcBuffer.h"
-#include "HwcDump.h"
 #include "HwcLayer.h"
 #include "platform.h"
-
-#include "img_gralloc1_public.h"
-
-#include <log/log.h>
 
 namespace android {
 

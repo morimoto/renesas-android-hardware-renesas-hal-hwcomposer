@@ -16,8 +16,6 @@
 
 #include <sched.h>
 
-#include <vendor/renesas/graphics/composer/1.0/IComposer.h>
-
 #include <binder/ProcessState.h>
 #include <hidl/LegacySupport.h>
 #include <hidl/HidlTransportSupport.h>

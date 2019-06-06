@@ -1,19 +1,12 @@
 #include  "HwcHotPlug.h"
 
 #include <fstream>
-#include <thread>
-#include <chrono>
-
-#include <hardware/hardware.h>
-#include <hardware/hwcomposer.h>
 
 #include <poll.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <linux/netlink.h>
-#include <linux/types.h>
 
 #define DRM_HOTPLUG_EVENT_SIZE 256
 

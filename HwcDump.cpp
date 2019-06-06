@@ -17,8 +17,6 @@
 
 #include "HwcDump.h"
 
-#include <log/log.h>
-
 namespace android {
 
 void debug_error(const char* format, const char* file, int line

@@ -18,21 +18,11 @@
 #ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_HWC_DISPLAY_H
 #define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_HWC_DISPLAY_H
 
-#include "HwcLayer.h"
-#include "DrmDisplayComposition.h"
 #include "config.h"
 #include "platform.h"
 #include "vsyncworker.h"
-#include "drm/DRMMode.h"
-#include "drm/DRMPlane.h"
 #include "img_gralloc1_public.h"
 
-#include <hardware/hardware.h>
-#include <hardware/hwcomposer2.h>
-
-#include <map>
-#include <string>
-#include <vector>
 #include <memory>
 #include <deque>
 #include <unordered_set>

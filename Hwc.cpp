@@ -17,17 +17,7 @@
 
 #include "Hwc.h"
 #include "ComposerClient.h"
-#include "platform.h"
-#include "HwcDump.h"
 #include "HwcHotPlug.h"
-
-#include "img_gralloc1_public.h"
-#include <hardware/hwcomposer.h>
-
-#include <log/log.h>
-#include <config.h>
-#include <type_traits>
-
 
 namespace android {
 namespace hardware {

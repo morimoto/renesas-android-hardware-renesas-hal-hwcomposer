@@ -23,6 +23,7 @@
 #include <cerrno>
 #include <libgen.h>
 #include <cstring>
+#include <log/log.h>
 
 namespace android {
 

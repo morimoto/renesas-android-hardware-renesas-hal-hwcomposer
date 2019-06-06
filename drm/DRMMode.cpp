@@ -77,43 +77,43 @@ uint32_t DRMMode::getClock() const {
     return mClock;
 }
 
-uint32_t DRMMode::getHDisplay() const {
+uint16_t DRMMode::getHDisplay() const {
     return mHDisplay;
 }
 
-uint32_t DRMMode::getHSyncStart() const {
+uint16_t DRMMode::getHSyncStart() const {
     return mHSyncStart;
 }
 
-uint32_t DRMMode::getHSyncEnd() const {
+uint16_t DRMMode::getHSyncEnd() const {
     return mHSyncEnd;
 }
 
-uint32_t DRMMode::getHTotal() const {
+uint16_t DRMMode::getHTotal() const {
     return mHTotal;
 }
 
-uint32_t DRMMode::getHSkew() const {
+uint16_t DRMMode::getHSkew() const {
     return mHSkew;
 }
 
-uint32_t DRMMode::getVDisplay() const {
+uint16_t DRMMode::getVDisplay() const {
     return mVDisplay;
 }
 
-uint32_t DRMMode::getVSyncStart() const {
+uint16_t DRMMode::getVSyncStart() const {
     return mVSyncStart;
 }
 
-uint32_t DRMMode::getVSyncEnd() const {
+uint16_t DRMMode::getVSyncEnd() const {
     return mVSyncEnd;
 }
 
-uint32_t DRMMode::getVTotal() const {
+uint16_t DRMMode::getVTotal() const {
     return mVTotal;
 }
 
-uint32_t DRMMode::getVScan() const {
+uint16_t DRMMode::getVScan() const {
     return mVScan;
 }
 

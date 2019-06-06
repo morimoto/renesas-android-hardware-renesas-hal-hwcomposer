@@ -2,7 +2,6 @@
 #define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_PRIME_CACHE_H
 
 #include <map>
-#include <sys/types.h>
 
 namespace android {
 

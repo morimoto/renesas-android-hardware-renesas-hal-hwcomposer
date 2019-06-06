@@ -27,9 +27,8 @@ namespace android {
 class RCarImporter : public Importer {
 public:
     RCarImporter(int drm_id);
-    ~RCarImporter() override;
+    ~RCarImporter() override = default;
 
-    int init();
 
     int importBuffer(buffer_handle_t handle, DrmHwcBo* bo) override;
     int releaseBuffer(DrmHwcBo* bo) override;
@@ -38,7 +37,7 @@ public:
     void setPrimeCache(PrimeCache* primeCache) override {
         mPrimeCache = primeCache;
     };
-    PrimeCache* getPrimeCache() const { return mPrimeCache; }
+    PrimeCache* getPrimeCache() const override { return mPrimeCache; }
 #endif
 
 private:

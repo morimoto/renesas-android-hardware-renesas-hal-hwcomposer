@@ -22,24 +22,9 @@
 #include "HwcDisplay.h"
 #include "HwcLayer.h"
 #include "vsyncworker.h"
-#include "drm/DRMMode.h"
 #include "PrimeCache.h"
 
 #include <vendor/renesas/graphics/composer/1.0/IComposer.h>
-#include <hardware/hwcomposer2.h>
-#include <log/log.h>
-#include <xf86drm.h>
-#include <xf86drmMode.h>
-
-#include <memory>
-#include <mutex>
-#include <unordered_set>
-#include <map>
-#include <vector>
-
-namespace android {
-class HWC2On1Adapter;
-}
 
 namespace android {
 namespace hardware {
@@ -48,12 +33,6 @@ namespace composer {
 namespace V2_1 {
 namespace implementation {
 
-using android::hardware::graphics::common::V1_0::PixelFormat;
-using android::hardware::graphics::common::V1_0::Transform;
-using android::hardware::graphics::common::V1_0::Dataspace;
-using android::hardware::graphics::common::V1_0::ColorMode;
-using android::hardware::graphics::common::V1_0::ColorTransform;
-using android::hardware::graphics::common::V1_0::Hdr;
 using vendor::renesas::graphics::composer::V1_0::IComposer;
 
 class ComposerClient;

@@ -17,17 +17,7 @@
 
 #include "DrmDisplayComposition.h"
 
-#include <algorithm>
-#include <unordered_set>
-
-#include <xf86drmMode.h>
-#include <log/log.h>
-#include <stdlib.h>
-
 namespace android {
-
-DrmDisplayComposition::~DrmDisplayComposition() {
-}
 
 int DrmDisplayComposition::init(int drm, uint32_t crtc) {
     mDrm = drm;
