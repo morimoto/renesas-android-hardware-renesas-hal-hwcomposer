@@ -165,6 +165,11 @@ int DRMPlane::updateProperties(drmModeAtomicReqPtr property_set,
     hwc_rect_t display_frame = layer.mDisplayFrame;
     hwc_frect_t source_crop = layer.mSourceCrop;
     int fence = layer.mAcquireFence.get();
+    uint64_t width = std::min(display_frame.right - display_frame.left
+                              , (int)(source_crop.right - source_crop.left));
+    uint64_t height = std::min(display_frame.bottom - display_frame.top
+                               , (int)(source_crop.bottom - source_crop.top));
+
     int success = drmModeAtomicAddProperty(property_set, mId, mCrtcProperty.getId(),
                                            crtc_id) < 0;
     success |= drmModeAtomicAddProperty(property_set, mId, mFbProperty.getId(),
@@ -175,20 +180,20 @@ int DRMPlane::updateProperties(drmModeAtomicReqPtr property_set,
                                         display_frame.top) < 0;
     success |=
         drmModeAtomicAddProperty(property_set, mId, mCrtcWProperty.getId(),
-                                 display_frame.right - display_frame.left) < 0;
+                                 width) < 0;
     success |=
         drmModeAtomicAddProperty(property_set, mId, mCrtcHProperty.getId(),
-                                 display_frame.bottom - display_frame.top) < 0;
+                                 height) < 0;
     success |= drmModeAtomicAddProperty(property_set, mId, mSrcXProperty.getId(),
                                         (int)(source_crop.left) << 16) < 0;
     success |= drmModeAtomicAddProperty(property_set, mId, mSrcYProperty.getId(),
                                         (int)(source_crop.top) << 16) < 0;
     success |= drmModeAtomicAddProperty(
                    property_set, mId, mSrcWProperty.getId(),
-                   (int)(source_crop.right - source_crop.left) << 16) < 0;
+                   width << 16) < 0;
     success |= drmModeAtomicAddProperty(
                    property_set, mId, mSrcHProperty.getId(),
-                   (int)(source_crop.bottom - source_crop.top) << 16) < 0;
+                   height << 16) < 0;
 
     if (mType == DRM_PLANE_TYPE_OVERLAY) {
         if (mAlphaProperty.getId()) {
