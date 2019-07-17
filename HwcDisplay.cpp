@@ -916,6 +916,10 @@ HwcLayer& HwcDisplay::getLayer(hwc2_layer_t layer) {
     return *mLayers.at(layer);
 }
 
+uint32_t HwcDisplay::getCrtId() const {
+    return mCrtId;
+}
+
 void HwcDisplay::updateConfig() {
     setActiveConfig(mCurrConfig);
 }

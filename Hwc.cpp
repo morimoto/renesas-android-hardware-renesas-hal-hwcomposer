@@ -82,10 +82,6 @@ Return<uint32_t> HwcHal::getDisplayWidth() {
     return mDisplayWidth;
 }
 
-bool HwcHal::isDisplayValid(hwc2_display_t display) const {
-        return display < mDisplays.size();
-}
-
 bool HwcHal::hasCapability(Capability capability) const {
     return (mCapabilities.count(capability) > 0);
 }
@@ -571,6 +567,12 @@ Error HwcHal::presentDisplay(
         return err;
     }
 
+    // writeback
+    if (mReadbackBuf) {
+        mReadbackBuf->waitAndTakeCapture(*outPresentFence);
+        mReadbackBuf.reset(nullptr);
+    }
+
     if (mIsCameraEnabled && display == HWC_DISPLAY_EXTERNAL) {
         getDisplay(display).syncFence( mDisplays.at(HWC_DISPLAY_PRIMARY).getDisplayHandle() );
     }
@@ -783,6 +785,35 @@ void HwcHal::getDisplayIdentificationData(uint64_t display,
 
     }
     _hidl_cb(Error::NONE, connectorId, data);
+}
+
+bool HwcHal::isDisplayValid(hwc2_display_t display) const {
+    return display < mDisplays.size();
+}
+
+Error HwcHal::setReadbackBuffer(hwc2_display_t display,
+        const buffer_handle_t& buffer, int releaseFence) {
+    uint32_t displayWidth{};
+    uint32_t displayHeight{};
+    mDisplays.at(display).getCurrentDisplaySize(displayWidth, displayHeight);
+    auto crtcId = mDisplays.at(display).getCrtId();
+    const auto img = reinterpret_cast<const IMG_native_handle_t*>(buffer);
+
+    if (!img) {
+        return Error::BAD_PARAMETER;
+    }
+
+    mReadbackBuf.reset(new ReadbackBuffer(mDrmFd,
+                                          displayWidth,
+                                          displayHeight,
+                                          crtcId, img,
+                                          releaseFence));
+
+    if (!mReadbackBuf->isInitialized()) {
+        return Error::BAD_PARAMETER;
+    }
+
+    return Error::NONE;
 }
 
 }  // namespace implementation

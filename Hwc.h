@@ -23,6 +23,7 @@
 #include "HwcLayer.h"
 #include "vsyncworker.h"
 #include "PrimeCache.h"
+#include "ReadbackBuffer.h"
 
 #include <vendor/renesas/graphics/composer/2.0/IComposer.h>
 
@@ -154,6 +155,9 @@ public:  // functions
         Display display, Layer layer, const std::vector<hwc_rect_t>& visible) override;
     Error setLayerZOrder(Display display, Layer layer, uint32_t z) override;
 
+    Error setReadbackBuffer(hwc2_display_t display,
+                            const buffer_handle_t& buffer, int releaseFence) override;
+
 private:  // types
     friend class HotPlug;
     struct HwcCallback {
@@ -205,6 +209,7 @@ private:  // members
     bool mIsHotplugInitialized;
     bool mInitDisplays;
 
+    std::unique_ptr<ReadbackBuffer> mReadbackBuf;
     uint32_t mDisplayHeight;
     uint32_t mDisplayWidth;
 };

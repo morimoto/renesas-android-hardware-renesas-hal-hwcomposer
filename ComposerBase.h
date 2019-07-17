@@ -128,6 +128,9 @@ public:
                                  uint32_t z) = 0;
     virtual void getDisplayIdentificationData(
             uint64_t display, IComposerClient::getDisplayIdentificationData_cb _hidl_cb) = 0;
+    virtual Error setReadbackBuffer(hwc2_display_t display,
+                                    const buffer_handle_t& buffer,
+                                    int releaseFence) = 0;
     virtual bool isDisplayValid(hwc2_display_t display) const = 0;
 };
 

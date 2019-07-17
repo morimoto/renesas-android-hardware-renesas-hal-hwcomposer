@@ -1527,23 +1527,47 @@ Error ComposerClient::CommandReader::updateBuffer(BufferCache cache,
 }
 
 Return<void> ComposerClient::getReadbackBufferAttributes(
-        [[maybe_unused]]uint64_t display,
-        getReadbackBufferAttributes_cb _hidl_cb) {
-    _hidl_cb(Error::UNSUPPORTED, {}, {});
+    uint64_t display, getReadbackBufferAttributes_cb _hidl_cb) {
+    Error err = mHal.isDisplayValid(display) ? Error::NONE : Error::BAD_DISPLAY;
+    // RGB_565 also supported
+    _hidl_cb(err, PixelFormat_V1_1::BGRA_8888, Dataspace_V1_1::RANGE_FULL);
     return Void();
 }
 
 Return<void> ComposerClient::getReadbackBufferFence(
-        [[maybe_unused]]uint64_t display,
-        getReadbackBufferFence_cb _hidl_cb) {
-    _hidl_cb(Error::UNSUPPORTED, {});
+        uint64_t display, getReadbackBufferFence_cb _hidl_cb) {
+
+    if (!mHal.isDisplayValid(display)) {
+        _hidl_cb(Error::BAD_DISPLAY, {});
+        return Void();
+    }
+
+    auto nh = native_handle_create(/* numFds */1, /* numInts*/0);
+    // no fence for readback buffer
+    nh->data[0] = -1;
+
+    // takes ownership
+    hidl_handle handle;
+    handle.setTo(nh, true);
+    _hidl_cb(Error::NONE, handle);
     return Void();
 }
 
 Return<Error> ComposerClient::setReadbackBuffer(
-    [[maybe_unused]]uint64_t display, [[maybe_unused]]const hidl_handle& buffer,
-    [[maybe_unused]]const hidl_handle& releaseFence) {
-    return Error::UNSUPPORTED;
+        uint64_t display, const hidl_handle& buffer,
+    const hidl_handle& releaseFence) {
+    if (mHal.isDisplayValid(display)) {
+        return Error::BAD_DISPLAY;
+    }
+
+    auto fenceNativeHandle = releaseFence.getNativeHandle();
+
+    if (fenceNativeHandle->numFds) {
+        return mHal.setReadbackBuffer(display, buffer.getNativeHandle(),
+                                      fenceNativeHandle->data[0]);
+    } else {
+        return mHal.setReadbackBuffer(display, buffer.getNativeHandle(), -1);
+    }
 }
 
 } // namespace implementation

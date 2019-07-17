@@ -61,6 +61,7 @@ LOCAL_SRC_FILES += service.cpp
 LOCAL_SRC_FILES += vsyncworker.cpp
 LOCAL_SRC_FILES += worker.cpp
 LOCAL_SRC_FILES += PrimeCache.cpp
+LOCAL_SRC_FILES += ReadbackBuffer.cpp
 
 # target
 #

@@ -40,7 +40,6 @@ public:
 
     Error registerVsyncCallback(hwc2_callback_data_t data,
                                 hwc2_function_pointer_t func);
-
     // HWC Hooks
     Error acceptDisplayChanges();
     Error createLayer(hwc2_layer_t* layer);
@@ -78,6 +77,8 @@ public:
     Error setVsyncEnabled(int32_t enabled);
     Error validateDisplay(uint32_t* num_types, uint32_t* num_requests);
     HwcLayer& getLayer(hwc2_layer_t layer);
+
+    uint32_t getCrtId() const;
 
     void updateConfig();
     void loadNewConfig();
