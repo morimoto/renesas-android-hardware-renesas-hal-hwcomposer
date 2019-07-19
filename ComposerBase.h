@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_COMPOSER_BASE_H
-#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_COMPOSER_BASE_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_BASE_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_BASE_H
 
-#include <android/hardware/graphics/composer/2.1/IComposer.h>
+#include <android/hardware/graphics/composer/2.3/IComposer.h>
 #include <hardware/hwcomposer2.h>
 
 namespace android {
 namespace hardware {
 namespace graphics {
 namespace composer {
-namespace V2_1 {
+namespace V2_3 {
 namespace implementation {
 
 using android::hardware::graphics::common::V1_0::PixelFormat;
@@ -33,6 +33,12 @@ using android::hardware::graphics::common::V1_0::Dataspace;
 using android::hardware::graphics::common::V1_0::ColorMode;
 using android::hardware::graphics::common::V1_0::ColorTransform;
 using android::hardware::graphics::common::V1_0::Hdr;
+using PowerMode
+    = android::hardware::graphics::composer::V2_1::IComposerClient::PowerMode;
+using android::hardware::graphics::composer::V2_1::Error;
+using android::hardware::graphics::composer::V2_1::Display;
+using android::hardware::graphics::composer::V2_1::Layer;
+using android::hardware::graphics::composer::V2_1::Config;
 
 class ComposerBase {
 public:
@@ -67,8 +73,7 @@ public:
 
     virtual Error setActiveConfig(Display display, Config config) = 0;
     virtual Error setColorMode(Display display, ColorMode mode) = 0;
-    virtual Error setPowerMode(Display display,
-                               IComposerClient::PowerMode mode) = 0;
+    virtual Error setPowerMode(Display display, PowerMode mode) = 0;
     virtual Error setVsyncEnabled(Display display,
                                   IComposerClient::Vsync enabled) = 0;
 
@@ -121,10 +126,10 @@ public:
 };
 
 }  // namespace implementation
-}  // namespace V2_1
+}  // namespace V2_3
 }  // namespace composer
 }  // namespace graphics
 }  // namespace hardware
 }  // namespace android
 
-#endif  // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_COMPOSER_BASE_H
+#endif  // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_BASE_H

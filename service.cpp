@@ -27,15 +27,14 @@
 using android::hardware::configureRpcThreadpool;
 using android::hardware::joinRpcThreadpool;
 
-using vendor::renesas::graphics::composer::V1_0::IComposer;
-using android::hardware::graphics::composer::V2_1::implementation::HwcHal;
+using vendor::renesas::graphics::composer::V2_0::IComposer;
+using android::hardware::graphics::composer::V2_3::implementation::HwcHal;
 
 int main() {
     android::sp<IComposer> vendor_service = new HwcHal();
     configureRpcThreadpool(4, true /* callerWillJoin */);
     android::status_t status = vendor_service->registerAsService();
-    android::sp<android::hardware::graphics::composer::V2_1::IComposer> service =
-        vendor_service;
+    android::sp<android::hardware::graphics::composer::V2_3::IComposer> service = vendor_service;
     status = service->registerAsService();
     LOG_ALWAYS_FATAL_IF(status != android::OK,
                         "Error while registering hwcomposer: %d", status);

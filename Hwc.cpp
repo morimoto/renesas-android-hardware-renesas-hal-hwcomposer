@@ -23,7 +23,7 @@ namespace android {
 namespace hardware {
 namespace graphics {
 namespace composer {
-namespace V2_1 {
+namespace V2_3 {
 namespace implementation {
 
 HwcHal::HwcHal()
@@ -129,6 +129,26 @@ Return<void> HwcHal::createClient(createClient_cb hidl_cb) {
     hidl_cb(err, client);
     return Void();
 }
+
+// Duplicate of HwcHal::createClient
+Return<void> HwcHal::createClient_2_3(createClient_2_3_cb _hidl_cb) {
+    Error err = Error::NONE;
+    sp<ComposerClient> client;
+    {
+        std::lock_guard<std::mutex> lock(mClientMutex);
+
+        // only one client is allowed
+        if (mClient == nullptr) {
+            client = new ComposerClient(*this);
+            client->initialize();
+            mClient = client;
+        } else {
+            err = Error::NO_RESOURCES;
+        }
+    }
+    _hidl_cb(err, client);
+    return Void();
+};
 
 sp<ComposerClient> HwcHal::getClient() {
     std::lock_guard<std::mutex> lock(mClientMutex);
@@ -353,7 +373,7 @@ Error HwcHal::setColorMode(Display display, ColorMode mode) {
     return getDisplay(display).setColorMode(static_cast<int32_t>(mode));
 }
 
-Error HwcHal::setPowerMode(Display display, IComposerClient::PowerMode mode) {
+Error HwcHal::setPowerMode(Display display, PowerMode_V2_1 mode) {
     return getDisplay(display).setPowerMode(static_cast<int32_t>(mode));
 }
 
@@ -648,8 +668,8 @@ void HwcHal::RegisterCallback(
     }
 }
 
-Return<::android::hardware::graphics::composer::V2_1::Error>
-HwcHal::setEVSCameraData(const hidl_handle& buffer, int8_t /*currDisplay*/) {
+Return<Error> HwcHal::setEVSCameraData(const hidl_handle& buffer,
+                                       int8_t /*currDisplay*/) {
     const IMG_native_handle_t* IMGHandle =
         reinterpret_cast<const IMG_native_handle_t*>(buffer.getNativeHandle());
     Error err = Error::NONE;
@@ -680,7 +700,7 @@ HwcHal::setEVSCameraData(const hidl_handle& buffer, int8_t /*currDisplay*/) {
 }
 
 }  // namespace implementation
-}  // namespace V2_1
+}  // namespace V2_3
 }  // namespace composer
 }  // namespace graphics
 }  // namespace hardware

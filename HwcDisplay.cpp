@@ -26,7 +26,7 @@
 
 namespace android {
 using Error = android::hardware::graphics::composer::V2_1::Error;
-using android::hardware::graphics::composer::V2_1::implementation::HwcHal;
+using android::hardware::graphics::composer::V2_3::implementation::HwcHal;
 
 #if DEBUG_FRAMERATE
 static double now_ms() {

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_COMPOSER_CLIENT_H
-#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_COMPOSER_CLIENT_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_CLIENT_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_CLIENT_H
 
 #include "IComposerCommandBuffer.h"
 #include "ComposerBase.h"
@@ -24,13 +24,42 @@
 #include <mutex>
 #include <unordered_map>
 #include <vector>
+#include <android/hardware/graphics/composer/2.3/IComposerClient.h>
+#include <hidl/MQDescriptor.h>
+#include <hidl/Status.h>
 
-namespace android {
-namespace hardware {
-namespace graphics {
-namespace composer {
-namespace V2_1 {
-namespace implementation {
+namespace android::hardware::graphics::composer::V2_3::implementation {
+
+using IComposerCallback
+    = ::android::hardware::graphics::composer::V2_1::IComposerCallback;
+using Error = ::android::hardware::graphics::composer::V2_1::Error;
+using RenderIntent = ::android::hardware::graphics::common::V1_1::RenderIntent;
+using Vsync
+    = ::android::hardware::graphics::composer::V2_1::IComposerClient::Vsync;
+using Attribute
+    = ::android::hardware::graphics::composer::V2_1::IComposerClient::Attribute;
+using DisplayedContentSampling
+    = ::android::hardware::graphics::composer::V2_3::IComposerClient::DisplayedContentSampling;
+
+using PixelFormat_V1_0
+    = ::android::hardware::graphics::common::V1_0::PixelFormat;
+using PixelFormat_V1_1
+    = ::android::hardware::graphics::common::V1_1::PixelFormat;
+using PixelFormat_V1_2
+    = ::android::hardware::graphics::common::V1_2::PixelFormat;
+
+using ColorMode_V1_0 = ::android::hardware::graphics::common::V1_0::ColorMode;
+using ColorMode_V1_1 = ::android::hardware::graphics::common::V1_1::ColorMode;
+using ColorMode_V1_2 = ::android::hardware::graphics::common::V1_2::ColorMode;
+
+using Dataspace_V1_0 = ::android::hardware::graphics::common::V1_0::Dataspace;
+using Dataspace_V1_1 = ::android::hardware::graphics::common::V1_1::Dataspace;
+using Dataspace_V1_2 = ::android::hardware::graphics::common::V1_2::Dataspace;
+
+using PowerMode_V2_1
+    = ::android::hardware::graphics::composer::V2_1::IComposerClient::PowerMode;
+using PowerMode_V2_2
+    = ::android::hardware::graphics::composer::V2_2::IComposerClient::PowerMode;
 
 class BufferCacheEntry {
 public:
@@ -62,12 +91,13 @@ public:
     void onRefresh(Display display);
     void onVsync(Display display, int64_t timestamp);
 
-    // IComposerClient interface
+    // ...::V2_1::IComposerClient
     Return<void> registerCallback(
         const sp<IComposerCallback>& callback) override;
     Return<uint32_t> getMaxVirtualDisplayCount() override;
     Return<void> createVirtualDisplay(uint32_t width, uint32_t height,
-                                      PixelFormat formatHint, uint32_t outputBufferSlotCount,
+                                      PixelFormat_V1_0 formatHint,
+                                      uint32_t outputBufferSlotCount,
                                       createVirtualDisplay_cb hidl_cb) override;
     Return<Error> destroyVirtualDisplay(Display display) override;
     Return<void> createLayer(Display display, uint32_t bufferSlotCount,
@@ -77,7 +107,8 @@ public:
                                  getActiveConfig_cb hidl_cb) override;
     Return<Error> getClientTargetSupport(Display display,
                                          uint32_t width, uint32_t height,
-                                         PixelFormat format, Dataspace dataspace) override;
+                                         PixelFormat_V1_0 format,
+                                         Dataspace_V1_0 dataspace) override;
     Return<void> getColorModes(Display display,
                                getColorModes_cb hidl_cb) override;
     Return<void> getDisplayAttribute(Display display,
@@ -94,8 +125,8 @@ public:
     Return<void> getHdrCapabilities(Display display,
                                     getHdrCapabilities_cb hidl_cb) override;
     Return<Error> setActiveConfig(Display display, Config config) override;
-    Return<Error> setColorMode(Display display, ColorMode mode) override;
-    Return<Error> setPowerMode(Display display, PowerMode mode) override;
+    Return<Error> setColorMode(Display display, ColorMode_V1_0 mode) override;
+    Return<Error> setPowerMode(Display display, PowerMode_V2_1 mode) override;
     Return<Error> setVsyncEnabled(Display display, Vsync enabled) override;
     Return<Error> setClientTargetSlotCount(Display display,
                                            uint32_t clientTargetSlotCount) override;
@@ -106,6 +137,79 @@ public:
     Return<void> executeCommands(uint32_t inLength,
                                  const hidl_vec<hidl_handle>& inHandles,
                                  executeCommands_cb hidl_cb) override;
+
+    // ...::V2_2::IComposerClient
+    Return<void> getPerFrameMetadataKeys(uint64_t display,
+                                         getPerFrameMetadataKeys_cb _hidl_cb) override;
+
+    Return<void> getReadbackBufferAttributes(uint64_t display,
+            getReadbackBufferAttributes_cb _hidl_cb) override;
+
+    Return<Error> setReadbackBuffer(uint64_t display,
+                                    const hidl_handle& buffer,
+                                    const hidl_handle& releaseFence) override;
+
+    Return<void> createVirtualDisplay_2_2(uint32_t width,
+                                          uint32_t height,
+                                          PixelFormat_V1_1 formatHint,
+                                          uint32_t outputBufferSlotCount,
+                                          createVirtualDisplay_2_2_cb _hidl_cb) override;
+
+    Return<Error> getClientTargetSupport_2_2(uint64_t display,
+            uint32_t width, uint32_t height,
+            PixelFormat_V1_1 format, Dataspace_V1_1 dataspace) override;
+
+    Return<Error> setPowerMode_2_2(uint64_t display, PowerMode_V2_2 mode) override;
+    Return<void> getColorModes_2_2(uint64_t display,
+                                   getColorModes_2_2_cb _hidl_cb) override;
+    Return<void> getRenderIntents(uint64_t display, ColorMode_V1_1 mode,
+                                  getRenderIntents_cb _hidl_cb) override;
+    Return<Error> setColorMode_2_2(uint64_t display, ColorMode_V1_1 mode,
+                                   RenderIntent intent) override;
+    Return<void> getDataspaceSaturationMatrix(Dataspace_V1_1 dataspace,
+            getDataspaceSaturationMatrix_cb _hidl_cb) override;
+    Return<void> executeCommands_2_2(uint32_t inLength,
+                                     const hidl_vec<hidl_handle>& inHandles,
+                                     executeCommands_2_2_cb _hidl_cb) override;
+
+    // ...::V2_3::IComposerClient
+    Return<void> getDisplayIdentificationData(uint64_t display,
+            getDisplayIdentificationData_cb _hidl_cb) override;
+    Return<void> getReadbackBufferAttributes_2_3(uint64_t display,
+            getReadbackBufferAttributes_2_3_cb _hidl_cb) override;
+    Return<Error> getClientTargetSupport_2_3(uint64_t display,
+            uint32_t width, uint32_t height,
+            PixelFormat_V1_2 format, Dataspace_V1_2 dataspace) override;
+    Return<void> getDisplayedContentSamplingAttributes(uint64_t display,
+            getDisplayedContentSamplingAttributes_cb _hidl_cb) override;
+    Return<Error> setDisplayedContentSamplingEnabled(uint64_t display,
+            DisplayedContentSampling enable,
+            hidl_bitfield<FormatColorComponent> componentMask,
+            uint64_t maxFrames) override;
+    Return<void> getDisplayedContentSample(uint64_t display,
+                                           uint64_t maxFrames, uint64_t timestamp,
+                                           getDisplayedContentSample_cb _hidl_cb) override;
+    Return<void> executeCommands_2_3(uint32_t inLength,
+                                     const hidl_vec<hidl_handle>& inHandles,
+                                     executeCommands_2_3_cb _hidl_cb) override;
+    Return<void> getRenderIntents_2_3(uint64_t display, ColorMode_V1_2 mode,
+                                      getRenderIntents_2_3_cb _hidl_cb) override;
+    Return<void> getColorModes_2_3(uint64_t display,
+                                   getColorModes_2_3_cb _hidl_cb) override;
+    Return<Error> setColorMode_2_3(uint64_t display,
+                                   ColorMode_V1_2 mode, RenderIntent intent) override;
+    Return<void> getDisplayCapabilities(uint64_t display,
+                                        getDisplayCapabilities_cb _hidl_cb) override;
+    Return<void> getPerFrameMetadataKeys_2_3(uint64_t display,
+            getPerFrameMetadataKeys_2_3_cb _hidl_cb) override;
+    Return<void> getHdrCapabilities_2_3(uint64_t display,
+                                        getHdrCapabilities_2_3_cb _hidl_cb) override;
+    Return<void> getDisplayBrightnessSupport(uint64_t display,
+            getDisplayBrightnessSupport_cb _hidl_cb) override;
+    Return<Error> setDisplayBrightness(uint64_t display,
+                                       float brightness) override;
+    Return<void> getReadbackBufferFence(uint64_t display,
+                                        getReadbackBufferFence_cb _hidl_cb) override;
 
 protected:
     struct LayerBuffers {
@@ -212,11 +316,6 @@ protected:
     std::unordered_map<Display, DisplayData> mDisplayData;
 };
 
-} // namespace implementation
-} // namespace V2_1
-} // namespace composer
-} // namespace graphics
-} // namespace hardware
-} // namespace android
+} // android::hardware::graphics::composer::V2_3::implementation
 
-#endif  // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_COMPOSER_CLIENT_H
+#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_CLIENT_H

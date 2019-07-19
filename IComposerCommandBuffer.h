@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_COMPOSER_COMMAND_BUFFER_H
-#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_COMPOSER_COMMAND_BUFFER_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_COMMAND_BUFFER_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_COMMAND_BUFFER_H
 
 #ifndef LOG_TAG
 #warn "IComposerCommandBuffer.h included without LOG_TAG"
@@ -24,7 +24,7 @@
 #undef LOG_NDEBUG
 #define LOG_NDEBUG 0
 
-#include <android/hardware/graphics/composer/2.1/IComposer.h>
+#include <android/hardware/graphics/composer/2.3/IComposer.h>
 #include <log/log.h>
 #include <sync/sync.h>
 #include <fmq/MessageQueue.h>
@@ -41,12 +41,17 @@ namespace android {
 namespace hardware {
 namespace graphics {
 namespace composer {
-namespace V2_1 {
+namespace V2_3 {
 
 using android::hardware::graphics::common::V1_0::ColorTransform;
 using android::hardware::graphics::common::V1_0::Dataspace;
 using android::hardware::graphics::common::V1_0::Transform;
+
 using android::hardware::MessageQueue;
+
+using android::hardware::graphics::composer::V2_1::Error;
+using android::hardware::graphics::composer::V2_1::Display;
+using android::hardware::graphics::composer::V2_1::Layer;
 
 using CommandQueueType = MessageQueue<uint32_t, kSynchronizedReadWrite>;
 
@@ -825,10 +830,10 @@ private:
     hidl_vec<hidl_handle> mDataHandles;
 };
 
-} // namespace V2_1
+} // namespace V2_3
 } // namespace composer
 } // namespace graphics
 } // namespace hardware
 } // namespace android
 
-#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_COMPOSER_COMMAND_BUFFER_H
+#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_COMMAND_BUFFER_H

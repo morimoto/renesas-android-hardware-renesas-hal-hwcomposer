@@ -23,7 +23,7 @@ namespace android {
 namespace hardware {
 namespace graphics {
 namespace composer {
-namespace V2_1 {
+namespace V2_3 {
 namespace implementation {
 
 namespace {
@@ -194,8 +194,107 @@ void ComposerClient::initialize() {
     }
 }
 
+Return<void> ComposerClient::getDisplayedContentSample(
+        [[maybe_unused]]uint64_t display, [[maybe_unused]]uint64_t maxFrames,
+        [[maybe_unused]]uint64_t timestamp,
+        [[maybe_unused]]getDisplayedContentSample_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {}, {}, {}, {}, {});
+    return Void();
+}
+
+// Duplicate of ComposerClient::executeCommands
+Return<void> ComposerClient::executeCommands_2_3(uint32_t inLength,
+        const hidl_vec<hidl_handle>& inHandles,
+        executeCommands_2_3_cb _hidl_cb) {
+    std::lock_guard<std::mutex> lock(mCommandMutex);
+    bool outChanged = false;
+    uint32_t outLength = 0;
+    hidl_vec<hidl_handle> outHandles;
+
+    if (!mReader->readQueue(inLength, inHandles)) {
+        _hidl_cb(Error::BAD_PARAMETER, outChanged, outLength, outHandles);
+        return Void();
+    }
+
+    Error err = mReader->parse();
+
+    if (err == Error::NONE &&
+        !mWriter.writeQueue(&outChanged, &outLength, &outHandles)) {
+        err = Error::NO_RESOURCES;
+    }
+
+    _hidl_cb(err, outChanged, outLength, outHandles);
+    mReader->reset();
+    mWriter.reset();
+    return Void();
+}
+
+Return<void> ComposerClient::getRenderIntents_2_3(
+        [[maybe_unused]]uint64_t display,
+        [[maybe_unused]]ColorMode_V1_2 mode,
+        [[maybe_unused]]getRenderIntents_2_3_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {});
+    return Void();
+}
+
+Return<void> ComposerClient::getColorModes_2_3( [[maybe_unused]]uint64_t display,
+        [[maybe_unused]]getColorModes_2_3_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {});
+    return Void();
+}
+
+Return<Error> ComposerClient::setColorMode_2_3(
+        [[maybe_unused]]uint64_t display,
+        [[maybe_unused]]ColorMode_V1_2 mode,
+        [[maybe_unused]]RenderIntent intent) {
+    // TODO implement
+    return Error::UNSUPPORTED;
+}
+
+Return<void> ComposerClient::getDisplayCapabilities(
+        [[maybe_unused]]uint64_t display,
+        [[maybe_unused]]getDisplayCapabilities_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {});
+    return Void();
+}
+
+Return<void> ComposerClient::getPerFrameMetadataKeys_2_3(
+        [[maybe_unused]]uint64_t display,
+        [[maybe_unused]]getPerFrameMetadataKeys_2_3_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {});
+    return Void();
+}
+
+Return<void> ComposerClient::getHdrCapabilities_2_3(
+        [[maybe_unused]]uint64_t display,
+        [[maybe_unused]]getHdrCapabilities_2_3_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {}, {}, {}, {});
+    return Void();
+}
+
+Return<void> ComposerClient::getDisplayBrightnessSupport(
+        [[maybe_unused]]uint64_t display,
+        [[maybe_unused]]getDisplayBrightnessSupport_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {});
+    return Void();
+}
+
+Return<Error> ComposerClient::setDisplayBrightness(
+        [[maybe_unused]]uint64_t display,
+        [[maybe_unused]]float brightness) {
+    // TODO implement
+    return Error::UNSUPPORTED;
+}
+
 void ComposerClient::onHotplug(Display display,
-                               IComposerCallback::Connection connected) {
+        IComposerCallback::Connection connected) {
     {
         std::lock_guard<std::mutex> lock(mDisplayDataMutex);
 
@@ -251,8 +350,8 @@ Return<uint32_t> ComposerClient::getMaxVirtualDisplayCount() {
 }
 
 Return<void> ComposerClient::createVirtualDisplay(uint32_t width,
-        uint32_t height, PixelFormat formatHint, uint32_t outputBufferSlotCount,
-        createVirtualDisplay_cb hidl_cb) {
+        uint32_t height, PixelFormat_V1_0 formatHint,
+        uint32_t outputBufferSlotCount, createVirtualDisplay_cb hidl_cb) {
     Display display = 0;
     Error err = mHal.createVirtualDisplay(width, height,
                                           &formatHint, &display);
@@ -306,6 +405,29 @@ Return<Error> ComposerClient::destroyLayer(Display display, Layer layer) {
     return err;
 }
 
+Return<void> ComposerClient::getColorModes_2_2([[maybe_unused]]uint64_t display,
+        [[maybe_unused]]getColorModes_2_2_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {});
+    return Void();
+}
+
+Return<Error> ComposerClient::setPowerMode_2_2(
+        [[maybe_unused]]uint64_t display,
+        [[maybe_unused]]PowerMode_V2_2 mode) {
+    // TODO implement
+    return Error::UNSUPPORTED;
+}
+
+
+Return<Error> ComposerClient::getClientTargetSupport_2_2(
+        [[maybe_unused]]uint64_t display, [[maybe_unused]]uint32_t width,
+        [[maybe_unused]]uint32_t height, [[maybe_unused]]PixelFormat_V1_1 format,
+        [[maybe_unused]]Dataspace_V1_1 dataspace) {
+    // TODO implement
+    return Error::UNSUPPORTED;
+}
+
 Return<void> ComposerClient::getActiveConfig(Display display,
         getActiveConfig_cb hidl_cb) {
     Config config = 0;
@@ -316,9 +438,10 @@ Return<void> ComposerClient::getActiveConfig(Display display,
 
 Return<Error> ComposerClient::getClientTargetSupport(Display display,
         uint32_t width, uint32_t height,
-        PixelFormat format, Dataspace dataspace) {
+        PixelFormat_V1_0 format, Dataspace_V1_0 dataspace) {
     Error err = mHal.getClientTargetSupport(display,
-                                            width, height, format, dataspace);
+                                            width, height,
+                                            format, dataspace);
     return err;
 }
 
@@ -327,6 +450,31 @@ Return<void> ComposerClient::getColorModes(Display display,
     hidl_vec<ColorMode> modes;
     Error err = mHal.getColorModes(display, &modes);
     hidl_cb(err, modes);
+    return Void();
+}
+
+Return<void> ComposerClient::getReadbackBufferAttributes_2_3(
+        [[maybe_unused]]uint64_t display,
+        [[maybe_unused]]getReadbackBufferAttributes_2_3_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {}, {});
+    return Void();
+}
+
+Return<Error> ComposerClient::getClientTargetSupport_2_3(
+        [[maybe_unused]]uint64_t display, [[maybe_unused]]uint32_t width,
+        [[maybe_unused]]uint32_t height, [[maybe_unused]]PixelFormat_V1_2 format,
+        [[maybe_unused]]Dataspace_V1_2 dataspace) {
+    // TODO implement
+    return Error::UNSUPPORTED;
+}
+
+// ...::V2_3::IComposerClient
+Return<void> ComposerClient::getDisplayIdentificationData(
+        [[maybe_unused]]uint64_t display,
+        [[maybe_unused]]getDisplayIdentificationData_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {}, {});
     return Void();
 }
 
@@ -406,7 +554,7 @@ Return<Error> ComposerClient::setColorMode(Display display, ColorMode mode) {
     return err;
 }
 
-Return<Error> ComposerClient::setPowerMode(Display display, PowerMode mode) {
+Return<Error> ComposerClient::setPowerMode(Display display, PowerMode_V2_1 mode) {
     Error err = mHal.setPowerMode(display, mode);
     return err;
 }
@@ -470,8 +618,28 @@ ComposerClient::createCommandReader() {
                new CommandReader(*this));
 }
 
+// Methods from ::android::hardware::graphics::composer::V2_2::IComposerClient follow.
+Return<void> ComposerClient::getPerFrameMetadataKeys(
+        [[maybe_unused]]uint64_t display,
+        [[maybe_unused]]getPerFrameMetadataKeys_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {});
+    return Void();
+}
+
 ComposerClient::CommandReader::CommandReader(ComposerClient& client)
     : mClient(client), mHal(client.mHal), mWriter(client.mWriter) {
+}
+
+
+Return<void> ComposerClient::createVirtualDisplay_2_2(
+        [[maybe_unused]]uint32_t width, [[maybe_unused]]uint32_t height,
+        [[maybe_unused]]PixelFormat_V1_1 formatHint,
+        [[maybe_unused]]uint32_t outputBufferSlotCount,
+        [[maybe_unused]]createVirtualDisplay_2_2_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {}, {});
+    return Void();
 }
 
 ComposerClient::CommandReader::~CommandReader() {
@@ -772,6 +940,58 @@ bool ComposerClient::CommandReader::parseAcceptDisplayChanges(uint16_t length) {
     return true;
 }
 
+Return<void> ComposerClient::executeCommands_2_2(
+        [[maybe_unused]]uint32_t inLength,
+        [[maybe_unused]]const hidl_vec<hidl_handle>&
+        inHandles, [[maybe_unused]]executeCommands_2_2_cb _hidl_cb) {
+    // TODO implement
+    std::lock_guard<std::mutex> lock(mCommandMutex);
+    bool outChanged = false;
+    uint32_t outLength = 0;
+    hidl_vec<hidl_handle> outHandles;
+
+    if (!mReader->readQueue(inLength, inHandles)) {
+        _hidl_cb(Error::BAD_PARAMETER, outChanged, outLength, outHandles);
+        return Void();
+    }
+
+    Error err = mReader->parse();
+
+    if (err == Error::NONE &&
+        !mWriter.writeQueue(&outChanged, &outLength, &outHandles)) {
+        err = Error::NO_RESOURCES;
+    }
+
+    _hidl_cb(err, outChanged, outLength, outHandles);
+    mReader->reset();
+    mWriter.reset();
+    return Void();
+}
+
+Return<void> ComposerClient::getDataspaceSaturationMatrix(
+    [[maybe_unused]] Dataspace_V1_1 dataspace,
+    [[maybe_unused]] getDataspaceSaturationMatrix_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {});
+    return Void();
+}
+
+Return<void> ComposerClient::getRenderIntents([[maybe_unused]] uint64_t display,
+        [[maybe_unused]] ColorMode_V1_1 mode,
+        [[maybe_unused]] getRenderIntents_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {});
+    return Void();
+}
+
+Return<Error> ComposerClient::setColorMode_2_2(
+        [[maybe_unused]] uint64_t display,
+        [[maybe_unused]] ColorMode_V1_1 mode,
+        [[maybe_unused]] RenderIntent intent) {
+    // TODO implement
+    return Error::UNSUPPORTED;
+}
+
 bool ComposerClient::CommandReader::parsePresentDisplay(uint16_t length) {
     if (length != CommandWriterBase::kPresentDisplayLength) {
         return false;
@@ -858,6 +1078,23 @@ bool ComposerClient::CommandReader::parseSetLayerSurfaceDamage(
     }
 
     return true;
+}
+
+Return<Error> ComposerClient::setDisplayedContentSamplingEnabled(
+    [[maybe_unused]] uint64_t display,
+    [[maybe_unused]] DisplayedContentSampling enable,
+    [[maybe_unused]] hidl_bitfield<FormatColorComponent> componentMask,
+    [[maybe_unused]] uint64_t maxFrames) {
+    // TODO implement
+    return Error::UNSUPPORTED;
+}
+
+Return<void> ComposerClient::getDisplayedContentSamplingAttributes(
+    [[maybe_unused]] uint64_t display,
+    [[maybe_unused]] getDisplayedContentSamplingAttributes_cb _hidl_cb) {
+    // TODO implement
+    _hidl_cb(Error::UNSUPPORTED, {}, {}, {});
+    return Void();
 }
 
 bool ComposerClient::CommandReader::parseSetLayerBlendMode(uint16_t length) {
@@ -1166,6 +1403,26 @@ Error ComposerClient::CommandReader::updateBuffer(BufferCache cache,
 
     *entry = handle;
     return Error::NONE;
+}
+
+Return<void> ComposerClient::getReadbackBufferAttributes(
+        [[maybe_unused]]uint64_t display,
+        getReadbackBufferAttributes_cb _hidl_cb) {
+    _hidl_cb(Error::UNSUPPORTED, {}, {});
+    return Void();
+}
+
+Return<void> ComposerClient::getReadbackBufferFence(
+        [[maybe_unused]]uint64_t display,
+        getReadbackBufferFence_cb _hidl_cb) {
+    _hidl_cb(Error::UNSUPPORTED, {});
+    return Void();
+}
+
+Return<Error> ComposerClient::setReadbackBuffer(
+    [[maybe_unused]]uint64_t display, [[maybe_unused]]const hidl_handle& buffer,
+    [[maybe_unused]]const hidl_handle& releaseFence) {
+    return Error::UNSUPPORTED;
 }
 
 } // namespace implementation

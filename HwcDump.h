@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_HWC_DUMP_H
-#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_HWC_DUMP_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_DUMP_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_DUMP_H
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -60,4 +60,4 @@ void dump_all(int gfx_fd);
 
 } // namespace android
 
-#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_HWC_DUMP_H
+#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_DUMP_H

@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_HWC_H
-#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_HWC_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_H
 
 #include "ComposerBase.h"
 #include "HwcDisplay.h"
@@ -24,16 +24,18 @@
 #include "vsyncworker.h"
 #include "PrimeCache.h"
 
-#include <vendor/renesas/graphics/composer/1.0/IComposer.h>
+#include <vendor/renesas/graphics/composer/2.0/IComposer.h>
 
 namespace android {
 namespace hardware {
 namespace graphics {
 namespace composer {
-namespace V2_1 {
+namespace V2_3 {
 namespace implementation {
 
-using vendor::renesas::graphics::composer::V1_0::IComposer;
+using vendor::renesas::graphics::composer::V2_0::IComposer;
+using PowerMode_V2_1
+    = ::android::hardware::graphics::composer::V2_1::IComposerClient::PowerMode;
 
 class ComposerClient;
 
@@ -48,8 +50,9 @@ public:  // functions
     Return<void> getCapabilities(getCapabilities_cb hidl_cb) override;
     Return<void> dumpDebugInfo(dumpDebugInfo_cb hidl_cb) override;
     Return<void> createClient(createClient_cb hidl_cb) override;
-    // Methods from IComposer follow.
-    Return<::android::hardware::graphics::composer::V2_1::Error> setEVSCameraData(
+    Return<void> createClient_2_3(createClient_2_3_cb _hidl_cb) override;
+    // Methods from IComposer follow
+    Return<Error> setEVSCameraData(
         const hidl_handle& buffer, int8_t currDisplay) override;
     Return<uint32_t> getDisplayHeight() override;
     Return<uint32_t> getDisplayWidth()  override;
@@ -93,7 +96,7 @@ public:  // functions
 
     Error setActiveConfig(Display display, Config config) override;
     Error setColorMode(Display display, ColorMode mode) override;
-    Error setPowerMode(Display display, IComposerClient::PowerMode mode) override;
+    Error setPowerMode(Display display, PowerMode_V2_1 mode) override;
     Error setVsyncEnabled(Display display, IComposerClient::Vsync enabled) override;
 
     Error setColorTransform(Display display, const float* matrix,
@@ -205,7 +208,7 @@ private:  // members
 };
 
 }  // namespace implementation
-}  // namespace V2_1
+}  // namespace V2_3
 }  // namespace composer
 }  // namespace graphics
 }  // namespace hardware
@@ -223,4 +226,4 @@ static inline void supported(char const* /*func*/) {
 
 } // namespace android
 
-#endif  // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_1_HWC_H
+#endif  // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_H
