@@ -471,10 +471,8 @@ Return<Error> ComposerClient::getClientTargetSupport_2_3(
 
 // ...::V2_3::IComposerClient
 Return<void> ComposerClient::getDisplayIdentificationData(
-        [[maybe_unused]]uint64_t display,
-        [[maybe_unused]]getDisplayIdentificationData_cb _hidl_cb) {
-    // TODO implement
-    _hidl_cb(Error::UNSUPPORTED, {}, {});
+        uint64_t display, getDisplayIdentificationData_cb _hidl_cb) {
+    mHal.getDisplayIdentificationData(display, _hidl_cb);
     return Void();
 }
 

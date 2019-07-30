@@ -98,6 +98,7 @@ public:
 #if HWC_PRIME_CACHE
     void setPrimeCache(PrimeCache* primeCache);
 #endif
+    uint32_t getConnectorId() const;
 
 private:
     int loadDisplayModes();

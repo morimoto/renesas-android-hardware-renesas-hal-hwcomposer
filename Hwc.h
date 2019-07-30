@@ -45,6 +45,8 @@ public:  // functions
     virtual ~HwcHal();
 
     bool hasCapability(Capability capability) const;
+    void getDisplayIdentificationData(
+        uint64_t display, IComposerClient::getDisplayIdentificationData_cb _hidl_cb) override;
 
     // IComposer interface
     Return<void> getCapabilities(getCapabilities_cb hidl_cb) override;
@@ -58,6 +60,7 @@ public:  // functions
     Return<uint32_t> getDisplayWidth()  override;
 
     // ComposerBase interface
+    bool isDisplayValid(hwc2_display_t display) const override;
     void removeClient() override;
     void enableCallback(bool enable) override;
     uint32_t getMaxVirtualDisplayCount() override;

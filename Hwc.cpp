@@ -84,6 +84,10 @@ Return<uint32_t> HwcHal::getDisplayWidth() {
     return mDisplayWidth;
 }
 
+bool HwcHal::isDisplayValid(hwc2_display_t display) const {
+        return display < mDisplays.size();
+}
+
 bool HwcHal::hasCapability(Capability capability) const {
     return (mCapabilities.count(capability) > 0);
 }
@@ -697,6 +701,65 @@ Return<Error> HwcHal::setEVSCameraData(const hidl_handle& buffer,
     }
 
     return err;
+}
+
+template <typename Deleter>
+static auto deleterFactory(Deleter const& del) {
+    return [del](auto *p){ del(p); };
+}
+
+void HwcHal::getDisplayIdentificationData(uint64_t display,
+        IComposerClient::getDisplayIdentificationData_cb _hidl_cb) {
+
+    if (!isDisplayValid(display)) {
+        _hidl_cb(Error::BAD_DISPLAY, {}, {});
+        return;
+    }
+
+    const auto connectorId = mDisplays.at(display).getConnectorId();
+    std::vector<uint8_t> data;
+
+    const auto& objPropsDeleter = deleterFactory(drmModeFreeObjectProperties);
+    std::unique_ptr<drmModeObjectProperties, decltype(objPropsDeleter)> props {
+        drmModeObjectGetProperties(mDrmFd, connectorId, DRM_MODE_OBJECT_CONNECTOR),
+        objPropsDeleter
+    };
+
+    if (!props) {
+        _hidl_cb(Error::NO_RESOURCES, {}, {});
+        return;
+    }
+
+    for (uint32_t i = 0; i < props->count_props; i++) {
+        const auto& propResDeleter = deleterFactory(drmModeFreeProperty);
+        std::unique_ptr<drmModePropertyRes, decltype(propResDeleter)> prop_info {
+            drmModeGetProperty(mDrmFd, props->props[i]),
+            propResDeleter
+        };
+
+        if (!prop_info) {
+            _hidl_cb(Error::NO_RESOURCES, {}, {});
+            return;
+        }
+
+        if (drm_property_type_is(prop_info.get(), DRM_MODE_PROP_BLOB)) {
+            const auto& propBlobDeleter = deleterFactory(drmModeFreePropertyBlob);
+            std::unique_ptr<drmModePropertyBlobRes, decltype(propBlobDeleter)> blob {
+                drmModeGetPropertyBlob(mDrmFd, props->prop_values[i]),
+                propBlobDeleter
+            };
+
+            // blob may be nullptr if there is no EDID
+            if (blob) {
+                auto blob_data = static_cast<const unsigned char*>(blob->data);
+                for (uint32_t j = 0; j < blob->length; j++) {
+                    data.push_back(blob_data[j]);
+                }
+            }
+        }
+
+    }
+    _hidl_cb(Error::NONE, connectorId, data);
 }
 
 }  // namespace implementation

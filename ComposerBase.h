@@ -123,6 +123,9 @@ public:
                                         const std::vector<hwc_rect_t>& visible) = 0;
     virtual Error setLayerZOrder(Display display, Layer layer,
                                  uint32_t z) = 0;
+    virtual void getDisplayIdentificationData(
+            uint64_t display, IComposerClient::getDisplayIdentificationData_cb _hidl_cb) = 0;
+    virtual bool isDisplayValid(hwc2_display_t display) const = 0;
 };
 
 }  // namespace implementation

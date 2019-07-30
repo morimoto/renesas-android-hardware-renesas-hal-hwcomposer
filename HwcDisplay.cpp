@@ -1326,4 +1326,8 @@ void HwcDisplay::setPrimeCache(PrimeCache* primeCache) {
 }
 #endif
 
+uint32_t HwcDisplay::getConnectorId() const {
+    return mConnectorId;
+}
+
 } // namespace android
