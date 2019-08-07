@@ -59,8 +59,8 @@ int RCarImporter::getIonBufferFd(int bufferFd, int format
 
     int ret = 0;
 #if HWC_PRIME_CACHE
-    if (mPrimeCache) {
-        handle = mPrimeCache->findEntry(bo->mStamp, bufferFd, bo->index);
+    if (PrimeCache::getInstance().isCacheEnabled()) {
+        handle = PrimeCache::getInstance().findEntry(bo->mStamp, bufferFd, bo->index);
     } else {
 #endif
         /* register ion memory to drm driver */
@@ -168,7 +168,7 @@ int RCarImporter::getIonBufferFd(int bufferFd, int format
         CHECK_RES_WARN(drmModeAddFB2(mDrmFd, width, height, format, bo_handles, pitches,
                                      offsets, (uint32_t*) &fd, 0));
 #if HWC_PRIME_CACHE
-        if (!mPrimeCache) {
+        if (!PrimeCache::getInstance().isCacheEnabled()) {
 #endif
             drm_gem_close arg = { handle, 0, };
             if (drmIoctl(mDrmFd, DRM_IOCTL_GEM_CLOSE, &arg)) {

@@ -13,6 +13,11 @@ PrimeCache::~PrimeCache() {
     clear();
 }
 
+PrimeCache& PrimeCache::getInstance() {
+    static PrimeCache primeCache;
+    return primeCache;
+}
+
 void PrimeCache::optimizeCache(int layerIndex) {
     if (mStat[layerIndex] >= mCachePerLayerLimit) {
         std::vector<uint64_t> selection;
@@ -100,15 +105,11 @@ void PrimeCache::setCachePerLayerLimit(int cpll) {
     mCachePerLayerLimit = cpll;
 }
 
-void PrimeCache::setIsPrimeCacheEnabled(bool isPrimeCacheEnabled) {
-    mIsPrimeCacheEnabled = isPrimeCacheEnabled;
-}
-
 int PrimeCache::getCachePerLayerLimit() const {
     return mCachePerLayerLimit;
 }
 
-bool PrimeCache::getIsPrimeCacheEnabled() const {
+bool& PrimeCache::isCacheEnabled() {
     return mIsPrimeCacheEnabled;
 }
 

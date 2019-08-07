@@ -32,15 +32,8 @@ namespace android {
 class HwcDisplay {
     using Error = android::hardware::graphics::composer::V2_1::Error;
 public:
-
-#if HWC_PRIME_CACHE
-    HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
-               HWC2::DisplayType type, std::shared_ptr<Importer> importer,
-               PrimeCache* primeCache);
-#else
     HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
                HWC2::DisplayType type, std::shared_ptr<Importer> importer);
-#endif
 
     HwcDisplay(const HwcDisplay&) = delete;
     Error init();
@@ -73,6 +66,7 @@ public:
                              float* min_luminance);
     Error getReleaseFences(uint32_t* num_elements, hwc2_layer_t* layers,
                            int32_t* fences);
+    Error compositionLayers(std::vector<DrmHwcLayer> & layers);
     Error presentDisplay(int32_t* retire_fence);
     Error setActiveConfig(hwc2_config_t config);
     Error setClientTarget(buffer_handle_t target, int32_t acquire_fence,
@@ -87,17 +81,14 @@ public:
 
     void updateConfig();
     void loadNewConfig();
-
-    void startEVSCameraLayer(buffer_handle_t layer);
-    void stopEVSCameraLayer();
-    void invalidate();
-    void evsCameraChangeValidate();
     void getCurrentDisplaySize(uint32_t & inWidth, uint32_t & inHeight);
     void hwcDisplayPoll(int32_t fd, int32_t timeout = -1) const;
+    void syncFence(const hwc2_display_t handle);
+    void evsStartCameraLayer(buffer_handle_t layer);
+    void evsStopCameraLayer();
+    hwc2_display_t getDisplayHandle() const noexcept;
+    Error evsPresentDisplay();
 
-#if HWC_PRIME_CACHE
-    void setPrimeCache(PrimeCache* primeCache);
-#endif
     uint32_t getConnectorId() const;
 
 private:
@@ -157,12 +148,7 @@ private:
     hwdisplay mDisplayParams;
 
     std::shared_ptr<Importer> mImporter;
-    DummyImporter mDummyImp;
     std::deque<DRMPlane> mPlanes;
-
-#if HWC_PRIME_CACHE
-    PrimeCache* mPrimeCache = nullptr;
-#endif
 
     const std::unordered_set<int> mSupportedFormats = {
         HAL_PIXEL_FORMAT_BGRX_8888,

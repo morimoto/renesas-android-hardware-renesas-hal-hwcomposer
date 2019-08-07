@@ -11,24 +11,28 @@ class PrimeCache {
         uint32_t handle = 0;
     };
 public:
-    PrimeCache();
-    ~PrimeCache();
+    static PrimeCache& getInstance();
     void optimizeCache(int layerIndex);
     void optimizeCache();
-    int destroyHandle(uint32_t handle) const;
     void eraseLayerCache(int layerIndex);
     void addEntry(uint64_t stamp, CacheInfo info);
-    uint32_t findEntry(uint64_t stamp, int bufferFd, int index);
     void clear();
-
     void setDrmFd(int drmFd);
     void setCachePerLayerLimit(int cpll);
-    void setIsPrimeCacheEnabled(bool isPrimeCacheEnabled);
 
+    int destroyHandle(uint32_t handle) const;
     int getCachePerLayerLimit() const;
-    bool getIsPrimeCacheEnabled() const;
+    uint32_t findEntry(uint64_t stamp, int bufferFd, int index);
 
+    bool& isCacheEnabled();
 private:
+    PrimeCache();
+    ~PrimeCache();
+    PrimeCache(const PrimeCache&) = delete;
+    PrimeCache(const PrimeCache&&) = delete;
+    PrimeCache& operator=(const PrimeCache&) = delete;
+    PrimeCache& operator=(PrimeCache&&) = delete;
+
     int mDrmFd = -1;
     int mCachePerLayerLimit = 0;
     bool mIsPrimeCacheEnabled = true;

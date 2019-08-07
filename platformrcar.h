@@ -29,16 +29,9 @@ public:
     RCarImporter(int drm_id);
     ~RCarImporter() override = default;
 
-
     int importBuffer(buffer_handle_t handle, DrmHwcBo* bo) override;
     int releaseBuffer(DrmHwcBo* bo) override;
     int createFrameBuffer(DrmHwcBo* bo) override;
-#if HWC_PRIME_CACHE
-    void setPrimeCache(PrimeCache* primeCache) override {
-        mPrimeCache = primeCache;
-    };
-    PrimeCache* getPrimeCache() const override { return mPrimeCache; }
-#endif
 
 private:
     int getIonBufferFd(int bufferFd, int format
@@ -47,9 +40,6 @@ private:
 
     int mDrmFd;
     std::mutex mLock;
-#if HWC_PRIME_CACHE
-    PrimeCache* mPrimeCache = nullptr;
-#endif
 };
 
 } // namespace android

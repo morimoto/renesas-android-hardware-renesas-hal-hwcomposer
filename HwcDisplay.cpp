@@ -52,14 +52,8 @@ private:
     hwc2_function_pointer_t hook_;
 };
 
-#if HWC_PRIME_CACHE
-HwcDisplay::HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
-                       HWC2::DisplayType type, std::shared_ptr<Importer> importer,
-                       PrimeCache* primeCache)
-#else
 HwcDisplay::HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
                        HWC2::DisplayType type, std::shared_ptr<Importer> importer)
-#endif
     : mDrmFd(drmFd)
     , mCurrConfig(-1)
     , mConnectorId(0)
@@ -72,10 +66,6 @@ HwcDisplay::HwcDisplay(int drmFd, hwc2_display_t handle, hwdisplay params,
     , mCrtId(0)
     , mDisplayParams(params)
     , mImporter(importer)
-#if HWC_PRIME_CACHE
-    , mPrimeCache(primeCache)
-#endif
-
 {
     supported(__func__);
 }
@@ -142,8 +132,8 @@ Error HwcDisplay::destroyLayer(hwc2_layer_t layer) {
     auto it = mLayers.find(layer);
     if (it != mLayers.end()) {
 #if HWC_PRIME_CACHE
-        if (mPrimeCache) {
-            mPrimeCache->eraseLayerCache(it->second->getIndex());
+        if (PrimeCache::getInstance().isCacheEnabled()) {
+            PrimeCache::getInstance().eraseLayerCache(it->second->getIndex());
         }
 #endif
         delete it->second;
@@ -155,10 +145,81 @@ Error HwcDisplay::destroyLayer(hwc2_layer_t layer) {
     return Error::NONE;
 }
 
-void HwcDisplay::startEVSCameraLayer(buffer_handle_t layer) {
+void HwcDisplay::syncFence(const hwc2_display_t handle) {
+    for (auto& l: mLayers) {
+        l.second->setReleaseFence(mReleaseFence);
+        if (!handle) {
+            hwcDisplayPoll(mReleaseFence);
+        }
+    }
+}
+
+hwc2_display_t HwcDisplay::getDisplayHandle() const noexcept {
+    return mHandle;
+}
+
+Error HwcDisplay::compositionLayers(std::vector<DrmHwcLayer>& layers) {
+    if (layers.empty()) {
+        return Error::NONE;
+    }
+
+    std::unique_ptr<DrmDisplayComposition> composition(new DrmDisplayComposition());
+    composition->init(mDrmFd, mCrtId);
+    int32_t ret = composition->setLayers(std::move(layers));
+
+    if (ret) {
+        ALOGE("Failed to set layers in the composition ret=%d", ret);
+        return Error::BAD_LAYER;
+    }
+
+    ret = applyComposition(std::move(composition));
+
+    if (ret) {
+        ALOGE("Failed to apply the frame composition ret=%d", ret);
+        return Error::BAD_PARAMETER;
+    }
+
+    return Error::NONE;
+}
+
+Error HwcDisplay::evsPresentDisplay() {
+    DrmHwcLayer layer;
+    mCameraLayer.populateDrmLayer(&layer);
+
+    if (mReleaseFence != -1) {
+        mCameraLayer.setReleaseFence(mReleaseFence);
+        hwcDisplayPoll(mReleaseFence);
+        close(mReleaseFence);
+    }
+
+    const int32_t ret = layer.importBuffer(mImporter.get());
+
+    if (ret) {
+        ALOGE("Failed to import Camera layer, ret=%d", ret);
+        return Error::BAD_LAYER;
+    }
+
+    std::vector<DrmHwcLayer> cameraComposition;
+    cameraComposition.emplace_back(std::move(layer));
+
+    Error err = compositionLayers(cameraComposition);
+
+    if (err != Error::NONE) {
+        ALOGE("Failed to composition Camera layers, ret=<%d>", static_cast<int32_t>(err));
+        return err;
+    }
+
+    return Error::NONE;
+}
+
+void HwcDisplay::evsStartCameraLayer(buffer_handle_t layer) {
     mCameraLayer.setBuffer(layer);
+    mCameraLayer.setValidatedType(HWC2::Composition::Device);
 
     if (!mUsingCameraLayer) {
+        int retireFence = 0;
+        presentDisplay(&retireFence);
+        close(retireFence);
         // Setup camera layer's dimensions
         const IMG_native_handle_t* imgHnd2 =
             reinterpret_cast<const IMG_native_handle_t*>(layer);
@@ -179,26 +240,14 @@ void HwcDisplay::startEVSCameraLayer(buffer_handle_t layer) {
         mCameraLayer.setLayerDisplayFrame(display_frame);
         mCameraLayer.setLayerSourceCrop(source_crop);
         mUsingCameraLayer = true;
-        //SelectConfig(imgHnd2->iWidth, imgHnd2->iHeight);
-        //updateConfig();
     }
-
-    invalidate();
 }
 
-void HwcDisplay::stopEVSCameraLayer() {
-    invalidate();
+void HwcDisplay::evsStopCameraLayer() {
     if (mUsingCameraLayer) {
+        evsPresentDisplay();
         mUsingCameraLayer = false;
-        //SelectConfig();
-        //updateConfig();
     }
-}
-
-void HwcDisplay::invalidate() {
-    int retire_fence = -1;
-    presentDisplay(&retire_fence);
-    close(retire_fence);
 }
 
 void HwcDisplay::getCurrentDisplaySize(uint32_t & inWidth, uint32_t & inHeight) {
@@ -427,7 +476,7 @@ std::vector<HwcLayer*> HwcDisplay::getSortedLayersByZOrder() {
 
     for (auto& l : mLayersSortedByZ) {
         HWC2::Composition validated_type = l.second->getValidatedType();
-        if (HWC2::Composition::Device == validated_type || mUsingCameraLayer) {
+        if (HWC2::Composition::Device == validated_type) {
             layers.push_back(l.second);
         } else if (HWC2::Composition::Client == validated_type) {
             use_client_layer = true;
@@ -441,11 +490,6 @@ std::vector<HwcLayer*> HwcDisplay::getSortedLayersByZOrder() {
     if (use_client_layer) {
         mClientLayer.setLayerZOrder(client_z_order);
         layers.push_back(&mClientLayer);
-    }
-
-    if (mUsingCameraLayer) {
-        mCameraLayer.setLayerZOrder(client_z_order + 1);
-        layers.push_back(&mCameraLayer);
     }
 
     return layers;
@@ -546,21 +590,40 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
         }
     }
 
-    uint32_t j = 0;
+    uint32_t j = 0, i = 0;
 
-    for (uint32_t i = 0; i < layers.size() && (mUsingCameraLayer
-            || i < mPlanes.size()); ++i) {
-        DrmHwcLayer& layer = layers[i];
-        int fb_id = -1;
-        fb_id = layer.mBuffer->mFbId;
+    if (mUsingCameraLayer) {
+        DrmHwcLayer& layer = layers[j];
+        DRMPlane& plane = mPlanes[j];
+        plane.updateProperties(pset, mCrtId, layer, 0);
 
-        if (fb_id <= 0) {
-            if (!mUsingCameraLayer)
-                ALOGE("ApplyComposition| layer error fb_id <= 0");
-        } else {
-            DRMPlane& plane = mPlanes[j];
-            CHECK_RES_WARN(plane.updateProperties(pset, mCrtId, layer, j));
-            ++j;
+        if (!mFirstDraw) {
+            ret = -EBUSY;
+
+            while (ret == -EBUSY)
+                ret = drmModeAtomicCommit(mDrmFd, pset, DRM_MODE_ATOMIC_NONBLOCK, this);
+
+            if (pset)
+                drmModeAtomicFree(pset);
+
+            mActiveComposition.swap(composition);
+            mReleaseFence = out_fences[mCrtcPipe];
+
+            return 0;
+        }
+    } else {
+        while(i < layers.size() && i < mPlanes.size()) {
+            DrmHwcLayer& layer = layers[i];
+
+            if (layer.mBuffer->mFbId == 0) {
+                ALOGE("ApplyComposition| layer error fb_id = 0");
+            } else {
+                DRMPlane& plane = mPlanes[j];
+                plane.updateProperties(pset, mCrtId, layer, j);
+                ++j;
+            }
+
+            ++i;
         }
     }
 
@@ -614,67 +677,32 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
 
     std::vector<DrmHwcLayer> layers;
 
-#if HWC_PRIME_CACHE
-    if (mPrimeCache) {
-        mImporter.get()->setPrimeCache(mPrimeCache);
-    } else if (mImporter.get()->getPrimeCache()) {
-        mImporter.get()->setPrimeCache(nullptr);
-    }
-#endif
-
     for (HwcLayer* layer : sorted_layers) {
         DrmHwcLayer drm_layer;
         layer->populateDrmLayer(&drm_layer);
 
-        if (!mUsingCameraLayer) {
-            ret = drm_layer.importBuffer(mImporter.get());
-        } else {
-            if (layer == &mCameraLayer) {
-                ret = drm_layer.importBuffer(mImporter.get());
-            } else {
-                ret = drm_layer.importBuffer(&mDummyImp);
-            }
-        }
+        ret = drm_layer.importBuffer(mImporter.get());
 
         if (ret) {
             ALOGE("Failed to import layer, ret=%d", ret);
             continue;
-        } else {
-            layers.emplace_back(std::move(drm_layer));
         }
+
+        layers.emplace_back(std::move(drm_layer));
     }
 
-    if (layers.empty()) {
-        return Error::NONE;
-    }
+    Error err = compositionLayers(layers);
 
-    std::unique_ptr<DrmDisplayComposition> composition(new DrmDisplayComposition());
-    composition->init(mDrmFd, mCrtId);
-    ret = composition->setLayers(std::move(layers));
-
-    if (ret) {
-        ALOGE("Failed to set layers in the composition ret=%d", ret);
-        return Error::BAD_LAYER;
-    }
-
-    ret = applyComposition(std::move(composition));
-
-    if (ret) {
-        ALOGE("Failed to apply the frame composition ret=%d", ret);
-        return Error::BAD_PARAMETER;
+    if (err != Error::NONE) {
+        ALOGE("Failed to composition layers, ret=<%d>", static_cast<int32_t>(err));
+        return err;
     }
 
     *retire_fence = mReleaseFence;
-    for (auto& l: mLayers) {
-        l.second->setReleaseFence(mReleaseFence);
-        if (!mHandle) {
-            hwcDisplayPoll(mReleaseFence);
-        }
-    }
+    syncFence(mHandle);
 
     return Error::NONE;
 }
-
 
 Error HwcDisplay::setActiveConfig(hwc2_config_t config) {
     supported(__func__);
@@ -702,8 +730,6 @@ Error HwcDisplay::setActiveConfig(hwc2_config_t config) {
                                mode.getVDisplay() + 0.0f
                               };
     mClientLayer.setLayerSourceCrop(source_crop);
-    //mCameraLayer.SetLayerDisplayFrame(display_frame);
-    //mCameraLayer.SetLayerSourceCrop(source_crop);
     return Error::NONE;
 }
 
@@ -800,12 +826,6 @@ bool HwcDisplay::layerSupported(HwcLayer* layer, const uint32_t& num_device_plan
             && formatSupported);
 }
 
-void HwcDisplay::evsCameraChangeValidate() {
-    for (auto& l : mLayers) {
-        l.second->setValidatedType(HWC2::Composition::Device);
-    }
-}
-
 Error HwcDisplay::validateDisplay(uint32_t* num_types,
                                   uint32_t* num_requests) {
     supported(__func__);
@@ -879,7 +899,6 @@ HwcLayer& HwcDisplay::getLayer(hwc2_layer_t layer) {
 }
 
 void HwcDisplay::updateConfig() {
-    //mFirstDraw = true;
     setActiveConfig(mCurrConfig);
 }
 
@@ -892,7 +911,6 @@ void HwcDisplay::loadNewConfig() {
     setActiveConfig(mCurrConfig);
 
     mMaxDevicePlanes = calcMaxDevicePlanes();
-    invalidate();
 }
 
 int HwcDisplay::loadDisplayModes() {
@@ -1319,12 +1337,6 @@ int HwcDisplay::destroyPropertyBlob(uint32_t blob_id) {
 
     return 0;
 }
-
-#if HWC_PRIME_CACHE
-void HwcDisplay::setPrimeCache(PrimeCache* primeCache) {
-    mPrimeCache = primeCache;
-}
-#endif
 
 uint32_t HwcDisplay::getConnectorId() const {
     return mConnectorId;

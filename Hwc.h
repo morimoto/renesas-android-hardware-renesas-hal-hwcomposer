@@ -121,10 +121,10 @@ public:  // functions
         std::vector<uint32_t>* outRequestMasks) override;
     Error acceptDisplayChanges(Display display) override;
     Error presentDisplay(
-        Display display = HWC_DISPLAY_PRIMARY,
-        int32_t* outPresentFence = 0,
-        std::vector<Layer>* outLayers = {},
-        std::vector<int32_t>* outReleaseFences = {}) override;
+        Display display,
+        int32_t* outPresentFence,
+        std::vector<Layer>* outLayers,
+        std::vector<int32_t>* outReleaseFences) override;
 
     Error setLayerCursorPosition(Display display, Layer layer, int32_t x,
                                  int32_t y) override;
@@ -171,6 +171,7 @@ private:  // functions
 
     void initCapabilities();
     void initDisplays();
+    void evsCameraStream(size_t cameraDisplay, const hidl_handle& buffer);
 
     sp<ComposerClient> getClient();
     static void hotplugHook(
@@ -195,16 +196,13 @@ private:  // members
     std::map<hwc2_display_t, HwcDisplay> mDisplays;
     std::map<HWC2::Callback, HwcCallback> mCallbacks;
 
-    hidl_handle mCameraHidlHandle;
+    int8_t mCameraDisplayId = 0;
+    bool mCameraStreamAllDisplays = false;
+    hidl_handle mCameraHidlHandle = nullptr;
     std::atomic<bool> mIsCameraEnabled = {false};
-    const Display HWC_CAMERA_DISPLAY = 4;
-    bool mSignalStopCamera;
+
     bool mIsHotplugInitialized;
     bool mInitDisplays;
-
-#if HWC_PRIME_CACHE
-    PrimeCache  mPrimeCache;
-#endif
 
     uint32_t mDisplayHeight;
     uint32_t mDisplayWidth;

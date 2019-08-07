@@ -22,10 +22,6 @@
 
 namespace android {
 
-#if HWC_PRIME_CACHE
-class PrimeCache;
-#endif
-
 class Importer {
 public:
     virtual ~Importer() {}
@@ -50,21 +46,6 @@ public:
     // Note: This can be called from a different thread than ImportBuffer. The
     //       implementation is responsible for ensuring thread safety.
     virtual int createFrameBuffer(DrmHwcBo* bo) = 0;
-#if HWC_PRIME_CACHE
-    virtual void setPrimeCache(PrimeCache* primeCache) = 0;
-    virtual PrimeCache* getPrimeCache() const = 0;
-#endif
-};
-
-class DummyImporter: public Importer {
-public:
-    int importBuffer(buffer_handle_t, DrmHwcBo* bo) override { bo->mFbId = 0; return 0; }
-    int releaseBuffer(DrmHwcBo*) override { return 0; }
-    int createFrameBuffer(DrmHwcBo*) override { return 0; }
-#if HWC_PRIME_CACHE
-    void setPrimeCache(PrimeCache*) override { }
-    virtual PrimeCache* getPrimeCache() const override { return nullptr; }
-#endif
 };
 
 } // namespace android

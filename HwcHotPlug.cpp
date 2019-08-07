@@ -109,22 +109,12 @@ HotPlug::Status HotPlug::getStatusDisplay(size_t display) {
 Error HotPlug::loadDisplayConfiguration(size_t display) {
     if (!mConnectDisplays[display].isReInit) {
         hwc2_display_t type = static_cast<hwc2_display_t>(mHwc->mDisplays.size());
-#if HWC_PRIME_CACHE
-        mHwc->mDisplays.emplace(
-                    std::piecewise_construct,
-                    std::forward_as_tuple(type),
-                    std::forward_as_tuple(mHwc->mDrmFd, type, hwdisplays[display],
-                                          HWC2::DisplayType::Physical,
-                                          mHwc->mImporter,
-                                          &mHwc->mPrimeCache));
-#else
         mHwc->mDisplays.emplace(
                     std::piecewise_construct,
                     std::forward_as_tuple(type),
                     std::forward_as_tuple(mHwc->mDrmFd, type, hwdisplays[display],
                                           HWC2::DisplayType::Physical,
                                           mHwc->mImporter));
-#endif
         if (mHwc->mDisplays.at(type).init() != Error::NONE) {
             mHwc->mDisplays.erase(type);
             return Error::BAD_CONFIG;
@@ -150,9 +140,9 @@ void HotPlug::hookEventHotPlug() {
                                 static_cast<int32_t>(HWC2::Connection::Disconnected));
             mConnectDisplays[display].isConnected = false;
 #if HWC_PRIME_CACHE
-            mHwc->mPrimeCache.setCachePerLayerLimit(
-                    mHwc->mPrimeCache.getCachePerLayerLimit() - 3);
-            mHwc->mPrimeCache.optimizeCache();
+            PrimeCache::getInstance().setCachePerLayerLimit(
+                    PrimeCache::getInstance().getCachePerLayerLimit() - 3);
+            PrimeCache::getInstance().optimizeCache();
 #endif
         } else if (currentStatusDisplay == CONNECTED_DISPLAY
                    && !mConnectDisplays[display].isConnected) {
@@ -163,8 +153,8 @@ void HotPlug::hookEventHotPlug() {
                                 static_cast<int32_t>(HWC2::Connection::Connected));
             mConnectDisplays[display].isConnected = true;
 #if HWC_PRIME_CACHE
-            mHwc->mPrimeCache.setCachePerLayerLimit(
-                    mHwc->mPrimeCache.getCachePerLayerLimit() + 3);
+            PrimeCache::getInstance().setCachePerLayerLimit(
+                   PrimeCache::getInstance().getCachePerLayerLimit() + 3);
 #endif
         }
     }

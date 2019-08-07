@@ -28,8 +28,6 @@ namespace implementation {
 
 HwcHal::HwcHal()
     : mDrmFd(-1)
-    , mCameraHidlHandle(nullptr)
-    , mSignalStopCamera(false)
     , mIsHotplugInitialized(false)
     , mInitDisplays(false) {
     mDrmFd = drmOpen("rcar-du", NULL);
@@ -39,7 +37,7 @@ HwcHal::HwcHal()
     }
 
 #if HWC_PRIME_CACHE
-    mPrimeCache.setDrmFd(mDrmFd);
+    PrimeCache::getInstance().setDrmFd(mDrmFd);
     ALOGD("PRIME_CACHE enabled");
 #endif
 
@@ -419,10 +417,7 @@ Error HwcHal::validateDisplay(
     uint32_t* outDisplayRequestMask,
     std::vector<Layer>* outRequestedLayers,
     std::vector<uint32_t>* outRequestMasks) {
-    if (mIsCameraEnabled && display == HWC_DISPLAY_PRIMARY) {
-       getDisplay(display).evsCameraChangeValidate();
-       return Error::NONE;
-    }
+
     uint32_t types_count = 0;
     uint32_t reqs_count = 0;
     auto err = getDisplay(display).validateDisplay(&types_count, &reqs_count);
@@ -486,6 +481,26 @@ Error HwcHal::acceptDisplayChanges(Display display) {
     return getDisplay(display).acceptDisplayChanges();
 }
 
+void HwcHal::evsCameraStream(size_t cameraDisplay, const hidl_handle& buffer) {
+    if (mIsCameraEnabled) {
+#if HWC_PRIME_CACHE
+        PrimeCache::getInstance().isCacheEnabled() = false;
+        PrimeCache::getInstance().clear();
+#endif
+        mCameraHidlHandle = buffer;
+        mDisplays.at(cameraDisplay).evsStartCameraLayer(static_cast<buffer_handle_t>
+                                                        (mCameraHidlHandle.getNativeHandle()));
+
+        mDisplays.at(cameraDisplay).evsPresentDisplay();
+    } else {
+        mDisplays.at(cameraDisplay).evsStopCameraLayer();
+        getClient()->onRefresh(cameraDisplay);
+#if HWC_PRIME_CACHE
+        PrimeCache::getInstance().isCacheEnabled() = true;
+#endif
+    }
+}
+
 Error HwcHal::presentDisplay(
     Display display,
     int32_t* outPresentFence,
@@ -507,40 +522,20 @@ Error HwcHal::presentDisplay(
 #endif
     }
 
-    Error err = Error::NONE;
-    if (mIsCameraEnabled && display == HWC_CAMERA_DISPLAY) {
-        if (!mSignalStopCamera) {
-            mDisplays.at(HWC_DISPLAY_PRIMARY).startEVSCameraLayer(static_cast<buffer_handle_t>
-                                                                  (mCameraHidlHandle.getNativeHandle()));
-        }
-        else {
-            mDisplays.at(HWC_DISPLAY_PRIMARY).stopEVSCameraLayer();
-            sp<ComposerClient> cc = getClient();
-            if (cc != nullptr)
-                cc->onRefresh(HWC_DISPLAY_PRIMARY);
-            mIsCameraEnabled = false;
-            mSignalStopCamera = false;
-#if HWC_PRIME_CACHE
-            if (!mPrimeCache.getIsPrimeCacheEnabled()) {
-                ALOGD("Turning on prime cache");
-                for (auto &cur : mDisplays) {
-                    cur.second.setPrimeCache(&mPrimeCache);
-                }
-                mPrimeCache.setIsPrimeCacheEnabled(true);
-            }
-#endif
-        }
-        return Error::NONE;
-    }
     *outPresentFence = -1;
-    if (mIsCameraEnabled && display == HWC_DISPLAY_PRIMARY) {
+    if (mIsCameraEnabled &&
+            (display == mCameraDisplayId || mCameraStreamAllDisplays)) {
         return Error::NONE;
     }
 
-    err = getDisplay(display).presentDisplay(outPresentFence);
+    Error err = getDisplay(display).presentDisplay(outPresentFence);
 
     if (err != Error::NONE) {
         return err;
+    }
+
+    if (mIsCameraEnabled && display == HWC_DISPLAY_EXTERNAL) {
+        getDisplay(display).syncFence( mDisplays.at(HWC_DISPLAY_PRIMARY).getDisplayHandle() );
     }
 
     uint32_t count = 0;
@@ -672,35 +667,26 @@ void HwcHal::RegisterCallback(
     }
 }
 
-Return<Error> HwcHal::setEVSCameraData(const hidl_handle& buffer,
-                                       int8_t /*currDisplay*/) {
-    const IMG_native_handle_t* IMGHandle =
-        reinterpret_cast<const IMG_native_handle_t*>(buffer.getNativeHandle());
-    Error err = Error::NONE;
+Return<Error> HwcHal::setEVSCameraData(const hidl_handle& buffer, int8_t currDisplay) {
+    mIsCameraEnabled = (buffer != nullptr);
 
-    if (IMGHandle == nullptr) {
-        if (mIsCameraEnabled) {
-            mSignalStopCamera = true;
-            presentDisplay(HWC_CAMERA_DISPLAY);
+    switch(currDisplay) {
+    case HWC_DISPLAY_PRIMARY:
+
+        [[fallthrough]];
+    case HWC_DISPLAY_EXTERNAL:
+        mCameraDisplayId = currDisplay;
+        evsCameraStream(currDisplay, buffer);
+        break;
+
+    default:
+        mCameraStreamAllDisplays = true;
+        for(size_t display = 0; display < mDisplays.size(); ++display) {
+            evsCameraStream(display, buffer);
         }
-        err = Error::BAD_LAYER;
-    } else {
-#if HWC_PRIME_CACHE
-        if (mPrimeCache.getIsPrimeCacheEnabled()) {
-            ALOGD("Turning off prime cache");
-            for (auto &cur : mDisplays) {
-                cur.second.setPrimeCache(nullptr);
-            }
-            mPrimeCache.clear();
-            mPrimeCache.setIsPrimeCacheEnabled(false);
-        }
-#endif
-        mCameraHidlHandle = buffer;
-        mIsCameraEnabled = true;
-        err = presentDisplay(HWC_CAMERA_DISPLAY);
+        break;
     }
-
-    return err;
+    return Error::NONE;
 }
 
 template <typename Deleter>
