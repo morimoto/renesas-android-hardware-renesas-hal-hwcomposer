@@ -236,25 +236,45 @@ Error HwcHal::destroyVirtualDisplay(Display display) {
 }
 
 Error HwcHal::createLayer(Display display, Layer* outLayer) {
+    if (!isDisplayValid(display)) {
+        return Error::BAD_DISPLAY;
+    }
+
     return getDisplay(display).createLayer(outLayer);
 }
 
 Error HwcHal::destroyLayer(Display display, Layer layer) {
+    if (!isDisplayValid(display)) {
+        return Error::BAD_DISPLAY;
+    }
+
     return getDisplay(display).destroyLayer(layer);
 }
 
 Error HwcHal::getActiveConfig(Display display, Config* outConfig) {
+    if (!isDisplayValid(display)) {
+        return Error::BAD_DISPLAY;
+    }
+
     return getDisplay(display).getActiveConfig(outConfig);
 }
 
 Error HwcHal::getClientTargetSupport(
     Display display, uint32_t width, uint32_t height, PixelFormat format,
     Dataspace dataspace) {
+    if (!isDisplayValid(display)) {
+        return Error::BAD_DISPLAY;
+    }
+
     return getDisplay(display).getClientTargetSupport(
                width, height, static_cast<int32_t>(format), static_cast<int32_t>(dataspace));
 }
 
 Error HwcHal::getColorModes(Display display, hidl_vec<ColorMode>* outModes) {
+    if (!isDisplayValid(display)) {
+        return Error::BAD_DISPLAY;
+    }
+
     uint32_t count = 0;
     auto err = getDisplay(display).getColorModes(&count, nullptr);
 
@@ -283,6 +303,10 @@ Error HwcHal::getDisplayAttribute(
 }
 
 Error HwcHal::getDisplayConfigs(Display display, hidl_vec<Config>* outConfigs) {
+    if (!isDisplayValid(display)) {
+        return Error::BAD_DISPLAY;
+    }
+
     uint32_t count = 0;
     auto err = getDisplay(display).getDisplayConfigs(&count, nullptr);
 
@@ -331,6 +355,10 @@ Error HwcHal::getDisplayType(Display display,
 }
 
 Error HwcHal::getDozeSupport(Display display, bool* outSupport) {
+    if (!isDisplayValid(display)) {
+        return Error::BAD_DISPLAY;
+    }
+
     int32_t hwc_support = 0;
     const auto err = getDisplay(display).getDozeSupport(&hwc_support);
     *outSupport = hwc_support;
@@ -371,11 +399,20 @@ Error HwcHal::setActiveConfig(Display display, Config config) {
     return getDisplay(display).setActiveConfig(config);
 }
 
-Error HwcHal::setColorMode(Display display, ColorMode mode) {
-    return getDisplay(display).setColorMode(static_cast<int32_t>(mode));
+Error HwcHal::setColorMode(Display display, ColorMode mode, RenderIntent intent) {
+    if (!isDisplayValid(display)) {
+        return Error::BAD_DISPLAY;
+    }
+
+    return getDisplay(display).setColorMode(static_cast<int32_t>(mode),
+                                            static_cast<int32_t>(intent));
 }
 
 Error HwcHal::setPowerMode(Display display, PowerMode_V2_1 mode) {
+    if (!isDisplayValid(display)) {
+        return Error::BAD_DISPLAY;
+    }
+
     return getDisplay(display).setPowerMode(static_cast<int32_t>(mode));
 }
 

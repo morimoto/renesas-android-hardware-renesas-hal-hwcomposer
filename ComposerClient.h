@@ -239,6 +239,10 @@ protected:
         virtual bool parseCommand(IComposerClient::Command command,
                                   uint16_t length);
 
+        bool parseSetLayerColorTransform(uint16_t length);
+        bool parseSetLayerPerFrameMetadata(uint16_t length);
+        bool parseSetLayerFloatColor(uint16_t length);
+        bool parseSetLayerPerFrameMetadataBlobs(uint16_t length);
         bool parseSelectDisplay(uint16_t length);
         bool parseSelectLayer(uint16_t length);
         bool parseSetColorTransform(uint16_t length);

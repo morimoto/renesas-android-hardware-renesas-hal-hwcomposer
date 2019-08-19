@@ -140,6 +140,7 @@ Error HwcDisplay::destroyLayer(hwc2_layer_t layer) {
         mLayers.erase(it);
     } else {
         ALOGE("remove nonexisting layer: %d", static_cast<int>(layer));
+        return Error::BAD_LAYER;
     }
 
     return Error::NONE;
@@ -317,8 +318,14 @@ Error HwcDisplay::getClientTargetSupport(uint32_t width, uint32_t height,
 }
 
 Error HwcDisplay::getColorModes(uint32_t* num_modes, int32_t* modes) {
-    unsupported(__func__, num_modes, modes);
-    // TODO: android_color_mode_t isn't defined yet!
+    supported(__func__);
+
+    if (!modes)
+        *num_modes = 1;
+
+    if (modes)
+        *modes = HAL_COLOR_MODE_NATIVE;
+
     return Error::NONE;
 }
 
@@ -743,9 +750,16 @@ Error HwcDisplay::setClientTarget(buffer_handle_t target,
     return Error::NONE;
 }
 
-Error HwcDisplay::setColorMode(int32_t mode) {
-    unsupported(__func__, mode);
-    // TODO: android_color_mode_t isn't defined yet!
+Error HwcDisplay::setColorMode(int32_t mode, int32_t intent) {
+    supported(__func__);
+
+    if (mode < 0 || intent < 0) {
+        return Error::BAD_PARAMETER;
+    }
+
+    if (mode != HAL_COLOR_MODE_NATIVE)
+        return Error::UNSUPPORTED;
+
     return Error::NONE;
 }
 
@@ -765,6 +779,11 @@ Error HwcDisplay::setOutputBuffer(buffer_handle_t buffer,
 
 Error HwcDisplay::setPowerMode(int32_t mode_in) {
     supported(__func__);
+
+    if (mode_in < 0) {
+        return Error::BAD_PARAMETER;
+    }
+
     auto mode = static_cast<HWC2::PowerMode>(mode_in);
 
     switch (mode) {

@@ -360,6 +360,9 @@ public:
         endCommand();
     }
 
+    static constexpr uint16_t kSetLayerColorTransformLength = 16;
+    static constexpr uint16_t kSetLayerFloatColorLength = 4;
+
     static constexpr uint16_t kSetLayerBlendModeLength = 1;
     void setLayerBlendMode(IComposerClient::BlendMode mode) {
         beginCommand(IComposerClient::Command::SET_LAYER_BLEND_MODE,
@@ -734,6 +737,15 @@ protected:
         int32_t val;
         memcpy(&val, &mData[mDataRead++], sizeof(val));
         return val;
+    }
+
+    std::vector<uint8_t> readBlob(uint32_t length) {
+        std::vector<uint8_t> blob(length);
+        std::memcpy(blob.data(), &mData[mDataRead], length);
+        uint32_t numElements = length / 4;
+        mDataRead += numElements;
+        mDataRead += (length - (numElements * 4) > 0) ? 1 : 0;
+        return blob;
     }
 
     float readFloat() {

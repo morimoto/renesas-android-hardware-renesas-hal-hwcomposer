@@ -71,7 +71,7 @@ public:
     Error setActiveConfig(hwc2_config_t config);
     Error setClientTarget(buffer_handle_t target, int32_t acquire_fence,
                           int32_t dataspace, hwc_region_t damage);
-    Error setColorMode(int32_t mode);
+    Error setColorMode(int32_t mode, int32_t intent = 0 /* COLORIMETRIC */);
     Error setColorTransform(const float* matrix, int32_t hint);
     Error setOutputBuffer(buffer_handle_t buffer, int32_t release_fence);
     Error setPowerMode(int32_t mode);

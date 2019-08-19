@@ -39,6 +39,8 @@ using android::hardware::graphics::composer::V2_1::Error;
 using android::hardware::graphics::composer::V2_1::Display;
 using android::hardware::graphics::composer::V2_1::Layer;
 using android::hardware::graphics::composer::V2_1::Config;
+using RenderIntent
+    = ::android::hardware::graphics::common::V1_1::RenderIntent;
 
 class ComposerBase {
 public:
@@ -72,7 +74,8 @@ public:
                                      float* outMinLuminance) = 0;
 
     virtual Error setActiveConfig(Display display, Config config) = 0;
-    virtual Error setColorMode(Display display, ColorMode mode) = 0;
+    virtual Error setColorMode(Display display, ColorMode mode,
+            RenderIntent intent = RenderIntent::COLORIMETRIC) = 0;
     virtual Error setPowerMode(Display display, PowerMode mode) = 0;
     virtual Error setVsyncEnabled(Display display,
                                   IComposerClient::Vsync enabled) = 0;

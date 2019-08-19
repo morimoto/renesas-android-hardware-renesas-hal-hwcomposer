@@ -98,7 +98,8 @@ public:  // functions
         float* outMinLuminance) override;
 
     Error setActiveConfig(Display display, Config config) override;
-    Error setColorMode(Display display, ColorMode mode) override;
+    Error setColorMode(Display display, ColorMode mode,
+            RenderIntent intent = RenderIntent::COLORIMETRIC) override;
     Error setPowerMode(Display display, PowerMode_V2_1 mode) override;
     Error setVsyncEnabled(Display display, IComposerClient::Vsync enabled) override;
 
