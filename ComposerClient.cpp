@@ -16,7 +16,7 @@
 
 #include "ComposerClient.h"
 
-#include <android/hardware/graphics/mapper/2.0/IMapper.h>
+#include <android/hardware/graphics/mapper/3.0/IMapper.h>
 #include <log/log.h>
 
 namespace android {
@@ -28,8 +28,8 @@ namespace implementation {
 
 namespace {
 
-using MapperError = android::hardware::graphics::mapper::V2_0::Error;
-using android::hardware::graphics::mapper::V2_0::IMapper;
+using MapperError = android::hardware::graphics::mapper::V3_0::Error;
+using android::hardware::graphics::mapper::V3_0::IMapper;
 
 class HandleImporter {
 public:

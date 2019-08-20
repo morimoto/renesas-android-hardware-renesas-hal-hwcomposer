@@ -23,7 +23,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_EXECUTABLES)/hw
 LOCAL_SHARED_LIBRARIES := libcutils libhardware libutils libhardware_legacy liblog libhidlbase
-LOCAL_SHARED_LIBRARIES += android.hardware.graphics.mapper@2.0
+LOCAL_SHARED_LIBRARIES += android.hardware.graphics.mapper@3.0
 LOCAL_SHARED_LIBRARIES += libhidltransport
 LOCAL_SHARED_LIBRARIES += android.hardware.graphics.common@1.2
 LOCAL_SHARED_LIBRARIES += libhwbinder
@@ -31,7 +31,6 @@ LOCAL_SHARED_LIBRARIES += android.hardware.graphics.composer@2.1
 LOCAL_SHARED_LIBRARIES += android.hardware.graphics.composer@2.2
 LOCAL_SHARED_LIBRARIES += android.hardware.graphics.composer@2.3
 LOCAL_SHARED_LIBRARIES += vendor.renesas.graphics.composer@2.0
-LOCAL_SHARED_LIBRARIES += android.hardware.graphics.mapper@2.0
 LOCAL_SHARED_LIBRARIES += libfmq
 LOCAL_SHARED_LIBRARIES += libsync
 LOCAL_SHARED_LIBRARIES += libion
