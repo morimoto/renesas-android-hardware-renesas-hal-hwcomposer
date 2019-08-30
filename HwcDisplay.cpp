@@ -590,7 +590,7 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
         }
     }
 
-    uint32_t j = 0, i = 0;
+    decltype(layers.size()) j = 0, i = 0;
 
     if (mUsingCameraLayer) {
         DrmHwcLayer& layer = layers[j];
@@ -646,8 +646,7 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
         mMode.mBlobId = 0;
     }
 
-    if (pset)
-        drmModeAtomicFree(pset);
+    drmModeAtomicFree(pset);
 
     int32_t cur_out_fence = out_fences[mCrtcPipe];
     if (mCrtcOutFenceProperty.getId() && cur_out_fence > 0) {
@@ -1300,7 +1299,6 @@ int HwcDisplay::selectConfig(uint32_t width, uint32_t height, uint32_t HZ) {
 
     if (config == -1) {
         ALOGE("Unable to select config");
-        return -1;
     }
 
     mCurrConfig = config;

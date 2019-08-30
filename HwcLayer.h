@@ -139,12 +139,12 @@ private:
     HWC2::Composition mSfType = HWC2::Composition::Invalid;
     HWC2::Composition mValidatedType = HWC2::Composition::Invalid;
     HWC2::BlendMode mBlending = HWC2::BlendMode::None;
-    buffer_handle_t mHandle;
+    buffer_handle_t mHandle = nullptr;
     UniqueFd mAcquireFence;
     UniqueFd mReleaseFence;
-    hwc_rect_t mDisplayFrame;
+    hwc_rect_t mDisplayFrame = { 0, 0, 0, 0 };
     float mAlpha = 1.0f;
-    hwc_frect_t mSourceCrop;
+    hwc_frect_t mSourceCrop = { 0.f, 0.f, 0.f, 0.f };
     HWC2::Transform mTransform = HWC2::Transform::None;
     uint32_t mZorder = 0;
     android_dataspace_t mDataspace = HAL_DATASPACE_UNKNOWN;

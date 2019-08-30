@@ -188,12 +188,12 @@ int RCarImporter::importBuffer(buffer_handle_t handle, DrmHwcBo* bo) {
     const IMG_native_handle_t* imgHnd2 =
         reinterpret_cast<const IMG_native_handle_t*>(handle);
 
-    bo->mStamp = imgHnd2->ui64Stamp;
-
     if (!imgHnd2) {
         ALOGE("mIonBuffers: ImportBuffer fail");
         return -1;
     }
+
+    bo->mStamp = imgHnd2->ui64Stamp;
 
     int fb_id = getIonBufferFd(imgHnd2->fd[0], imgHnd2->iFormat,
             imgHnd2->iWidth, imgHnd2->iHeight, bo);

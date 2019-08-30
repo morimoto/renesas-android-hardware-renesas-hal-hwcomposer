@@ -29,7 +29,7 @@ private:
     ~HotPlug() = default;
     HotPlug(const HotPlug&)  = delete;
     HotPlug(const HotPlug&&) = delete;
-    HotPlug& operator=(const HotPlug&)  = delete;
+    HotPlug& operator=(const HotPlug&) = delete;
     HotPlug& operator=(HotPlug&&) = delete;
 
     Status getStatusDisplay(size_t display);

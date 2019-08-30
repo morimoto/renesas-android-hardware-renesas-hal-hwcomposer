@@ -459,7 +459,7 @@ Error HwcHal::validateDisplay(
 
     outRequestedLayers->resize(reqs_count);
     outRequestMasks->resize(reqs_count);
-    getDisplay(display).getDisplayRequests(
+    err = getDisplay(display).getDisplayRequests(
         &display_reqs,
         &reqs_count,
         outRequestedLayers->data(),
@@ -507,10 +507,10 @@ Error HwcHal::presentDisplay(
     std::vector<Layer>* outLayers,
     std::vector<int32_t>* outReleaseFences) {
     if (!mIsHotplugInitialized) {
-        for (std::pair<const hwc2_display_t, HwcDisplay>& display : mDisplays) {
-            if (display.first != HWC_DISPLAY_PRIMARY) {
-                ALOGD("hotplug crunch. %d", static_cast<int32_t>(display.first));
-                hotplugHook(this, display.first,
+        for (std::pair<const hwc2_display_t, HwcDisplay>& disp : mDisplays) {
+            if (disp.first != HWC_DISPLAY_PRIMARY) {
+                ALOGD("hotplug crunch. %d", static_cast<int32_t>(disp.first));
+                hotplugHook(this, disp.first,
                             static_cast<int32_t>(HWC2::Connection::Connected));
             }
         }

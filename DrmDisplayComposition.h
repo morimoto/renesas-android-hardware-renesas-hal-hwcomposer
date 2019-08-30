@@ -38,6 +38,7 @@ class DrmDisplayComposition {
 public:
     DrmDisplayComposition() = default;
     DrmDisplayComposition(const DrmDisplayComposition&) = delete;
+    DrmDisplayComposition& operator=(const DrmDisplayComposition&) = delete;
     ~DrmDisplayComposition() = default;
 
     int init(int drm, uint32_t crtc);

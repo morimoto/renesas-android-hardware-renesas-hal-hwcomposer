@@ -40,6 +40,6 @@ private:
     std::map<int, int> mStat;
 };
 
-}
+} // namespace android
 
 #endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_PRIME_CACHE_H
