@@ -91,6 +91,8 @@ public:
     Error evsPresentDisplay();
 
     uint32_t getConnectorId() const;
+    std::string getDisplayInfo() const;
+    std::string getHardwareDisplayType() const;
 
 private:
     int loadDisplayModes();
@@ -123,7 +125,8 @@ private:
     uint32_t mmHeight = 0;
 
     uint32_t mCurrentDisplayHeight = 0;
-    uint32_t mCurrentDisplayWidth  = 0;
+    uint32_t mCurrentDisplayWidth = 0;
+    float mCurrentDisplayVRefresh = 0.0f;
 
     DRMProperty mCrtcModeProperty;
     DRMProperty mCrtcActiveProperty;
@@ -170,6 +173,7 @@ private:
     bool mInitialized = false;
     bool mUsingCameraLayer = false;
     bool mValidated = false;
+    bool mIsInterlaceMode = false;
 };
 
 } // namespace android

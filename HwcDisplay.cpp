@@ -1278,7 +1278,9 @@ int HwcDisplay::selectConfig() {
         ALOGD("selected mode %d name = %s vrefresh = %f", i - 1,
               mode.getName().c_str(), mode.getVRefresh());
         mCurrentDisplayHeight = mode.getVDisplay();
-        mCurrentDisplayWidth  = mode.getHDisplay();
+        mCurrentDisplayWidth = mode.getHDisplay();
+        mCurrentDisplayVRefresh = mode.getVRefresh();
+        mIsInterlaceMode = !!(mode.getFlags() & DRM_MODE_FLAG_INTERLACE);
         break;
     }
 
@@ -1361,6 +1363,24 @@ int HwcDisplay::destroyPropertyBlob(uint32_t blob_id) {
 
 uint32_t HwcDisplay::getConnectorId() const {
     return mConnectorId;
+}
+
+std::string HwcDisplay::getHardwareDisplayType() const {
+    auto typePosition = std::find(std::rbegin(mDisplayParams.property),
+                                  std::rend(mDisplayParams.property),
+                                  '.');
+    const std::string hardwareType(typePosition.base(), std::end(mDisplayParams.property));
+    return hardwareType;
+}
+
+std::string HwcDisplay::getDisplayInfo() const {
+    std::ostringstream displayInfo;
+    displayInfo << std::endl << "PLANES num: " << mPlanes.size() << std::endl;
+    displayInfo << "Current display mode: "
+                << mCurrentDisplayWidth << 'x' << mCurrentDisplayHeight
+                << (mIsInterlaceMode ? "i-" : "-")
+                << mCurrentDisplayVRefresh << std::endl << std::endl;
+    return displayInfo.str();
 }
 
 } // namespace android

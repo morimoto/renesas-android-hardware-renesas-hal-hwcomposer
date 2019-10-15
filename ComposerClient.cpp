@@ -1571,7 +1571,7 @@ Return<Error> ComposerClient::setReadbackBuffer(
 }
 
 } // namespace implementation
-} // namespace V2_1
+} // namespace V2_3
 } // namespace composer
 } // namespace graphics
 } // namespace hardware

@@ -95,17 +95,19 @@ Return<void> HwcHal::getCapabilities(getCapabilities_cb hidl_cb) {
 }
 
 Return<void> HwcHal::dumpDebugInfo(dumpDebugInfo_cb hidl_cb) {
-    //unsupported(__func__);
-    //    uint32_t len = 0;
-    //    mHwComposer2.Dump(&len, nullptr);
-    //    std::vector<char> buf(len + 1);
-    //    mHwComposer2.Dump(&len, buf.data());
-    //    buf.resize(len + 1);
-    //    buf[len] = '\0';
-    //    hidl_string buf_reply;
-    //    buf_reply.setToExternal(buf.data(), len);
-    //    hidl_cb(buf_reply);
-    hidl_cb("This is a dump from HwcHal.\n");
+    static constexpr size_t kDumpsysLimitRange = 91;
+    static const std::string header = std::string(kDumpsysLimitRange, '-') + '\n';
+    std::ostringstream hwcDump;
+    hwcDump << "    h/w composer API version 2.3\n";
+    hwcDump << header;
+
+    for (size_t i = 0; i < mDisplays.size(); ++i) {
+        hwcDump << "Display " << mDisplays.at(i).getHardwareDisplayType().data();
+        hwcDump << mDisplays.at(i).getDisplayInfo();
+    }
+
+    hwcDump << header;
+    hidl_cb(hwcDump.str());
     return Void();
 }
 
