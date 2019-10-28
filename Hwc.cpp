@@ -560,6 +560,8 @@ Error HwcHal::presentDisplay(
     *outPresentFence = -1;
     if (mIsCameraEnabled &&
             (display == mCameraDisplayId || mCameraStreamAllDisplays)) {
+        auto lock = std::unique_lock(mEvsLock);
+        mEndEvsThread.wait(lock);
         return Error::NONE;
     }
 
@@ -573,10 +575,6 @@ Error HwcHal::presentDisplay(
     if (mReadbackBuf) {
         mReadbackBuf->waitAndTakeCapture(*outPresentFence);
         mReadbackBuf.reset(nullptr);
-    }
-
-    if (mIsCameraEnabled && display == HWC_DISPLAY_EXTERNAL) {
-        getDisplay(display).syncFence( mDisplays.at(HWC_DISPLAY_PRIMARY).getDisplayHandle() );
     }
 
     uint32_t count = 0;
@@ -727,6 +725,7 @@ Return<Error> HwcHal::setEVSCameraData(const hidl_handle& buffer, int8_t currDis
         }
         break;
     }
+    mEndEvsThread.notify_one();
     return Error::NONE;
 }
 

@@ -187,12 +187,7 @@ Error HwcDisplay::evsPresentDisplay() {
     DrmHwcLayer layer;
     mCameraLayer.populateDrmLayer(&layer);
 
-    if (mReleaseFence != -1) {
-        mCameraLayer.setReleaseFence(mReleaseFence);
-        hwcDisplayPoll(mReleaseFence);
-        close(mReleaseFence);
-    }
-
+    auto lock = std::lock_guard(mImporterLock);
     const int32_t ret = layer.importBuffer(mImporter.get());
 
     if (ret) {
@@ -210,6 +205,12 @@ Error HwcDisplay::evsPresentDisplay() {
         return err;
     }
 
+    if (mReleaseFence != -1) {
+        mCameraLayer.setReleaseFence(mReleaseFence);
+        hwcDisplayPoll(mReleaseFence);
+        close(mReleaseFence);
+    }
+
     return Error::NONE;
 }
 
@@ -218,9 +219,6 @@ void HwcDisplay::evsStartCameraLayer(buffer_handle_t layer) {
     mCameraLayer.setValidatedType(HWC2::Composition::Device);
 
     if (!mUsingCameraLayer) {
-        int retireFence = 0;
-        presentDisplay(&retireFence);
-        close(retireFence);
         // Setup camera layer's dimensions
         const IMG_native_handle_t* imgHnd2 =
             reinterpret_cast<const IMG_native_handle_t*>(layer);
@@ -614,8 +612,11 @@ int HwcDisplay::applyFrame(std::unique_ptr<DrmDisplayComposition> composition) {
                 drmModeAtomicFree(pset);
 
             mActiveComposition.swap(composition);
-            mReleaseFence = out_fences[mCrtcPipe];
 
+            int32_t cur_out_fence = out_fences[mCrtcPipe];
+            if (mCrtcOutFenceProperty.getId() && cur_out_fence > 0) {
+                mReleaseFence = cur_out_fence;
+            }
             return 0;
         }
     } else {
@@ -682,29 +683,33 @@ Error HwcDisplay::presentDisplay(int32_t* retire_fence) {
     }
 
     std::vector<DrmHwcLayer> layers;
+    {
+        auto lock = std::lock_guard(mImporterLock);
 
-    for (HwcLayer* layer : sorted_layers) {
-        DrmHwcLayer drm_layer;
-        layer->populateDrmLayer(&drm_layer);
+        for (HwcLayer* layer : sorted_layers) {
+            DrmHwcLayer drm_layer;
+            layer->populateDrmLayer(&drm_layer);
 
-        ret = drm_layer.importBuffer(mImporter.get());
+            ret = drm_layer.importBuffer(mImporter.get());
 
-        if (ret) {
-            ALOGE("Failed to import layer, ret=%d", ret);
-            continue;
+            if (ret) {
+                ALOGE("Failed to import layer, ret=%d", ret);
+                continue;
+            }
+
+            layers.emplace_back(std::move(drm_layer));
         }
 
-        layers.emplace_back(std::move(drm_layer));
+        Error err = compositionLayers(layers);
+
+        if (err != Error::NONE) {
+            ALOGE("Failed to composition layers, ret=<%d>", static_cast<int32_t>(err));
+            return err;
+        }
+
+
+        *retire_fence = mReleaseFence;
     }
-
-    Error err = compositionLayers(layers);
-
-    if (err != Error::NONE) {
-        ALOGE("Failed to composition layers, ret=<%d>", static_cast<int32_t>(err));
-        return err;
-    }
-
-    *retire_fence = mReleaseFence;
     syncFence(mHandle);
 
     return Error::NONE;

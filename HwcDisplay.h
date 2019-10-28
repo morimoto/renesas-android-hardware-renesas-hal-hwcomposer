@@ -151,6 +151,7 @@ private:
     uint32_t mCrtId;
     hwdisplay mDisplayParams;
 
+    std::mutex mImporterLock;
     std::shared_ptr<Importer> mImporter;
     std::deque<DRMPlane> mPlanes;
 

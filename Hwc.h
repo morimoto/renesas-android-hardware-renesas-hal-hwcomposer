@@ -205,6 +205,8 @@ private:  // members
     bool mCameraStreamAllDisplays = false;
     hidl_handle mCameraHidlHandle = nullptr;
     std::atomic<bool> mIsCameraEnabled = {false};
+    std::mutex mEvsLock;
+    std::condition_variable mEndEvsThread;
 
     bool mIsHotplugInitialized;
     bool mInitDisplays;
