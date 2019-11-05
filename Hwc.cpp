@@ -529,7 +529,12 @@ void HwcHal::evsCameraStream(size_t cameraDisplay, const hidl_handle& buffer) {
         mDisplays.at(cameraDisplay).evsPresentDisplay();
     } else {
         mDisplays.at(cameraDisplay).evsStopCameraLayer();
-        getClient()->onRefresh(cameraDisplay);
+
+        // the client may doesn't not exist yet
+        if (getClient()) {
+            getClient()->onRefresh(cameraDisplay);
+        }
+
 #if HWC_PRIME_CACHE
         PrimeCache::getInstance().isCacheEnabled() = true;
 #endif
