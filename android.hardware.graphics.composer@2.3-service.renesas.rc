@@ -1,10 +1,7 @@
 service vendor.hwcomposer-hal-2-3  /vendor/bin/hw/android.hardware.graphics.composer@2.3-service.renesas
     priority -20
-    class hal animation
+    class early_hal animation
     user system
     group graphics drmrpc
     capabilities SYS_NICE
     onrestart restart surfaceflinger
-
-on early-init
-    start vendor.hwcomposer-hal-2-3
