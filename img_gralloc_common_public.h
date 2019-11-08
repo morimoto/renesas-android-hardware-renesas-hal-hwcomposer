@@ -107,9 +107,14 @@ typedef struct
 	 * This also prevents us from leaking maps/allocations.
 	 */
 
-#define IMG_NATIVE_HANDLE_NUMFDS (MAX_SUB_ALLOCS)
+#define IMG_NATIVE_HANDLE_NUMFDS (MAX_SUB_ALLOCS + 1)
+
 	/* The 'fd' field is used to "export" a meminfo to another process. */
-	int fd[IMG_NATIVE_HANDLE_NUMFDS];
+	int fd[MAX_SUB_ALLOCS];
+
+	/* The iMetaDataFd filed is used to 'export' metadata to another process.
+	 */
+	int iMetaDataFd;
 
 	/* This define should represent the number of packed 'int's required to
 	 * represent the fields following it. If you add a data type that is
@@ -371,8 +376,13 @@ typedef enum
 {
 	/* Identical to upstream enum android_dataspace */
 	HAL_DATASPACE_EXT_UNKNOWN           = HAL_DATASPACE_UNKNOWN,
+#if defined(PVR_ANDROID_HAS_HAL_DATASPACE_V0)
+	HAL_DATASPACE_EXT_SRGB_LINEAR       = HAL_DATASPACE_V0_SRGB_LINEAR,
+	HAL_DATASPACE_EXT_SRGB              = HAL_DATASPACE_V0_SRGB,
+#else
 	HAL_DATASPACE_EXT_SRGB_LINEAR       = HAL_DATASPACE_SRGB_LINEAR,
 	HAL_DATASPACE_EXT_SRGB              = HAL_DATASPACE_SRGB,
+#endif
 #if defined(PVR_ANDROID_HAS_HAL_DATASPACE_SCRGB)
 	HAL_DATASPACE_EXT_V0_SCRGB          = HAL_DATASPACE_V0_SCRGB,
 	HAL_DATASPACE_EXT_V0_SCRGB_LINEAR   = HAL_DATASPACE_V0_SCRGB_LINEAR,
