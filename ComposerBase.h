@@ -131,6 +131,7 @@ public:
     virtual Error setReadbackBuffer(hwc2_display_t display,
                                     const buffer_handle_t& buffer,
                                     int releaseFence) = 0;
+    virtual bool isReadbackBufferSet() const = 0;
     virtual bool isDisplayValid(hwc2_display_t display) const = 0;
 };
 

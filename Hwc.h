@@ -61,6 +61,7 @@ public:  // functions
     Return<uint32_t> getDisplayWidth()  override;
 
     // ComposerBase interface
+    bool isReadbackBufferSet() const override;
     bool isDisplayValid(hwc2_display_t display) const override;
     void removeClient() override;
     void enableCallback(bool enable) override;

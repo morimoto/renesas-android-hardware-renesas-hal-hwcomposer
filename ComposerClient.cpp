@@ -486,10 +486,11 @@ Return<void> ComposerClient::getColorModes(Display display,
 }
 
 Return<void> ComposerClient::getReadbackBufferAttributes_2_3(
-        [[maybe_unused]]uint64_t display,
-        [[maybe_unused]]getReadbackBufferAttributes_2_3_cb _hidl_cb) {
-    // TODO implement
-    _hidl_cb(Error::UNSUPPORTED, {}, {});
+        uint64_t display, getReadbackBufferAttributes_2_3_cb _hidl_cb) {
+    Error err = mHal.isDisplayValid(display) ? Error::NONE : Error::BAD_DISPLAY;
+
+    // RGB_565 also supported
+    _hidl_cb(err, PixelFormat_V1_2::BGRA_8888, Dataspace_V1_2::RANGE_FULL);
     return Void();
 }
 
@@ -820,7 +821,7 @@ bool ComposerClient::CommandReader::parseSetLayerPerFrameMetadata(
 }
 
 bool ComposerClient::CommandReader::parseSetLayerFloatColor(uint16_t length) {
-    auto expLen = CommandWriterBase::kSetLayerColorTransformLength;
+    auto expLen = CommandWriterBase::kSetLayerFloatColorLength;
 
     if (length != expLen) {
         return false;
@@ -1529,6 +1530,7 @@ Error ComposerClient::CommandReader::updateBuffer(BufferCache cache,
 Return<void> ComposerClient::getReadbackBufferAttributes(
     uint64_t display, getReadbackBufferAttributes_cb _hidl_cb) {
     Error err = mHal.isDisplayValid(display) ? Error::NONE : Error::BAD_DISPLAY;
+
     // RGB_565 also supported
     _hidl_cb(err, PixelFormat_V1_1::BGRA_8888, Dataspace_V1_1::RANGE_FULL);
     return Void();
@@ -1536,9 +1538,13 @@ Return<void> ComposerClient::getReadbackBufferAttributes(
 
 Return<void> ComposerClient::getReadbackBufferFence(
         uint64_t display, getReadbackBufferFence_cb _hidl_cb) {
-
     if (!mHal.isDisplayValid(display)) {
         _hidl_cb(Error::BAD_DISPLAY, {});
+        return Void();
+    }
+
+    if (!mHal.isReadbackBufferSet()) {
+        _hidl_cb(Error::UNSUPPORTED, {});
         return Void();
     }
 
@@ -1556,13 +1562,13 @@ Return<void> ComposerClient::getReadbackBufferFence(
 Return<Error> ComposerClient::setReadbackBuffer(
         uint64_t display, const hidl_handle& buffer,
     const hidl_handle& releaseFence) {
-    if (mHal.isDisplayValid(display)) {
+    if (!mHal.isDisplayValid(display)) {
         return Error::BAD_DISPLAY;
     }
 
     auto fenceNativeHandle = releaseFence.getNativeHandle();
 
-    if (fenceNativeHandle->numFds) {
+    if (fenceNativeHandle && fenceNativeHandle->numFds) {
         return mHal.setReadbackBuffer(display, buffer.getNativeHandle(),
                                       fenceNativeHandle->data[0]);
     } else {

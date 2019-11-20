@@ -797,8 +797,12 @@ void HwcHal::getDisplayIdentificationData(uint64_t display,
     _hidl_cb(Error::NONE, connectorId, data);
 }
 
+bool HwcHal::isReadbackBufferSet() const {
+    return mReadbackBuf != nullptr;
+}
+
 bool HwcHal::isDisplayValid(hwc2_display_t display) const {
-    return display < mDisplays.size();
+    return mDisplays.find(display) != mDisplays.end();
 }
 
 Error HwcHal::setReadbackBuffer(hwc2_display_t display,

@@ -153,9 +153,17 @@ void VSyncWorker::routine() {
      * We could shorten the race window by caching callback_ right before calling
      * the hook. However, in practice, callback_ is only updated once, so it's not
      * worth the overhead.
+     *
+     * Update: hwcomposer vts'es may change the mCallback and mEnabled and expect
+     *         that changes will take effect immediately but it is not the case.
+     *         The window of unexpected VSYNC callback triggering is maximum shortened
+     *         but still exist.
+     *         In normal hwcomposer work (not VTS'es) this problem don't arise,
+     *         satisfying questionable vts consider as unreasonable.
      */
-    if (callback)
+    if (callback && mEnabled) {
         callback->callback(display, timestamp);
+    }
 
     mLastTimestamp = timestamp;
 }

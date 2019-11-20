@@ -60,7 +60,7 @@ private:
 
     int mDisplay;
     int mRefreshRate = 60; // Default to 60Hz refresh rate
-    bool mEnabled;
+    std::atomic<bool> mEnabled;
     int64_t mLastTimestamp;
 };
 
