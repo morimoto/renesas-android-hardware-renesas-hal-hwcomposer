@@ -83,7 +83,7 @@ public:
     void updateConfig();
     void loadNewConfig();
     void getCurrentDisplaySize(uint32_t & inWidth, uint32_t & inHeight);
-    void hwcDisplayPoll(int32_t fd, int32_t timeout = -1) const;
+    void hwcDisplayPoll(int32_t fd, int32_t timeout = 100) const;
     void syncFence(const hwc2_display_t handle);
     void evsStartCameraLayer(buffer_handle_t layer);
     void evsStopCameraLayer();
