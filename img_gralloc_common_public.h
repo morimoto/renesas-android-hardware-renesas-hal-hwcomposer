@@ -258,7 +258,7 @@ __attribute__((aligned(sizeof(int)),packed)) IMG_native_handle_t;
 #define IMG_BFF_YUV_SUBSAMPLING_4_4_4        (3 << 7)
 
 /* Move the format to the end of the list when returning configs to EGL. */
-#define IMG_BFF_EGL_LOW_PRIORITY             (1 << 9)  
+#define IMG_BFF_EGL_LOW_PRIORITY             (1 << 9)
 
 /* Backwards compatibility */
 #define IMG_BFF_YUV             IMG_BFF_ENCODING_VUCrCb
@@ -319,7 +319,6 @@ IMG_buffer_handle_t;
 #define GRALLOC_GET_ION_CLIENT_IMG                   6
 #define GRALLOC_GET_BUFFER_HANDLE_IMG                7
 #define GRALLOC_GET_COLORSPACE_BUFFER_FORMAT_IMG     8
-#define GRALLOC_GET_BUFFER_PHYS_ADDRESS              9
 
 #if !defined(PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE)
 

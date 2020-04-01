@@ -60,8 +60,6 @@ enum
 		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_BUFFER_HANDLE_IMG),
 	GRALLOC1_FUNCTION_GET_COLORSPACE_BUFFER_FORMAT_IMG =
 		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_COLORSPACE_BUFFER_FORMAT_IMG),
-	GRALLOC1_FUNCTION_GET_BUFFER_PHYS_ADDRESS =
-		(GRALLOC1_FUNCTION_IMG_EXT_OFF + GRALLOC_GET_BUFFER_PHYS_ADDRESS),
 };
 
 /* Public HAL extension API */
@@ -193,18 +191,6 @@ static inline int gralloc_get_colorspace_buffer_format_img
 			g->getFunction(g, GRALLOC1_FUNCTION_GET_COLORSPACE_BUFFER_FORMAT_IMG);
 
 	return f(g, format, eColorspace, v);
-}
-
-typedef int (*GRALLOC1_PFN_GET_BUFFER_PHYS_ADDRESS)
-	(gralloc_t *g, int fd, uint64_t *paddr);
-
-static inline int
-gralloc_get_buffer_phys_addr(gralloc_t *g, int fd, uint64_t *paddr)
-{
-	GRALLOC1_PFN_GET_BUFFER_PHYS_ADDRESS f =
-		(GRALLOC1_PFN_GET_BUFFER_PHYS_ADDRESS)
-		g->getFunction(g, GRALLOC1_FUNCTION_GET_BUFFER_PHYS_ADDRESS);
-	return f(g, fd, paddr);
 }
 
 #endif /* IMG_GRALLOC_PUBLIC_H */
