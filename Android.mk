@@ -22,7 +22,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE_PATH := $(TARGET_OUT_VENDOR_EXECUTABLES)/hw
-LOCAL_SHARED_LIBRARIES := libcutils libhardware libutils libhardware_legacy liblog libhidlbase
+LOCAL_SHARED_LIBRARIES := libcutils libhardware libutils libmmngr libhardware_legacy liblog libhidlbase
 LOCAL_SHARED_LIBRARIES += android.hardware.graphics.mapper@3.0
 LOCAL_SHARED_LIBRARIES += libhidltransport
 LOCAL_SHARED_LIBRARIES += android.hardware.graphics.common@1.2
@@ -123,6 +123,8 @@ LOCAL_C_INCLUDES+= $(TOP)/system/core/base/include/
 LOCAL_C_INCLUDES+= $(TOP)/system/core/base/
 LOCAL_C_INCLUDES+= $(TOP)/system/libfmq/
 LOCAL_C_INCLUDES+= $(TOP)/system/libfmq/include
+LOCAL_C_INCLUDES+= $(TOP)/vendor/renesas/utils/mmngr/libmmngr/mmngr/include
+LOCAL_C_INCLUDES+= $(TOP)/hardware/renesas/modules/mmngr/mmngr_drv/mmngr/mmngr-module/files/mmngr/include
 
 LOCAL_MULTILIB := 64
 LOCAL_PROPRIETARY_MODULE := true

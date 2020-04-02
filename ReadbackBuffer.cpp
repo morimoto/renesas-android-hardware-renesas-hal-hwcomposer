@@ -6,6 +6,10 @@
 #include <drm/drm_fourcc.h>
 #include <poll.h>
 
+extern "C" {
+#include <mmngr_user_public.h>
+}
+
 #define ALIGN_ROUND_UP(X, Y)  (((X)+(Y)-1) & ~((Y)-1))
 
 // should be in libdrm
@@ -13,66 +17,19 @@
 
 namespace android::hardware::graphics::composer::V2_3::implementation {
 
-class GrallocModuleHandler {
-public:
-    GrallocModuleHandler() {
-        const int eError = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &mModule);
-
-        if (!eError) {
-            gralloc1_open(mModule, &mImgGrallocModule);
-        } else {
-            ALOGE("Can't find %s module err = %#x",
-                  GRALLOC_HARDWARE_MODULE_ID, eError);
-            return;
-        }
-
-        mInitialized = true;
-    }
-    bool isInitialized() const {
-        return mInitialized;
-    }
-    int getPhysAddr(uint64_t* address, uint64_t bufferFd) const {
-        if (!mInitialized) return -1;
-
-        const int ret = gralloc_get_buffer_phys_addr(mImgGrallocModule,
-                        bufferFd,
-                        address);
-
-        if (ret != 0) {
-            ALOGE("gralloc api GetPhysAddr() returned error %#x", ret);
-            return ret;
-        }
-
-        return 0;
-    }
-    ~GrallocModuleHandler() {
-        if (!mInitialized) return;
-
-        gralloc1_close(mImgGrallocModule);
-    }
-private:
-    gralloc_t* mImgGrallocModule;
-    hw_module_t const* mModule;
-    bool mInitialized = false;
-};
-
-// -----------------------------------------------------------------------------
-
 ReadbackBuffer::ReadbackBuffer(int drmFd, uint32_t width, uint32_t height,
                                uint32_t crtcId,
                                const IMG_native_handle_t* buffer,
                                int releaseFence)
     : mDrmFd(drmFd)
     , mBufferReleaseFence(releaseFence) {
-    static GrallocModuleHandler grHandler;
 
-    if (!grHandler.isInitialized() || !buffer) {
+    if (!buffer) {
         return;
     }
 
-    uint64_t address = 0;
-
-    if (grHandler.getPhysAddr(&address, buffer->fd[0])) {
+    uint64_t address = 0u;
+    if (mmngr_get_buffer_phys_addr(buffer->fd[0u], &address) != R_MM_OK) {
         return;
     }
 
