@@ -607,11 +607,8 @@ Error HwcHal::presentDisplay(
 
 Error HwcHal::setLayerCursorPosition(Display display, Layer layer, int32_t x,
                                      int32_t y) {
-    if (mIsCameraEnabled) {
-        return Error::NONE;
-    }
-
-    return getLayer(display, layer).setCursorPosition(x, y);
+    unsupported(__func__, display, layer, x, y);
+    return Error::NONE;
 }
 
 Error HwcHal::setLayerBuffer(
