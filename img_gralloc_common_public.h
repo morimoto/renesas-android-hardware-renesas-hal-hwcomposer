@@ -28,7 +28,9 @@
 #include <system/graphics.h>
 #include <linux/ion.h>
 
+#ifndef ALIGN
 #define ALIGN(x,a)  ((((x) + (a) - 1L) / (a)) * (a))
+#endif
 #define HW_ALIGN    64
 
 #define PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE
@@ -74,9 +76,6 @@
 #define HAL_FB_COMPRESSION_DIRECT_8x8          1
 #define HAL_FB_COMPRESSION_DIRECT_16x4         2
 #define HAL_FB_COMPRESSION_DIRECT_32x2         3
-#define HAL_FB_COMPRESSION_INDIRECT_8x8        4
-#define HAL_FB_COMPRESSION_INDIRECT_16x4       5
-#define HAL_FB_COMPRESSION_INDIRECT_4TILE_8x8  6
 
 /* The memory layout is OR'ed into bit 7 (top bit) of the 8 bit "vendor
  * format" field. Only STRIDED and TWIDDLED are supported; there is no space
@@ -107,14 +106,10 @@ typedef struct
 	 * This also prevents us from leaking maps/allocations.
 	 */
 
-#define IMG_NATIVE_HANDLE_NUMFDS (MAX_SUB_ALLOCS + 1)
+#define IMG_NATIVE_HANDLE_NUMFDS (MAX_SUB_ALLOCS)
 
 	/* The 'fd' field is used to "export" a meminfo to another process. */
 	int fd[MAX_SUB_ALLOCS];
-
-	/* The iMetaDataFd filed is used to 'export' metadata to another process.
-	 */
-	int iMetaDataFd;
 
 	/* This define should represent the number of packed 'int's required to
 	 * represent the fields following it. If you add a data type that is
@@ -124,9 +119,9 @@ typedef struct
 	 */
 #define IMG_NATIVE_HANDLE_NUMINTS \
 	(sizeof(unsigned long long) / sizeof(int) + \
-	 7 + MAX_SUB_ALLOCS + MAX_SUB_ALLOCS + \
+	 6 + MAX_SUB_ALLOCS + MAX_SUB_ALLOCS + \
 	 sizeof(unsigned long long) / sizeof(int) * MAX_SUB_ALLOCS + \
-	 2)
+	 MAX_SUB_ALLOCS + 3)
 	/* A KERNEL unique identifier for any exported kernel memdesc. Each
 	 * exported kernel memdesc will have a unique stamp, but note that in
 	 * userspace, several memdescs across multiple processes could have
@@ -170,6 +165,9 @@ typedef struct
 	 * entries will be non-zero.
 	 */
 	unsigned long long aulPlaneOffset[MAX_SUB_ALLOCS];
+
+	/* Indicates what are stored in memdesc  */
+	unsigned int auiMemdescUsage[MAX_SUB_ALLOCS];
 
 	/* This records the number of MAX_SUB_ALLOCS fds actually used by the
 	 * buffer allocation. File descriptors up to fd[iNumSubAllocs - 1] are
@@ -237,12 +235,7 @@ __attribute__((aligned(sizeof(int)),packed)) IMG_native_handle_t;
  */
 #define IMG_BFF_NEVER_COMPRESS               (1 << 5)
 
-/* Indicates that the buffer should be mapped into the GPU 'tiling range'
- * heaps, rather than the 'linear' general heap. This implies that the raw
- * buffer data is tiled in physical memory. (The GPU BIF will de-tile it, so
- * this is distinct from 'tiled texture' support.) The graphics HAL will
- * select the correct 'tiling range' based on the buffer dimensions.
- */
+/* Deprecated, do not use */
 #define IMG_BFF_BIFTILED                     (1 << 6)
 
 /* YUV subsampling encoding of buffer data.
@@ -259,6 +252,16 @@ __attribute__((aligned(sizeof(int)),packed)) IMG_native_handle_t;
 
 /* Move the format to the end of the list when returning configs to EGL. */
 #define IMG_BFF_EGL_LOW_PRIORITY             (1 << 9)
+
+/* When computing the first bit in the metadata plane layout for each
+ * components, it's equivalent to the offset in pixels for channels.
+ * According to this bit to assign corresponding offets for R component and
+ * B component.
+ */
+#define IMG_BFF_B_G_R_ORDER                  (1 << 10)
+
+/* To determine how many components in the plane. */
+#define IMG_BFF_WITHOUT_ALPHA                (1 << 11)
 
 /* Backwards compatibility */
 #define IMG_BFF_YUV             IMG_BFF_ENCODING_VUCrCb
@@ -319,6 +322,7 @@ IMG_buffer_handle_t;
 #define GRALLOC_GET_ION_CLIENT_IMG                   6
 #define GRALLOC_GET_BUFFER_HANDLE_IMG                7
 #define GRALLOC_GET_COLORSPACE_BUFFER_FORMAT_IMG     8
+#define GRALLOC_GET_BUFFER_PHYS_ADDRESS              9
 
 #if !defined(PVR_ANDROID_HAS_SET_BUFFERS_DATASPACE)
 
@@ -418,5 +422,23 @@ typedef enum
 	                                      HAL_DATASPACE_RANGE_FULL,
 }
 android_dataspace_ext_t;
+
+/* This is the same definition as hwc2_blend_mode_t to be able to set blend
+ * modes per layer. It can be simplied cast from hwc2_blend_mode_t.
+ */
+typedef enum
+{
+	HAL_BLEND_MODE_EXT_INVALID          = 0,
+
+	/* colorOut = colorSrc */
+	HAL_BLEND_MODE_EXT_NONE             = 1,
+
+	/* colorOut = colorSrc + colorDst * (1 - alphaSrc) */
+	HAL_BLEND_MODE_EXT_PREMULTIPLIED    = 2,
+
+	/* colorOut = colorSrc * alphaSrc + colorDst * (1 - alphaSrc) */
+	HAL_BLEND_MODE_EXT_COVERAGE         = 3,
+}
+android_blend_mode_ext_t;
 
 #endif /* IMG_GRALLOC_COMMON_PUBLIC_H */
