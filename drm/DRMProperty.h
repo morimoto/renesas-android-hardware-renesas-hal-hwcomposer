@@ -44,6 +44,7 @@ public:
     uint32_t getId() const;
     std::string getName() const;
     int getValue(uint64_t* value) const;
+    std::tuple<uint64_t, int> getEnumValueWithName(std::string name) const;
 
     static int getProperty(uint32_t fd, uint32_t obj_id, uint32_t obj_type,
                            const char* prop_name, DRMProperty* property);
