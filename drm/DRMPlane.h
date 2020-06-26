@@ -55,6 +55,7 @@ public:
     const DRMProperty& getAlphaProperty() const;
     const DRMProperty& getZposProperty() const;
     const DRMProperty& getFenceProperty() const;
+    const DRMProperty& getBlendProperty() const;
 
 private:
     bool isSupportedFormat(uint32_t format);
@@ -81,6 +82,7 @@ private:
     DRMProperty mAlphaProperty;
     DRMProperty mZposProperty;
     DRMProperty mFenceProperty;
+    DRMProperty mBlendProperty;
 };
 
 } // namespace android

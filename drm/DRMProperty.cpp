@@ -93,6 +93,19 @@ int DRMProperty::getValue(uint64_t* value) const {
     }
 }
 
+std::tuple<uint64_t, int> DRMProperty::getEnumValueWithName(
+        std::string name) const {
+    for (auto it : mEnums) {
+        if (it.mName.compare(name) == 0) {
+            return std::make_tuple(it.mValue, 0);
+        }
+    }
+
+    ALOGE("Failed to get value with name %s for propperty %s",
+          name.c_str(), mName.c_str());
+    return std::make_tuple(UINT64_MAX, -EINVAL);
+}
+
 int DRMProperty::getProperty(uint32_t fd, uint32_t obj_id, uint32_t obj_type,
                              const char* prop_name, DRMProperty* property) {
     drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(fd, obj_id,

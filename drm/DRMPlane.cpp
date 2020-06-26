@@ -132,6 +132,13 @@ int DRMPlane::init() {
         return ret;
     }
 
+    ret = DRMProperty::getPlaneProperty(mDrm, mId, "IN_FENCE_FD", &mFenceProperty);
+
+    if (ret) {
+        ALOGE("DrmPlane: Could not get IN_FENCE_FD property");
+        return ret;
+    }
+
     if (mType == DRM_PLANE_TYPE_OVERLAY) {
         ret = DRMProperty::getPlaneProperty(mDrm, mId, "alpha", &mAlphaProperty);
 
@@ -146,13 +153,13 @@ int DRMPlane::init() {
             ALOGE("DrmPlane: Could not get zpos property");
             return ret;
         }
-    }
 
-    ret = DRMProperty::getPlaneProperty(mDrm, mId, "IN_FENCE_FD", &mFenceProperty);
+        ret = DRMProperty::getPlaneProperty(mDrm, mId, "pixel blend mode", &mBlendProperty);
 
-    if (ret) {
-        ALOGE("DrmPlane: Could not get IN_FENCE_FD property");
-        return ret;
+        if (ret) {
+            ALOGE("DrmPlane: Could not get pixel blend mode property");
+            return ret;
+        }
     }
 
     return 0;
@@ -204,6 +211,26 @@ int DRMPlane::updateProperties(drmModeAtomicReqPtr property_set,
         if (mZposProperty.getId()) {
             success |= drmModeAtomicAddProperty(property_set, mId, mZposProperty.getId(),
                                                 zpos) < 0;
+        }
+
+        if (mBlendProperty.getId()) {
+            uint64_t blend;
+            int ret = 0;
+            switch (layer.mBlending) {
+            case HWC2::BlendMode::Premultiplied:
+                std::tie(blend, ret) = mBlendProperty.getEnumValueWithName("Pre-multiplied");
+                break;
+            case HWC2::BlendMode::Coverage:
+                std::tie(blend, ret) = mBlendProperty.getEnumValueWithName("Coverage");
+                break;
+            default:
+                std::tie(blend, ret) = mBlendProperty.getEnumValueWithName("None");
+                break;
+            }
+            if (!ret) {
+                success |= drmModeAtomicAddProperty(property_set, mId, mBlendProperty.getId(),
+                                                    blend) < 0;
+            }
         }
     }
 
@@ -296,6 +323,10 @@ const DRMProperty& DRMPlane::getZposProperty() const {
 
 const DRMProperty& DRMPlane::getFenceProperty() const {
     return mFenceProperty;
+}
+
+const DRMProperty& DRMPlane::getBlendProperty() const {
+    return mBlendProperty;
 }
 
 bool DRMPlane::isSupportedFormat(uint32_t format) {

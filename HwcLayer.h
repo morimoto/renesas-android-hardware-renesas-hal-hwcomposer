@@ -43,6 +43,7 @@ public:
     uint8_t mAlpha = 0xff;
     hwc_frect_t mSourceCrop;
     hwc_rect_t mDisplayFrame;
+    HWC2::BlendMode mBlending = HWC2::BlendMode::None;
     int index = -1;
 };
 
