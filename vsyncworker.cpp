@@ -52,6 +52,11 @@ void VSyncWorker::registerCallback(std::shared_ptr<VsyncCallback> callback) {
     mCallback = callback;
 }
 
+void VSyncWorker::registerCallback_2_4(std::shared_ptr<VsyncCallback_2_4> callback) {
+    std::lock_guard<std::mutex> lock(mMutex);
+    mCallback_2_4 = callback;
+}
+
 void VSyncWorker::controlVSync(bool enabled) {
     std::lock_guard<std::mutex> lock(mMutex);
 
@@ -119,6 +124,7 @@ void VSyncWorker::routine() {
     bool enabled = mEnabled;
     int display = mDisplay;
     std::shared_ptr<VsyncCallback> callback(mCallback);
+    std::shared_ptr<VsyncCallback_2_4> callback_2_4(mCallback_2_4);
     lock.unlock();
 
     if (!enabled)
@@ -163,6 +169,10 @@ void VSyncWorker::routine() {
      */
     if (callback && mEnabled) {
         callback->callback(display, timestamp);
+    }
+
+    if (callback_2_4 && mEnabled) {
+        callback_2_4->callback(display, timestamp, kOneSecondNs / mRefreshRate);
     }
 
     mLastTimestamp = timestamp;

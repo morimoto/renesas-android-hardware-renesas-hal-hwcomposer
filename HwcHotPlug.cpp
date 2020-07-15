@@ -14,7 +14,7 @@ namespace android {
 namespace hardware {
 namespace graphics {
 namespace composer {
-namespace V2_3 {
+namespace V2_4 {
 namespace implementation {
 
 HotPlug::HotPlug() : android::Worker("Hotplug", HAL_PRIORITY_URGENT_DISPLAY) {
@@ -183,7 +183,7 @@ void HotPlug::initDisplays(HwcHal* hwc) {
 }
 
 }  // namespace implementation
-}  // namespace V2_3
+}  // namespace V2_4
 }  // namespace composer
 }  // namespace graphics
 }  // namespace hardware

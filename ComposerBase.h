@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_BASE_H
-#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_BASE_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_COMPOSER_BASE_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_COMPOSER_BASE_H
 
-#include <android/hardware/graphics/composer/2.3/IComposer.h>
+#include <android/hardware/graphics/composer/2.4/IComposer.h>
 #include <hardware/hwcomposer2.h>
 
 namespace android {
 namespace hardware {
 namespace graphics {
 namespace composer {
-namespace V2_3 {
+namespace V2_4 {
 namespace implementation {
 
 using android::hardware::graphics::common::V1_0::PixelFormat;
@@ -62,7 +62,7 @@ public:
     virtual Error getColorModes(Display display,
                                 hidl_vec<ColorMode>* outModes) = 0;
     virtual Error getDisplayAttribute(Display display, Config config,
-                                      IComposerClient::Attribute attribute, int32_t* outValue) = 0;
+                                      V2_1::IComposerClient::Attribute attribute, int32_t* outValue) = 0;
     virtual Error getDisplayConfigs(Display display,
                                     hidl_vec<Config>* outConfigs) = 0;
     virtual Error getDisplayName(Display display, hidl_string* outName) = 0;
@@ -133,13 +133,17 @@ public:
                                     int releaseFence) = 0;
     virtual bool isReadbackBufferSet() const = 0;
     virtual bool isDisplayValid(hwc2_display_t display) const = 0;
+    virtual Error setClientTargetProperty(
+            IComposerClient::ClientTargetProperty clientTargetProperty) = 0;
+    virtual Error setLayerGenericMetadata(const std::string& key, bool mandatory,
+                                         const std::vector<uint8_t>& value) = 0;
 };
 
 }  // namespace implementation
-}  // namespace V2_3
+}  // namespace V2_4
 }  // namespace composer
 }  // namespace graphics
 }  // namespace hardware
 }  // namespace android
 
-#endif  // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_BASE_H
+#endif  // ANDROID_HARDWARE_GRAPHICS_COMPOSER_COMPOSER_BASE_H

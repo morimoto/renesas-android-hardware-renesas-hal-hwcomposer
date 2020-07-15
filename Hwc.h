@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_H
-#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_HWC_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_HWC_H
 
 #include "ComposerBase.h"
 #include "HwcDisplay.h"
@@ -31,7 +31,7 @@ namespace android {
 namespace hardware {
 namespace graphics {
 namespace composer {
-namespace V2_3 {
+namespace V2_4 {
 namespace implementation {
 
 using vendor::renesas::graphics::composer::V2_0::IComposer;
@@ -54,6 +54,7 @@ public:  // functions
     Return<void> dumpDebugInfo(dumpDebugInfo_cb hidl_cb) override;
     Return<void> createClient(createClient_cb hidl_cb) override;
     Return<void> createClient_2_3(createClient_2_3_cb _hidl_cb) override;
+    Return<void> createClient_2_4(createClient_2_4_cb _hidl_cb) override;
     // Methods from IComposer follow
     Return<Error> setEVSCameraData(
         const hidl_handle& buffer, int8_t currDisplay) override;
@@ -94,7 +95,7 @@ public:  // functions
     Error getDisplayAttribute(
         Display display,
         Config config,
-        IComposerClient::Attribute attribute,
+        V2_1::IComposerClient::Attribute attribute,
         int32_t* outValue) override;
     Error getDisplayConfigs(Display display, hidl_vec<Config>* outConfigs) override;
     Error getDisplayName(Display display, hidl_string* outName) override;
@@ -167,6 +168,10 @@ public:  // functions
 
     Error setReadbackBuffer(hwc2_display_t display,
                             const buffer_handle_t& buffer, int releaseFence) override;
+    Error setClientTargetProperty(
+            IComposerClient::ClientTargetProperty clientTargetProperty) override;
+    Error setLayerGenericMetadata(const std::string& key, bool mandatory,
+                                         const std::vector<uint8_t>& value) override;
 
 private:  // types
     friend class HotPlug;
@@ -195,8 +200,13 @@ private:  // functions
                             hwc2_display_t display);
     static void vsyncHook(
         hwc2_callback_data_t callbackData, hwc2_display_t display, int64_t timestamp);
-    inline HwcDisplay& getDisplay(hwc2_display_t display);
+    static void vsyncHook_2_4(hwc2_callback_data_t callbackData,
+        hwc2_display_t display, int64_t timestamp, uint32_t vsyncPeriodNanos);
+    static void vsyncPeriodTimingChangedHook(hwc2_callback_data_t callbackData,
+        uint64_t display, const VsyncPeriodChangeTimeline& updatedTimeline);
+    static void seamlessPossibleHook(hwc2_callback_data_t callbackData, uint64_t display);
 
+    inline HwcDisplay& getDisplay(hwc2_display_t display);
     inline HwcLayer& getLayer(hwc2_display_t display, hwc2_layer_t layer);
 
 private:  // members
@@ -227,7 +237,7 @@ private:  // members
 };
 
 }  // namespace implementation
-}  // namespace V2_3
+}  // namespace V2_4
 }  // namespace composer
 }  // namespace graphics
 }  // namespace hardware
@@ -245,4 +255,4 @@ static inline void supported(char const* /*func*/) {
 
 } // namespace android
 
-#endif  // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_H
+#endif  // ANDROID_HARDWARE_GRAPHICS_COMPOSER_HWC_H

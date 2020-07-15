@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_DISPLAY_H
-#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_DISPLAY_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_HWC_DISPLAY_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_HWC_DISPLAY_H
 
 #include "config.h"
 #include "platform.h"
@@ -40,6 +40,9 @@ public:
 
     Error registerVsyncCallback(hwc2_callback_data_t data,
                                 hwc2_function_pointer_t func);
+    Error registerVsyncCallback_2_4(hwc2_callback_data_t data,
+                                    hwc2_function_pointer_t func);
+
     // HWC Hooks
     Error acceptDisplayChanges();
     Error createLayer(hwc2_layer_t* layer);
@@ -184,4 +187,4 @@ private:
 
 } // namespace android
 
-#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_DISPLAY_H
+#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_HWC_DISPLAY_H

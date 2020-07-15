@@ -28,7 +28,7 @@
 
 namespace android {
 using Error = android::hardware::graphics::composer::V2_1::Error;
-using android::hardware::graphics::composer::V2_3::implementation::HwcHal;
+using android::hardware::graphics::composer::V2_4::implementation::HwcHal;
 
 #if DEBUG_FRAMERATE
 static double now_ms() {
@@ -47,6 +47,22 @@ public:
     void callback(int display, int64_t timestamp) {
         auto hook = reinterpret_cast<HWC2_PFN_VSYNC>(hook_);
         hook(data_, display, timestamp);
+    }
+
+private:
+    hwc2_callback_data_t data_;
+    hwc2_function_pointer_t hook_;
+};
+
+class DrmVsyncCallback_2_4: public VsyncCallback_2_4 {
+public:
+    DrmVsyncCallback_2_4(hwc2_callback_data_t data, hwc2_function_pointer_t hook) :
+        data_(data), hook_(hook) {
+    }
+
+    void callback(int display, int64_t timestamp, uint32_t vsyncPeriodNanos) {
+        auto hook = reinterpret_cast<HWC2_PFN_VSYNC_2_4>(hook_);
+        hook(data_, display, timestamp, vsyncPeriodNanos);
     }
 
 private:
@@ -106,6 +122,15 @@ Error HwcDisplay::registerVsyncCallback(hwc2_callback_data_t data,
     supported(__func__);
     auto callback = std::make_shared<DrmVsyncCallback>(data, func);
     mVsyncWorker.registerCallback(std::move(callback));
+
+    return Error::NONE;
+}
+
+Error HwcDisplay::registerVsyncCallback_2_4(hwc2_callback_data_t data,
+                                            hwc2_function_pointer_t func) {
+    supported(__func__);
+    auto callback = std::make_shared<DrmVsyncCallback_2_4>(data, func);
+    mVsyncWorker.registerCallback_2_4(std::move(callback));
 
     return Error::NONE;
 }

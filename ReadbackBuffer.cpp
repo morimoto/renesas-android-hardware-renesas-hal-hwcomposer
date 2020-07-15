@@ -15,7 +15,7 @@ extern "C" {
 // should be in libdrm
 #define DRM_RCAR_DU_SCRSHOT 4
 
-namespace android::hardware::graphics::composer::V2_3::implementation {
+namespace android::hardware::graphics::composer::V2_4::implementation {
 
 ReadbackBuffer::ReadbackBuffer(int drmFd, uint32_t width, uint32_t height,
                                uint32_t crtcId,
@@ -81,5 +81,5 @@ bool ReadbackBuffer::isInitialized() const {
     return mInitialized;
 }
 
-} // namespace android::hardware::graphics::composer::V2_3::implementation
+} // namespace android::hardware::graphics::composer::V2_4::implementation
 

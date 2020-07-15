@@ -24,7 +24,7 @@ namespace android {
 namespace hardware {
 namespace graphics {
 namespace composer {
-namespace V2_3 {
+namespace V2_4 {
 namespace implementation {
 
 HwcHal::HwcHal()
@@ -99,7 +99,7 @@ Return<void> HwcHal::dumpDebugInfo(dumpDebugInfo_cb hidl_cb) {
     static constexpr size_t kDumpsysLimitRange = 91;
     static const std::string header = std::string(kDumpsysLimitRange, '-') + '\n';
     std::ostringstream hwcDump;
-    hwcDump << "    h/w composer API version 2.3\n";
+    hwcDump << "    h/w composer API version 2.4\n";
     hwcDump << header;
 
     for (size_t i = 0; i < mDisplays.size(); ++i) {
@@ -133,6 +133,26 @@ Return<void> HwcHal::createClient(createClient_cb hidl_cb) {
 
 // Duplicate of HwcHal::createClient
 Return<void> HwcHal::createClient_2_3(createClient_2_3_cb _hidl_cb) {
+    Error err = Error::NONE;
+    sp<ComposerClient> client;
+    {
+        std::lock_guard<std::mutex> lock(mClientMutex);
+
+        // only one client is allowed
+        if (mClient == nullptr) {
+            client = new ComposerClient(*this);
+            client->initialize();
+            mClient = client;
+        } else {
+            err = Error::NO_RESOURCES;
+        }
+    }
+    _hidl_cb(err, client);
+    return Void();
+};
+
+Return<void> HwcHal::createClient_2_4(createClient_2_4_cb _hidl_cb) {
+    using Error = ::android::hardware::graphics::composer::V2_4::Error;
     Error err = Error::NONE;
     sp<ComposerClient> client;
     {
@@ -192,6 +212,33 @@ void HwcHal::vsyncHook(hwc2_callback_data_t callbackData,
     }
 }
 
+void HwcHal::vsyncHook_2_4(hwc2_callback_data_t callbackData, hwc2_display_t display, int64_t timestamp, uint32_t vsyncPeriodNanos) {
+    auto hal = reinterpret_cast<HwcHal*>(callbackData);
+    auto client = hal->getClient();
+
+    if (client != nullptr) {
+        client->onVsync_2_4(display, timestamp, vsyncPeriodNanos);
+    }
+}
+
+void HwcHal::vsyncPeriodTimingChangedHook(hwc2_callback_data_t callbackData, uint64_t display, const VsyncPeriodChangeTimeline& updatedTimeline) {
+    auto hal = reinterpret_cast<HwcHal*>(callbackData);
+    auto client = hal->getClient();
+
+    if (client != nullptr) {
+        client->onVsyncPeriodTimingChanged(display, updatedTimeline);
+    }
+}
+
+void HwcHal::seamlessPossibleHook(hwc2_callback_data_t callbackData, uint64_t display) {
+    auto hal = reinterpret_cast<HwcHal*>(callbackData);
+    auto client = hal->getClient();
+
+    if (client != nullptr) {
+        client->onSeamlessPossible(display);
+    }
+}
+
 HwcDisplay& HwcHal::getDisplay(hwc2_display_t display) {
     return mDisplays.at(display);
 }
@@ -211,10 +258,22 @@ void HwcHal::enableCallback(bool enable) {
         RegisterCallback(
             HWC2::Callback::Vsync, this,
             reinterpret_cast<hwc2_function_pointer_t>(vsyncHook));
+        RegisterCallback(
+            HWC2::Callback::Vsync_2_4, this,
+            reinterpret_cast<hwc2_function_pointer_t>(vsyncHook_2_4));
+        RegisterCallback(
+            HWC2::Callback::VsyncPeriodTimingChanged, this,
+            reinterpret_cast<hwc2_function_pointer_t>(vsyncPeriodTimingChangedHook));
+        RegisterCallback(
+            HWC2::Callback::SeamlessPossible, this,
+            reinterpret_cast<hwc2_function_pointer_t>(seamlessPossibleHook));
     } else {
         RegisterCallback(HWC2::Callback::Hotplug, this, nullptr);
         RegisterCallback(HWC2::Callback::Refresh, this, nullptr);
         RegisterCallback(HWC2::Callback::Vsync, this, nullptr);
+        RegisterCallback(HWC2::Callback::Vsync_2_4, this, nullptr);
+        RegisterCallback(HWC2::Callback::VsyncPeriodTimingChanged, this, nullptr);
+        RegisterCallback(HWC2::Callback::SeamlessPossible, this, nullptr);
     }
 }
 
@@ -295,7 +354,7 @@ Error HwcHal::getColorModes(Display display, hidl_vec<ColorMode>* outModes) {
 }
 
 Error HwcHal::getDisplayAttribute(
-    Display display, Config config, IComposerClient::Attribute attribute,
+    Display display, Config config, V2_1::IComposerClient::Attribute attribute,
     int32_t* outValue) {
     return getDisplay(display).getDisplayAttribute(
                config, static_cast<int32_t>(attribute), outValue);
@@ -703,7 +762,20 @@ void HwcHal::RegisterCallback(
     case HWC2::Callback::Vsync: {
         for (std::pair<const hwc2_display_t, HwcDisplay>& d : mDisplays)
             d.second.registerVsyncCallback(data, function);
+        break;
+    }
 
+    case HWC2::Callback::Vsync_2_4: {
+        for (std::pair<const hwc2_display_t, HwcDisplay>& d : mDisplays)
+            d.second.registerVsyncCallback_2_4(data, function);
+        break;
+    }
+
+    case HWC2::Callback::VsyncPeriodTimingChanged: {
+        break;
+    }
+
+    case HWC2::Callback::SeamlessPossible: {
         break;
     }
 
@@ -885,8 +957,17 @@ Return<void> HwcHal::cmsGetHgo(int8_t /*currDisplay*/, cmsGetHgo_cb _hidl_cb) {
     return Void();
 }
 
+Error HwcHal::setClientTargetProperty([[maybe_unused]]IComposerClient::ClientTargetProperty clientTargetProperty) {
+    return Error::NONE;
+}
+
+Error HwcHal::setLayerGenericMetadata([[maybe_unused]]const std::string &key,
+        [[maybe_unused]]bool mandatory, [[maybe_unused]]const std::vector<uint8_t> &value) {
+    return Error::NONE;
+}
+
 }  // namespace implementation
-}  // namespace V2_3
+}  // namespace V2_4
 }  // namespace composer
 }  // namespace graphics
 }  // namespace hardware

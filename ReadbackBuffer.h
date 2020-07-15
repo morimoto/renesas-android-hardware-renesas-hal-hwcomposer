@@ -1,9 +1,9 @@
-#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_READBACK_BUFFER_H
-#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_READBACK_BUFFER_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_READBACK_BUFFER_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_READBACK_BUFFER_H
 
 #include "img_gralloc1_public.h"
 
-namespace android::hardware::graphics::composer::V2_3::implementation {
+namespace android::hardware::graphics::composer::V2_4::implementation {
 
 // should be in libdrm
 struct rcar_du_screen_shot {
@@ -32,6 +32,6 @@ private:
     rcar_du_screen_shot mData;
 };
 
-} // namespace android::hardware::graphics::composer::v2_3::implementation
+} // namespace android::hardware::graphics::composer::v2_4::implementation
 
-#endif //ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_READBACK_BUFFER_H
+#endif //ANDROID_HARDWARE_GRAPHICS_COMPOSER_READBACK_BUFFER_H

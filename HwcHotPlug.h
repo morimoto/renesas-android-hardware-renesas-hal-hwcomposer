@@ -1,5 +1,5 @@
-#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_HOTPLUG_H
-#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_HOTPLUG_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_HWC_HOTPLUG_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_HWC_HOTPLUG_H
 
 #include "Hwc.h"
 #include "autofd.h"
@@ -8,7 +8,7 @@ namespace android {
 namespace hardware {
 namespace graphics {
 namespace composer {
-namespace V2_3 {
+namespace V2_4 {
 namespace implementation {
 
 class HotPlug: public android::Worker {
@@ -50,10 +50,10 @@ private:
 };
 
 }  // namespace implementation
-}  // namespace V2_3
+}  // namespace V2_4
 }  // namespace composer
 }  // namespace graphics
 }  // namespace hardware
 }  // namespace android
-#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_HWC_HOTPLUG_H
+#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_HWC_HOTPLUG_H
 

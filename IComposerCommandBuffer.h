@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_COMMAND_BUFFER_H
-#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_COMMAND_BUFFER_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_COMPOSER_COMMAND_BUFFER_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_COMPOSER_COMMAND_BUFFER_H
 
 #ifndef LOG_TAG
 #warn "IComposerCommandBuffer.h included without LOG_TAG"
@@ -24,7 +24,7 @@
 #undef LOG_NDEBUG
 #define LOG_NDEBUG 0
 
-#include <android/hardware/graphics/composer/2.3/IComposer.h>
+#include <android/hardware/graphics/composer/2.4/IComposer.h>
 #include <log/log.h>
 #include <sync/sync.h>
 #include <fmq/MessageQueue.h>
@@ -41,7 +41,7 @@ namespace android {
 namespace hardware {
 namespace graphics {
 namespace composer {
-namespace V2_3 {
+namespace V2_4 {
 
 using android::hardware::graphics::common::V1_0::ColorTransform;
 using android::hardware::graphics::common::V1_0::Dataspace;
@@ -49,7 +49,6 @@ using android::hardware::graphics::common::V1_0::Transform;
 
 using android::hardware::MessageQueue;
 
-using android::hardware::graphics::composer::V2_1::Error;
 using android::hardware::graphics::composer::V2_1::Display;
 using android::hardware::graphics::composer::V2_1::Layer;
 
@@ -460,6 +459,53 @@ public:
         endCommand();
     }
 
+    static constexpr uint16_t kSetClientTargetPropertyLength = 2;
+    void setClientTargetProperty(
+            IComposerClient::ClientTargetProperty clientTargetProperty) {
+        beginCommand(IComposerClient::Command::SET_CLIENT_TARGET_PROPERTY,
+                     kSetClientTargetPropertyLength);
+        writeSigned(static_cast<int32_t>(clientTargetProperty.pixelFormat));
+        writeSigned(static_cast<int32_t>(clientTargetProperty.dataspace));
+        endCommand();
+    }
+
+    void setLayerGenericMetadata(const std::string& key, bool mandatory,
+                                 const std::vector<uint8_t>& value) {
+        uint32_t key_size = key.size();
+        uint32_t key_size_paded = key_size / 4;
+        key_size_paded += (key_size % 4 > 0) ? 1 : 0;
+
+        uint32_t value_size = value.size();
+        uint32_t value_size_paded = value_size / 4;
+        value_size_paded += (value_size % 4 > 0) ? 1 : 0;
+        uint32_t length = key_size_paded + 1 + value_size_paded;
+
+        beginCommand(IComposerClient::Command::SET_LAYER_GENERIC_METADATA, length);
+
+        // The key length, stored as a uint32_t
+        write(key_size);
+
+        // The key itself, padded to a uint32_t boundary if necessary
+        std::vector<uint8_t> key_vec(key.begin(), key.end());
+        key_vec.resize(key_size_paded * 4);
+        memcpy(&mData[mDataWritten], (uint32_t*)key_vec.data(), key_size_paded);
+        mDataWritten += key_size_paded;
+
+        // The mandatory flag, stored as a uint32_t
+        write(mandatory ? 1 : 0);
+
+        // The value length in bytes, stored as a uint32_t
+        write(value_size);
+
+        // The value itself, padded to a uint32_t boundary if necessary
+        std::vector<uint8_t> value_vec(value.begin(), value.end());
+        value_vec.resize(value_size_paded * 4);
+        memcpy(&mData[mDataWritten], (uint32_t*)value_vec.data(), value_size_paded);
+        mDataWritten += value_size_paded;
+
+        endCommand();
+    }
+
 protected:
     void beginCommand(IComposerClient::Command command, uint16_t length) {
         if (mCommandEnd) {
@@ -842,10 +888,10 @@ private:
     hidl_vec<hidl_handle> mDataHandles;
 };
 
-} // namespace V2_3
+} // namespace V2_4
 } // namespace composer
 } // namespace graphics
 } // namespace hardware
 } // namespace android
 
-#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_COMPOSER_COMMAND_BUFFER_H
+#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_COMPOSER_COMMAND_BUFFER_H

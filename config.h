@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_CONFIG_H
-#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_CONFIG_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_CONFIG_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_CONFIG_H
 
 /***********************************
  define function switch
@@ -82,4 +82,4 @@ static const hwdisplay hwdisplays[NUM_DISPLAYS] = {
 #endif /* defined(TARGET_BOARD_KINGFISHER) */
 };
 
-#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_CONFIG_H
+#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_CONFIG_H

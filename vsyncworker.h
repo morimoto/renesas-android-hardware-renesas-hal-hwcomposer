@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_EVENT_WORKER_H
-#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_EVENT_WORKER_H
+#ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_EVENT_WORKER_H
+#define ANDROID_HARDWARE_GRAPHICS_COMPOSER_EVENT_WORKER_H
 
 #include "worker.h"
 
@@ -34,6 +34,12 @@ public:
     virtual void callback(int display, int64_t timestamp) = 0;
 };
 
+class VsyncCallback_2_4 {
+public:
+    virtual ~VsyncCallback_2_4() {}
+    virtual void callback(int display, int64_t timestamp, uint32_t vsyncPeriodNanos) = 0;
+};
+
 class VSyncWorker : public Worker {
 public:
     VSyncWorker();
@@ -41,6 +47,7 @@ public:
 
     int init(int drmFd, int display, int refresh);
     void registerCallback(std::shared_ptr<VsyncCallback> callback);
+    void registerCallback_2_4(std::shared_ptr<VsyncCallback_2_4> callback);
 
     void controlVSync(bool enabled);
 
@@ -56,7 +63,8 @@ private:
     // shared_ptr since we need to use this outside of the thread lock (to
     // actually call the hook) and we don't want the memory freed until we're
     // done
-    std::shared_ptr<VsyncCallback> mCallback = NULL;
+    std::shared_ptr<VsyncCallback> mCallback = nullptr;
+    std::shared_ptr<VsyncCallback_2_4> mCallback_2_4 = nullptr;
 
     int mDisplay;
     int mRefreshRate = 60; // Default to 60Hz refresh rate
@@ -66,4 +74,4 @@ private:
 
 } // namespace android
 
-#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_V2_3_EVENT_WORKER_H
+#endif // ANDROID_HARDWARE_GRAPHICS_COMPOSER_EVENT_WORKER_H
