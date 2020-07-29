@@ -826,9 +826,9 @@ Error HwcDisplay::setVsyncEnabled(int32_t enabled_in) {
 }
 
 int HwcDisplay::calcMaxDevicePlanes() {
-    return (mPlanes.size() > 1
+    return /*(mPlanes.size() > 1
             && !(mDrmModes[mCurrConfig].getFlags() & DRM_MODE_FLAG_INTERLACE))
-            ? mPlanes.size() - 1 : 0;
+            ? mPlanes.size() - 1 :*/ 0;
 }
 
 bool HwcDisplay::layerSupported(HwcLayer* layer, const uint32_t& num_device_planes) {
