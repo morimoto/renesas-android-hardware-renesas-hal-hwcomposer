@@ -38,13 +38,6 @@ Error HwcLayer::setLayerBuffer(buffer_handle_t buffer,
                                int32_t acquire_fence) {
     supported(__func__);
     UniqueFd af(acquire_fence);
-
-    // The buffer and acquire_fence are handled elsewhere
-    if (mSfType == HWC2::Composition::Client
-        || mSfType == HWC2::Composition::Sideband
-        || mSfType == HWC2::Composition::SolidColor)
-        return Error::NONE;
-
     setBuffer(buffer);
     setAcquireFence(af.get());
     return Error::NONE;

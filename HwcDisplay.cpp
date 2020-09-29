@@ -501,12 +501,12 @@ std::vector<HwcLayer*> HwcDisplay::getSortedLayersByZOrder() {
         HWC2::Composition validated_type = l.second->getValidatedType();
         if (HWC2::Composition::Device == validated_type) {
             layers.push_back(l.second);
-        } else if (HWC2::Composition::Client == validated_type) {
-            use_client_layer = true;
-            client_z_order = std::max(client_z_order, l.second->getZorder());
         } else if (!mValidated) {
             // layer Composition not suported, need to validate
             return std::vector<HwcLayer*>();
+        } else if (HWC2::Composition::Client == validated_type) {
+            use_client_layer = true;
+            client_z_order = std::max(client_z_order, l.second->getZorder());
         }
     }
 
