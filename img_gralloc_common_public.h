@@ -25,8 +25,9 @@
 #define IMG_GRALLOC_COMMON_PUBLIC_H
 
 #include <cutils/native_handle.h>
-#include <system/graphics.h>
+#include <hardware/gralloc1.h>
 #include <linux/ion.h>
+#include <system/graphics.h>
 
 #ifndef ALIGN
 #define ALIGN(x,a)  ((((x) + (a) - 1L) / (a)) * (a))

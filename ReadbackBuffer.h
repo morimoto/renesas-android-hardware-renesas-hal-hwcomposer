@@ -1,7 +1,7 @@
 #ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_READBACK_BUFFER_H
 #define ANDROID_HARDWARE_GRAPHICS_COMPOSER_READBACK_BUFFER_H
 
-#include "img_gralloc1_public.h"
+#include "img_gralloc_common_public.h"
 
 namespace android::hardware::graphics::composer::V2_4::implementation {
 

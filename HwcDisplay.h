@@ -18,14 +18,14 @@
 #ifndef ANDROID_HARDWARE_GRAPHICS_COMPOSER_HWC_DISPLAY_H
 #define ANDROID_HARDWARE_GRAPHICS_COMPOSER_HWC_DISPLAY_H
 
-#include "config.h"
-#include "platform.h"
-#include "vsyncworker.h"
-#include "img_gralloc1_public.h"
-
 #include <memory>
 #include <deque>
 #include <unordered_set>
+
+#include "img_gralloc_common_public.h"
+#include "config.h"
+#include "platform.h"
+#include "vsyncworker.h"
 
 namespace android {
 

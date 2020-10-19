@@ -16,8 +16,9 @@
  */
 
 #include "HwcLayer.h"
+
 #include "Hwc.h"
-#include "img_gralloc1_public.h"
+#include "img_gralloc_common_public.h"
 
 namespace android {
 using Error = android::hardware::graphics::composer::V2_1::Error;

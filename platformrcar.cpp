@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "HwcDump.h"
-#include "platform.h"
 #include "platformrcar.h"
-#include "img_gralloc1_public.h"
 
 #include <drm/drm_fourcc.h>
 
+#include "HwcDump.h"
+#include "img_gralloc_common_public.h"
+#include "platform.h"
 
 #define ALIGN_ROUND_UP(X, Y)  (((X)+(Y)-1) & ~((Y)-1))
 
