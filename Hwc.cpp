@@ -256,9 +256,6 @@ void HwcHal::enableCallback(bool enable) {
             HWC2::Callback::Refresh, this,
             reinterpret_cast<hwc2_function_pointer_t>(refreshHook));
         RegisterCallback(
-            HWC2::Callback::Vsync, this,
-            reinterpret_cast<hwc2_function_pointer_t>(vsyncHook));
-        RegisterCallback(
             HWC2::Callback::Vsync_2_4, this,
             reinterpret_cast<hwc2_function_pointer_t>(vsyncHook_2_4));
         RegisterCallback(
@@ -270,7 +267,6 @@ void HwcHal::enableCallback(bool enable) {
     } else {
         RegisterCallback(HWC2::Callback::Hotplug, this, nullptr);
         RegisterCallback(HWC2::Callback::Refresh, this, nullptr);
-        RegisterCallback(HWC2::Callback::Vsync, this, nullptr);
         RegisterCallback(HWC2::Callback::Vsync_2_4, this, nullptr);
         RegisterCallback(HWC2::Callback::VsyncPeriodTimingChanged, this, nullptr);
         RegisterCallback(HWC2::Callback::SeamlessPossible, this, nullptr);
