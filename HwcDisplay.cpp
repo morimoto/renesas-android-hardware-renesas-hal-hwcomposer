@@ -411,6 +411,10 @@ Error HwcDisplay::getDisplayAttribute(hwc2_config_t config,
         *value = mmHeight ? (mode.getVDisplay() * kUmPerInch) / mmHeight : defaultDpi;
         break;
 
+    case HWC2::Attribute::ConfigGroup:
+        *value = 0;
+        break;
+
     default:
         *value = -1;
         return Error::BAD_CONFIG;
