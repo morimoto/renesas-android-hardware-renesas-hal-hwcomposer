@@ -5,3 +5,4 @@ service vendor.hwcomposer-hal-2-4  /vendor/bin/hw/android.hardware.graphics.comp
     group graphics drmrpc
     capabilities SYS_NICE
     onrestart restart surfaceflinger
+    shutdown critical
