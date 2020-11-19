@@ -1701,13 +1701,16 @@ Return<void> ComposerClient::getDisplayCapabilities_2_4(uint64_t display,
 
 Return<void> ComposerClient::getDisplayConnectionType(uint64_t display,
         getDisplayConnectionType_cb hidl_cb) {
+    using ConnectionType = V2_4::IComposerClient::DisplayConnectionType;
     auto err = V2_4::Error::NONE;
 
     if (!mHal.isDisplayValid(display)) {
         err = V2_4::Error::BAD_DISPLAY;
     }
 
-    hidl_cb(err, DisplayConnectionType::EXTERNAL);
+    ConnectionType conType = ConnectionType::EXTERNAL;
+    err = static_cast<V2_4::Error>(mHal.getDisplayConnectionType(display, &conType));
+    hidl_cb(err, conType);
     return Void();
 }
 

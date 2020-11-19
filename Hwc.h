@@ -101,6 +101,9 @@ public:  // functions
     Error getDisplayName(Display display, hidl_string* outName) override;
     Error getDisplayType(Display display,
                          IComposerClient::DisplayType* outType) override;
+    Error getDisplayConnectionType(
+            Display /*display*/,
+            V2_4::IComposerClient::DisplayConnectionType* /*outType*/) override;
     Error getDozeSupport(Display display, bool* outSupport) override;
     Error getHdrCapabilities(
         Display display,

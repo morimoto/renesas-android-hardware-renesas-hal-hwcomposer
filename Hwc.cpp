@@ -408,6 +408,11 @@ Error HwcHal::getDisplayType(Display display,
     return err;
 }
 
+Error HwcHal::getDisplayConnectionType(
+        Display /*display*/, V2_4::IComposerClient::DisplayConnectionType* /*outType*/) {
+    return Error::UNSUPPORTED;
+}
+
 Error HwcHal::getDozeSupport(Display display, bool* outSupport) {
     if (!isDisplayValid(display)) {
         return Error::BAD_DISPLAY;
