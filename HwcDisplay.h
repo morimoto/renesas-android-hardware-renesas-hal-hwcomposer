@@ -172,7 +172,8 @@ private:
         HAL_PIXEL_FORMAT_NV12,
         HAL_PIXEL_FORMAT_NV12_CUSTOM,
         HAL_PIXEL_FORMAT_NV21,
-        HAL_PIXEL_FORMAT_NV21_CUSTOM
+        HAL_PIXEL_FORMAT_NV21_CUSTOM,
+        HAL_PIXEL_FORMAT_YV12
     };
 
     int32_t mColorTransform = 0;
