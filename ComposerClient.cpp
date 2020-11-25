@@ -16,7 +16,7 @@
 
 #include "ComposerClient.h"
 
-#include <android/hardware/graphics/mapper/3.0/IMapper.h>
+#include <android/hardware/graphics/mapper/4.0/IMapper.h>
 #include <log/log.h>
 
 namespace android {
@@ -28,8 +28,8 @@ namespace implementation {
 
 namespace {
 
-using MapperError = ::android::hardware::graphics::mapper::V3_0::Error;
-using IMapper = ::android::hardware::graphics::mapper::V3_0::IMapper;
+using MapperError = ::android::hardware::graphics::mapper::V4_0::Error;
+using IMapper = ::android::hardware::graphics::mapper::V4_0::IMapper;
 
 using Hdr_V1_0 = ::android::hardware::graphics::common::V1_0::Hdr;
 using Hdr_V1_2 = ::android::hardware::graphics::common::V1_2::Hdr;
