@@ -96,6 +96,7 @@ public:
     uint32_t getConnectorId() const;
     std::string getDisplayInfo() const;
     std::string getHardwareDisplayType() const;
+    int64_t getDisplayVsyncPeriod() const;
 
     void cmsReset();
     void cmsSetLut(const hardware::hidl_vec<uint32_t>& buff);

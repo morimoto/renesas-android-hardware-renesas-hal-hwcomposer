@@ -1726,13 +1726,9 @@ Return<void> ComposerClient::getDisplayAttribute_2_4(uint64_t display,
 
 Return<void> ComposerClient::getDisplayVsyncPeriod(uint64_t display,
         getDisplayVsyncPeriod_cb hidl_cb) {
-    auto err = V2_4::Error::BAD_CONFIG;// NONE
-
-    if (!mHal.isDisplayValid(display)) {
-        err = V2_4::Error::BAD_DISPLAY;
-    }
-
-    hidl_cb(err, 0);
+    int64_t value = 0;
+    auto err = mHal.getDisplayVsyncPeriod(display, &value);
+    hidl_cb(static_cast<V2_4::Error>(err), value);
     return Void();
 }
 

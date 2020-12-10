@@ -104,6 +104,7 @@ public:  // functions
     Error getDisplayConnectionType(
             Display /*display*/,
             V2_4::IComposerClient::DisplayConnectionType* /*outType*/) override;
+    Error getDisplayVsyncPeriod(Display display, int64_t* vsyncPeriod) override;
     Error getDozeSupport(Display display, bool* outSupport) override;
     Error getHdrCapabilities(
         Display display,

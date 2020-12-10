@@ -71,6 +71,7 @@ public:
     virtual Error getDisplayConnectionType(
                                  Display display,
                                  V2_4::IComposerClient::DisplayConnectionType* outType) = 0;
+    virtual Error getDisplayVsyncPeriod(Display display, int64_t* vsyncPeriod) = 0;
     virtual Error getDozeSupport(Display display, bool* outSupport) = 0;
     virtual Error getHdrCapabilities(Display display, hidl_vec<Hdr>* outTypes,
                                      float* outMaxLuminance, float* outMaxAverageLuminance,

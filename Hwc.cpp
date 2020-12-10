@@ -413,6 +413,18 @@ Error HwcHal::getDisplayConnectionType(
     return Error::UNSUPPORTED;
 }
 
+Error HwcHal::getDisplayVsyncPeriod(Display display, int64_t* vsyncPeriod) {
+    if (!isDisplayValid(display)) {
+        return Error::BAD_DISPLAY;
+    }
+
+    if (vsyncPeriod == nullptr)
+        return Error::BAD_PARAMETER;
+
+    *vsyncPeriod = getDisplay(display).getDisplayVsyncPeriod();
+    return Error::NONE;
+}
+
 Error HwcHal::getDozeSupport(Display display, bool* outSupport) {
     if (!isDisplayValid(display)) {
         return Error::BAD_DISPLAY;

@@ -1435,4 +1435,10 @@ std::string HwcDisplay::getDisplayInfo() const {
     return displayInfo.str();
 }
 
+int64_t HwcDisplay::getDisplayVsyncPeriod() const {
+    // returns the current refresh rate (in terms of vsync period, nanoseconds)
+    // the display operates at.
+    return (int64_t)(1e9 / mDrmModes[mCurrConfig].getVRefresh());
+}
+
 } // namespace android
